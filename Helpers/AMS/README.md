@@ -8,6 +8,7 @@ i.e. XML, INI, CONFIG and even Registry
 
 # Usage
 
+```c#
 Xml profile = new Xml();
 ...
 int width = profile.GetValue("Main Window", "Width", 800);
@@ -15,3 +16,4 @@ int height = profile.GetValue("Main Window", "Height", 600);
 ...
 profile.SetValue("Main Window", "Width", this.Size.Width);
 profile.SetValue("Main Window", "Height", this.Size.Height);
+```
