@@ -53,14 +53,24 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Helpers\AMS\Config.cs" />
+    <Compile Include="Helpers\AMS\Events.cs" />
+    <Compile Include="Helpers\AMS\Ini.cs" />
+    <Compile Include="Helpers\AMS\IProfile.cs" />
+    <Compile Include="Helpers\AMS\Profile.cs" />
+    <Compile Include="Helpers\AMS\Registry.cs" />
+    <Compile Include="Helpers\AMS\Xml.cs" />
+    <Compile Include="Helpers\AMS\XmlHelper.cs" />
+    <Compile Include="Helpers\DapperDatabaseHelper.cs" />
+    <Compile Include="Helpers\SQLInfoEnumerator.cs" />
     <Compile Include="Utils.cs" />
-    <Compile Include="Application\AssemblyHelper.cs" />
-    <Compile Include="Application\BTPPropertyChangedEventArgs.cs" />
-    <Compile Include="Application\FolderNameEditor2.cs" />
-    <Compile Include="Application\FormWindowSettings.cs" />
-    <Compile Include="Application\IClonable.cs" />
-    <Compile Include="Application\RecordSavedEventArgs.cs" />
-    <Compile Include="Application\Temporaryfiles.cs" />
+    <Compile Include="Helpers\AssemblyHelper.cs" />
+    <Compile Include="Helpers\PropertyChangedEventArgs.cs" />
+    <Compile Include="Helpers\FolderNameEditor.cs" />
+    <Compile Include="Helpers\FormWindowSettings.cs" />
+    <Compile Include="Helpers\IClonable.cs" />
+    <Compile Include="Helpers\RecordSavedEventArgs.cs" />
+    <Compile Include="Helpers\Temporaryfiles.cs" />
     <Compile Include="Extensions\ArrayExtensions.cs" />
     <Compile Include="Extensions\EventHandlerExtensions.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />

@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace AGenius.UsefulStuff
+namespace AGenius.UsefulStuff.Helpers
 {
     /// <summary>Holds various settings for a modules window (or sub window)</summary>
     /// <remarks>Window State : Maximized or Standard

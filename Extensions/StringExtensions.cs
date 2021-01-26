@@ -11,6 +11,30 @@ namespace AGenius.UsefulStuff
     /// </summary>
     public static class StringExtensions
     {
+        /// <summary>
+        /// Return the string portion on the right of the string
+        /// </summary>
+        /// <param name="StringValue">The string passed in</param>
+        /// <param name="MaxLength">The number of characters from the right side of the string to pass back</param>
+        /// <returns>String result</returns>
+        public static string Right(this string StringValue, int MaxLength)
+        {
+            //Check if the value is valid
+            if (string.IsNullOrEmpty(StringValue))
+            {
+                //Set valid empty string as string could be null
+                StringValue = string.Empty;
+            }
+            else if (StringValue.Length > MaxLength)
+            {
+                //Make the string no longer than the max length
+                StringValue = StringValue.Substring(StringValue.Length - MaxLength, MaxLength);
+            }
+
+            //Return the string
+            return StringValue;
+        }
+
         #region ContainsValue / HasValue
 
         /// <summary>

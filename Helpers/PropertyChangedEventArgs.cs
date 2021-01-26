@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AGenius.UsefulStuff
+namespace AGenius.UsefulStuff.Helpers
 {
     public class UsefulPropertyChangedEventArgs : EventArgs
     {
@@ -14,7 +14,6 @@ namespace AGenius.UsefulStuff
             Message = message;
             RecordObject = recordObject;
         }
-
         public string PropertyName { get; private set; }
         public string Message { get; private set; }
         public object RecordObject { get; private set; }

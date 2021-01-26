@@ -4,7 +4,7 @@ using System.IO;
 using System.Reflection;
 using System.Text.RegularExpressions;
 
-namespace AGenius.UsefulStuff
+namespace AGenius.UsefulStuff.Helpers
 {
     public static class AssemblyHelper
     {

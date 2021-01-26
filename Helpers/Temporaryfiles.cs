@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using System.Reflection;
 
-namespace AGenius.UsefulStuff
+namespace AGenius.UsefulStuff.Helpers
 {
     /// <summary>
     /// This is a very useful class that will keep your temporary files under control
