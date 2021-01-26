@@ -9,7 +9,7 @@ using Newtonsoft.Json;
 /// <summary>
 /// Some Common usefull methods
 /// </summary>
-public static class AGeniusUtils
+public static class Utils
 {
     #region Scramble Methods
     public static string ApplicationPath = Directory.GetParent(System.Reflection.Assembly.GetEntryAssembly().Location).FullName;

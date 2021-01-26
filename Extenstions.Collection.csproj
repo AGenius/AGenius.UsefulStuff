@@ -53,7 +53,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AGeniusUtils.cs" />
+    <Compile Include="Utils.cs" />
     <Compile Include="Application\AssemblyHelper.cs" />
     <Compile Include="Application\BTPPropertyChangedEventArgs.cs" />
     <Compile Include="Application\FolderNameEditor2.cs" />
