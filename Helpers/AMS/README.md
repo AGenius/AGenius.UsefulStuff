@@ -9,6 +9,8 @@ i.e. XML, INI, CONFIG and even Registry
 # Usage
 
 ```c#
+using AGenius.UsefulStuff.AMS.Profile;
+
 Xml profile = new Xml();
 ...
 int width = profile.GetValue("Main Window", "Width", 800);
