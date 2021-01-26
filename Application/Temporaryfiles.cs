@@ -3,16 +3,17 @@ using System.Reflection;
 
 namespace AGenius.UsefulStuff
 {
+    /// <summary>
+    /// This is a very useful class that will keep your temporary files under control
+    /// </summary> 
     public static partial class TemporaryFiles
     {
         private const string UserFilesListFilenamePrefix = ".used-temporary-files.txt";
         static private readonly object UsedFilesListLock = new object();
-
         private static string GetUsedFilesListFilename()
         {
             return Assembly.GetEntryAssembly().Location + UserFilesListFilenamePrefix;
         }
-
         public static void AddToUsedFilesList(string filename)
         {
             lock (UsedFilesListLock)
@@ -21,7 +22,6 @@ namespace AGenius.UsefulStuff
                     writer.WriteLine(filename);
             }
         }
-
         public static string GetNew(string extension = ".tmp", string subFolder = "")
         {
             string fileName;
@@ -53,7 +53,6 @@ namespace AGenius.UsefulStuff
             AddToUsedFilesList(fileName);
             return fileName;
         }
-
         public static void DeleteAllPreviouslyUsed()
         {
             lock (UsedFilesListLock)
