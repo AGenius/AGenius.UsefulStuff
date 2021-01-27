@@ -141,53 +141,16 @@ namespace AGenius.UsefulStuff
         }
         public static string DateHash(this DateTime dateTime, int ResultLength = 8)
         {
-            string rst = "";
-
             long timeSince1970 = (long)dateTime.Subtract(DateTime.MinValue.AddYears(1969)).TotalMilliseconds;
             long d = timeSince1970 * 1000;
             long timeSince2000 = (long)new DateTime(2000, 10, 06).Subtract(DateTime.MinValue.AddYears(1969)).TotalMilliseconds;
             long od = timeSince2000 / 1000;
 
-            rst = EncodeBase36(((d - od) / 1000));
+            string rst = ((d - od) / 1000).EncodeBase36();
 
             return rst.Substring(0, 8).ToUpper();
         }
 
-        private const string CharList = "0123456789abcdefghijklmnopqrstuvwxyz";
-        /// <summary>Encode the given number into a Base36 string </summary>
-        internal static String EncodeBase36(long input)
-        {
-            if (input < 0)
-            {
-                throw new ArgumentOutOfRangeException("input", input, "input cannot be negative");
-            }
-
-            char[] clistarr = CharList.ToCharArray();
-            var result = new Stack<char>();
-
-            while (input != 0)
-            {
-                result.Push(clistarr[input % 36]);
-                input /= 36;
-            }
-
-            return new string(result.ToArray());
-        }
-
-        /// <summary>Decode the Base36 Encoded string into a number</summary>
-        internal static Int64 DecodeBase36(string input)
-        {
-            var reversed = input.ToLower().Reverse();
-            long result = 0;
-            int pos = 0;
-
-            foreach (char c in reversed)
-            {
-                result += CharList.IndexOf(c) * (long)Math.Pow(36, pos);
-                pos++;
-            }
-
-            return result;
-        }
+     
     }
 }

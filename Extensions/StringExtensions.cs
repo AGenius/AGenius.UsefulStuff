@@ -1,6 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
+using System.IO.Compression;
 using System.Linq;
+using System.Security;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.RegularExpressions;
 
 //Copied from Tazmainiandevil/Useful.Extension
@@ -11,12 +17,370 @@ namespace AGenius.UsefulStuff
     /// </summary>
     public static class StringExtensions
     {
+        /// <summary>Return a clean string usable as a filename </summary>
+        /// <param name="StringValue">The String to process</param>
+        /// <returns>Clean file system safe string <see cref="string"/></returns>
+        /// <remarks>This will remove any special characters from a string</remarks>
+        public static string CleanFileName(this string StringValue)
+        {
+            return Path.GetInvalidFileNameChars().Aggregate(StringValue, (current, c) => current.Replace(c.ToString(), string.Empty));
+        }
+        /// <summary>Decode the Base36 Encoded string into a number</summary>
+        internal static Int64 DecodeBase36(this string input)
+        {
+            string CharList = "0123456789abcdefghijklmnopqrstuvwxyz";
+            var reversed = input.ToLower().Reverse();
+            long result = 0;
+            int pos = 0;
+
+            foreach (char c in reversed)
+            {
+                result += CharList.IndexOf(c) * (long)Math.Pow(36, pos);
+                pos++;
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Compresses a string using GZip
+        /// </summary>
+        /// <param name="StringValue">The string to compress</param>
+        /// <returns>The compressed string</returns>
+        public static string CompressString(this string StringValue)
+        {
+            byte[] buffer = Encoding.UTF8.GetBytes(StringValue);
+            var memoryStream = new MemoryStream();
+            using (var gZipStream = new GZipStream(memoryStream, CompressionMode.Compress, true))
+            {
+                gZipStream.Write(buffer, 0, buffer.Length);
+            }
+
+            memoryStream.Position = 0;
+
+            var compressedData = new byte[memoryStream.Length];
+            memoryStream.Read(compressedData, 0, compressedData.Length);
+
+            var gZipBuffer = new byte[compressedData.Length + 4];
+            Buffer.BlockCopy(compressedData, 0, gZipBuffer, 4, compressedData.Length);
+            Buffer.BlockCopy(BitConverter.GetBytes(buffer.Length), 0, gZipBuffer, 0, 4);
+            return Convert.ToBase64String(gZipBuffer);
+        }
+
+        /// <summary>Decompresses a string using GZip</summary>
+        /// <param name="CompressedStringValue">The compressed string</param>
+        /// <returns>The uncompressed string</returns>
+        public static string DecompressString(this string CompressedStringValue)
+        {
+            byte[] gZipBuffer = Convert.FromBase64String(CompressedStringValue);
+            using (var memoryStream = new MemoryStream())
+            {
+                int dataLength = BitConverter.ToInt32(gZipBuffer, 0);
+                memoryStream.Write(gZipBuffer, 4, gZipBuffer.Length - 4);
+
+                var buffer = new byte[dataLength];
+
+                memoryStream.Position = 0;
+                using (var gZipStream = new GZipStream(memoryStream, CompressionMode.Decompress))
+                {
+                    gZipStream.Read(buffer, 0, buffer.Length);
+                }
+
+                return Encoding.UTF8.GetString(buffer);
+            }
+        }
+
+        /// <summary>Encrypt a string into a web safe string.</summary>
+        /// <param name="StringValue">The string being processed <see cref="string"/></param>
+        /// <param name="passphrase">A passphrase to use to encrypt with. Can only be decrypted using the same passphrase <see cref="string"/></param>
+        /// <returns>Encrypted String result <see cref="string"/></returns>
+        public static string EncryptStringWebSafe(this string StringValue, string passphrase = "Theres no fate but what we make.")
+        {
+            byte[] results;
+            var utf8 = new System.Text.UTF8Encoding();
+
+            // Step 1. We hash the passphrase using MD5
+            // We use the MD5 hash generator as the result is a 128 bit byte array
+            // which is a valid length for the TripleDES encoder we use below
+            var hashProvider = new MD5CryptoServiceProvider();
+            byte[] tdesKey = hashProvider.ComputeHash(utf8.GetBytes(passphrase));
+
+            // Step 2. Create a new TripleDESCryptoServiceProvider object
+            var tdesAlgorithm = new TripleDESCryptoServiceProvider();
+
+            // Step 3. Setup the encoder
+            tdesAlgorithm.Key = tdesKey;
+            tdesAlgorithm.Mode = CipherMode.ECB;
+            tdesAlgorithm.Padding = PaddingMode.PKCS7;
+
+            // Step 4. Convert the input string to a byte[]
+            var dataToEncrypt = utf8.GetBytes(StringValue);
+
+            // Step 5. Attempt to encrypt the string
+            try
+            {
+                var encryptor = tdesAlgorithm.CreateEncryptor();
+                results = encryptor.TransformFinalBlock(dataToEncrypt, 0, dataToEncrypt.Length);
+            }
+            finally
+            {
+                // Clear the TripleDes and Hashprovider services of any sensitive information
+                tdesAlgorithm.Clear();
+                hashProvider.Clear();
+            }
+
+            // Step 6. Return the encrypted string as a base64 encoded string
+            return Convert.ToBase64String(results);
+        }
+        /// <summary>
+        /// Decrypt a web safe encrypted string
+        /// </summary>
+        /// <param name="StringValue">The string being processed</param>
+        /// <param name="passphrase">A passphrase to use to decrypt with. Can only be decrypted using the same passphrase as it was encrypted with</param>
+        /// <returns>Decrypted String result <see cref="string"/></returns>
+        public static string DecryptStringWebSafe(this string StringValue, string passphrase = "Theres no fate but what we make.")
+        {
+            try
+            {
+                byte[] results;
+                var utf8 = new System.Text.UTF8Encoding();
+
+                // Step 1. We hash the passphrase using MD5
+                // We use the MD5 hash generator as the result is a 128 bit byte array
+                // which is a valid length for the TripleDES encoder we use below
+                var hashProvider = new MD5CryptoServiceProvider();
+                var tdesKey = hashProvider.ComputeHash(utf8.GetBytes(passphrase));
+
+                // Step 2. Create a new TripleDESCryptoServiceProvider object
+                var tdesAlgorithm = new TripleDESCryptoServiceProvider();
+
+                // Step 3. Setup the decoder
+                tdesAlgorithm.Key = tdesKey;
+                tdesAlgorithm.Mode = CipherMode.ECB;
+                tdesAlgorithm.Padding = PaddingMode.PKCS7;
+
+                // Convert.FromBase64String(message) does not work well with spaces in the string for some odd reason
+                // Plus sign will be interpreted as a space when u call the FromBase64String method
+                StringValue = StringValue.Replace(" ", "+");
+
+                try
+                {
+                    // Step 4. Convert the input string to a byte[]
+                    var dataToDecrypt = Convert.FromBase64String(StringValue);
+
+                    // Step 5. Attempt to decrypt the string
+                    var decryptor = tdesAlgorithm.CreateDecryptor();
+                    results = decryptor.TransformFinalBlock(dataToDecrypt, 0, dataToDecrypt.Length);
+                }
+                finally
+                {
+                    // Clear the TripleDes and Hashprovider services of any sensitive information
+                    tdesAlgorithm.Clear();
+                    hashProvider.Clear();
+                }
+
+                // Step 6. Return the decrypted string in UTF8 format
+                return utf8.GetString(results);
+            }
+            catch (Exception ex)
+            {
+                return string.Empty;
+            }
+        }
+
+        /// <summary>Simple string encryption using a simple hex swap method</summary>
+        /// <param name="StringValue">String to Encrypt</param>
+        /// <remarks>This will convert each character in the string
+        /// into hex then swap the hex around then turn it back to
+        /// decimal and turn it into a char
+        /// Passing a previously SimpleEncrpted string will decrypt it</remarks>
+        public static string SimpleEncrypt(this string StringValue)
+        {
+            string NewString = string.Empty;
+            string stmp = string.Empty;
+            try
+            {
+                for (int i = 0; i <= StringValue.Length - 1; i++)
+                {
+                    // Turn Char into a hex string
+                    int ichar = Convert.ToChar(StringValue.Substring(i, 1));
+                    string sHex = ichar.ToString("X").PadLeft(2, '0');
+                    // Swap Hex awound for example
+                    // 6E becomes E6
+                    string sNewHex = sHex.Substring(sHex.Length - 1) + sHex.Substring(0, 1);
+                    // Convert the new hex into decimal
+                    int iDec = int.Parse(sNewHex, System.Globalization.NumberStyles.HexNumber);
+
+                    if (iDec > 0)
+                    {
+                        // now add the char value to the new string
+                        stmp = stmp + Convert.ToChar(iDec);
+                        if (stmp.Length > 50)
+                        {
+                            // This increase performance on large strings
+                            NewString = NewString + stmp;
+                            stmp = "";
+                        }
+                    }
+                }
+                NewString = NewString + stmp;
+                return NewString;
+            }
+
+            catch (System.Exception)
+            {
+                return "";
+            }
+        }
+        /// <summary>
+        /// Convert an enumerated list to a CSV string
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source"></param>
+        /// <returns></returns>
+        public static string ToCsv<T>(this IEnumerable<T> source)
+        {
+            if (source == null)
+            {
+                throw new ArgumentNullException("source");
+            }
+
+            return string.Join(",", source.Select(s => s.ToString()).ToArray());
+        }
+
+        /// <summary>Returns the FieldNames from the Fields Parameter passed in as FieldName=FieldValue</summary>
+        /// <param name="SearchFieldString">FieldName=FieldValue</param>
+        /// <returns>string result</returns>
+        public static string[] ToFieldNames(this string[] SearchFieldString)
+        {
+            string[] names = new string[SearchFieldString.Length];
+            for (int i = 0; i < SearchFieldString.Length; i++)
+            {
+                names[i] = SearchFieldString[i].Split('=')[0];
+            }
+            return names;
+        }
+        /// <summary>Returns the FieldNames as a csv string from the Fields Parameter passed in as FieldName=FieldValue</summary>
+        /// <param name="SearchFieldString">FieldName=FieldValue</param>
+        /// <returns>string result <see cref="string"/></returns>
+        public static string ToFieldNamesCSV(this string[] SearchFieldString)
+        {
+            string names = String.Empty;
+            for (int i = 0; i < SearchFieldString.Length; i++)
+            {
+                if (!string.IsNullOrEmpty(names)) names += ",";
+                names += SearchFieldString[i].Split('=')[0];
+            }
+            return names;
+        }
+        /// <summary>Returns the Values from the Fields Parameter passed in as FieldName=FieldValue</summary>
+        /// <param name="SearchFieldString">FieldName=FieldValue</param>
+        /// <returns>string result  <see cref="string[]"/></returns>
+        public static string[] ToFieldValues(this string[] SearchFieldString)
+        {
+            string[] values = new string[SearchFieldString.Length];
+            for (int i = 0; i < SearchFieldString.Length; i++)
+            {
+                string[] SplitUp = SearchFieldString[i].Split('=');
+                for (int ii = 1; ii < SplitUp.Length; ii++)
+                {
+                    values[i] += SplitUp[ii];
+                }
+            }
+            return values;
+        }
+        /// <summary>Returns the Values as a csv string from the Fields Parameter passed in as FieldName=FieldValue</summary>
+        /// <param name="SearchFieldString">FieldName=FieldValue</param>
+        /// <returns>string result <see cref="string"/></returns>
+        public static string ToFieldValuesCSV(this string[] SearchFieldString)
+        {
+            string values = string.Empty;
+            for (int i = 0; i < SearchFieldString.Length; i++)
+            {
+                string[] SplitUp = SearchFieldString[i].Split('=');
+                for (int ii = 1; ii < SplitUp.Length; ii++)
+                {
+                    if (!string.IsNullOrEmpty(values)) values += ",";
+                    values += SplitUp[ii];
+                }
+            }
+            return values;
+        }
+        /// <summary>Convert unsecure string to readonly SecureString. </summary>
+        /// <param name="StringValue">The unsecure string for conversion.</param>
+        /// <param name="ReadOnly">Set result as readonly <see cref="bool"/></param>
+        /// <returns>SecureString <see cref="SecureString"/></returns>
+        public static SecureString ToSecureString(this string StringValue, bool ReadOnly = true)
+        {
+            if (string.IsNullOrEmpty(StringValue))
+            {
+                throw new ArgumentNullException("Missing string value");
+            }
+            SecureString securePassword = new SecureString();
+            foreach (char c in StringValue)
+            {
+                securePassword.AppendChar(c);
+            }
+            if (ReadOnly) securePassword.MakeReadOnly();
+            return securePassword;
+        }
+        /// <summary>
+        /// Convert a SecureString to a standard string value
+        /// </summary>
+        /// <param name="SecureStringValue">The SecureString object</param>
+        /// <returns>string result <see cref="string"/></returns>
+        public static string ToUnSecureString(this SecureString SecureStringValue)
+        {
+            return new System.Net.NetworkCredential(string.Empty, SecureStringValue).Password;
+        }
+        /// <summary>Get the content of the string before the given character or string </summary>
+        /// <param name="StringValue">The string containing the content</param>
+        /// <param name="SearchString">The String value to search for</param>
+        /// <returns>String result <see cref="string"/></returns>
+        public static string GetBefore(this string StringValue, string SearchString)
+        {
+            try
+            {
+                return StringValue.Substring(0, StringValue.ToLower().IndexOf(SearchString.ToLower()));
+            }
+            catch (Exception)
+            {
+                return string.Empty;
+            }
+        }
+
+        /// <summary>Get the string contents after a given character or string </summary>
+        /// <param name="StringValue">The string containing the content</param>
+        /// <param name="SearchString">The String value to search for</param>
+        /// <returns>String result <see cref="string"/></returns>
+        public static string GetAfter(this string StringValue, string SearchString)
+        {
+            try
+            {
+                return StringValue.Substring(StringValue.ToLower().IndexOf(SearchString.ToLower()) + SearchString.Length);
+            }
+            catch (Exception)
+            {
+                return string.Empty;
+            }
+        }
+        /// <summary>
+        /// Get the strin contents between two string values
+        /// </summary>
+        /// <param name="StringValue">The string containing the content</param>
+        /// <param name="StartValue">The starting string value to search</param>
+        /// <param name="EndValue">The ending string value to search</param>
+        /// <returns>String result <see cref="string"/></returns>
+        public static string GetBetween(this string StringValue, string StartValue, string EndValue)
+        {
+            return GetAfter(GetBefore(StringValue, EndValue), StartValue);
+        }
         /// <summary>
         /// Return the string portion on the right of the string
         /// </summary>
         /// <param name="StringValue">The string passed in</param>
         /// <param name="MaxLength">The number of characters from the right side of the string to pass back</param>
-        /// <returns>String result</returns>
+        /// <returns>String result <see cref="string"/></returns>
         public static string Right(this string StringValue, int MaxLength)
         {
             //Check if the value is valid

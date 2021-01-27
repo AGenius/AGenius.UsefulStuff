@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace AGenius.UsefulStuff
 {
@@ -7,9 +8,7 @@ namespace AGenius.UsefulStuff
     /// </summary>
     public static class LongXtensions
     {
-        /// <summary>
-        /// Negates (* -1) the given long number.
-        /// </summary>
+        /// <summary>Negates (* -1) the given long number.</summary>
         /// <param name="number">The given long number.</param>
         /// <returns>The negated long number.</returns>
         public static long Negate(this long number)
@@ -17,14 +16,33 @@ namespace AGenius.UsefulStuff
             return number * -1;
         }
 
-        /// <summary>
-        /// Strips out the sign and returns the absolute value of given long number.
-        /// </summary>
+        /// <summary>Strips out the sign and returns the absolute value of given long number.</summary>
         /// <param name="number">The given long number.</param>
         /// <returns>The absolute value of given long number.</returns>
         public static long AbsoluteValue(this long number)
         {
             return Math.Abs(number);
+        }
+
+        /// <summary>Encode the given number into a Base36 string </summary>
+        public static string EncodeBase36(this long input)
+        {
+            string CharList = "0123456789abcdefghijklmnopqrstuvwxyz";
+            if (input < 0)
+            {
+                throw new ArgumentOutOfRangeException("input", input, "input cannot be negative");
+            }
+
+            char[] clistarr = CharList.ToCharArray();
+            var result = new Stack<char>();
+
+            while (input != 0)
+            {
+                result.Push(clistarr[input % 36]);
+                input /= 36;
+            }
+
+            return new string(result.ToArray());
         }
     }
 }

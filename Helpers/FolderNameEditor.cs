@@ -9,7 +9,7 @@ namespace AGenius.UsefulStuff.Helpers
     /// <summary>
     /// Probably no longer of use
     /// </summary>
-    public class FolderNameEditor2 : UITypeEditor
+    public class FolderNameEditor : UITypeEditor
     {
         public override UITypeEditorEditStyle GetEditStyle(ITypeDescriptorContext context)
         {

@@ -7,9 +7,16 @@ namespace AGenius.UsefulStuff
     #region object extension for comparision
     public static class ObjectExtensions
     {
+        /// <summary>
+        /// Return a List of Variance records representing the differences between two entity objects
+        /// </summary>
+        /// <typeparam name="T">The Entity Type</typeparam>
+        /// <param name="sourceObject">The Source object</param>
+        /// <param name="targetObject">The Taget object</param>
+        /// <param name="ignoreID">set to true to ensure the ID property is not compared</param>
+        /// <returns>Lists of Variance records <see cref="List{T}"/> <seealso cref="Variance"/></returns>
         public static List<Variance> DetailedCompare<T>(this T sourceObject, T targetObject, bool ignoreID = false)
-        {
-            string propertyName = "";
+        {           
             try
             {
                 List<Variance> variances = new List<Variance>();
@@ -19,7 +26,7 @@ namespace AGenius.UsefulStuff
 
                     foreach (var property in properties)
                     {
-                        propertyName = property.Name;
+                        string propertyName = property.Name;
                         bool isEditable = true; // used to skip properties 
                         var ComputedATT = property.GetCustomAttribute(typeof(Dapper.Contrib.Extensions.ComputedAttribute));
                         var EditableATT = property.GetCustomAttribute(typeof(EditableAttribute));
