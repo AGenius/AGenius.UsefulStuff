@@ -336,12 +336,21 @@ namespace AGenius.UsefulStuff
         /// <summary>Get the content of the string before the given character or string </summary>
         /// <param name="StringValue">The string containing the content</param>
         /// <param name="SearchString">The String value to search for</param>
+        /// <param name="includeFindValue">Return the SearchString as part of the result</param>
         /// <returns>String result <see cref="string"/></returns>
-        public static string GetBefore(this string StringValue, string SearchString)
+        public static string GetBefore(this string StringValue, string SearchString, bool includeFindValue = false)
         {
             try
             {
-                return StringValue.Substring(0, StringValue.ToLower().IndexOf(SearchString.ToLower()));
+                string returnValue = StringValue.Substring(0, StringValue.ToLower().IndexOf(SearchString.ToLower()));
+                if (includeFindValue)
+                {
+                    return returnValue + SearchString;
+                }
+                else
+                {
+                    return returnValue;
+                }
             }
             catch (Exception)
             {
@@ -352,12 +361,21 @@ namespace AGenius.UsefulStuff
         /// <summary>Get the string contents after a given character or string </summary>
         /// <param name="StringValue">The string containing the content</param>
         /// <param name="SearchString">The String value to search for</param>
+        /// <param name="includeFindValue">Return the SearchString as part of the result</param>
         /// <returns>String result <see cref="string"/></returns>
-        public static string GetAfter(this string StringValue, string SearchString)
+        public static string GetAfter(this string StringValue, string SearchString, bool includeFindValue = false)
         {
             try
             {
-                return StringValue.Substring(StringValue.ToLower().IndexOf(SearchString.ToLower()) + SearchString.Length);
+                string returnValue = StringValue.Substring(StringValue.ToLower().IndexOf(SearchString.ToLower()) + SearchString.Length);
+                if (includeFindValue)
+                {
+                    return SearchString + returnValue;
+                }
+                else
+                {
+                    return returnValue;
+                }
             }
             catch (Exception)
             {
