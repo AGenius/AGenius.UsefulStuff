@@ -382,20 +382,30 @@ namespace AGenius.UsefulStuff
                 return string.Empty;
             }
         }
-        /// <summary>
-        /// Get the strin contents between two string values
-        /// </summary>
+
+        /// <summary>Get the strin contents between two string values</summary>
         /// <param name="StringValue">The string containing the content</param>
         /// <param name="StartValue">The starting string value to search</param>
         /// <param name="EndValue">The ending string value to search</param>
+        /// <param name="inclusive">Include the Start and End values in the result</param>
         /// <returns>String result <see cref="string"/></returns>
-        public static string GetBetween(this string StringValue, string StartValue, string EndValue)
+        public static string GetBetween(this string StringValue, string StartValue, string EndValue, bool inclusive = false)
         {
-            return GetAfter(GetBefore(StringValue, EndValue), StartValue);
+            if (inclusive)
+            {
+                return $"{StartValue}{StringValue.GetAfter(StartValue).GetBefore(EndValue)}{EndValue}";               
+            }
+            return StringValue.GetBefore(EndValue).GetAfter(StartValue);
         }
-        /// <summary>
-        /// Return the string portion on the right of the string
-        /// </summary>
+        /// <summary>Get a string between the search string</summary>
+        /// <param name="StringValue">The String to process</param>
+        /// <param name="SearchString">The sring search to use</param>
+        /// <returns>String result <see cref="string"/></returns>
+        public static string GetBetween(this string StringValue, string SearchString)
+        {
+            return StringValue.GetAfter(SearchString).GetBefore(SearchString);
+        } 
+        /// <summary>Return the string portion on the right of the string</summary>
         /// <param name="StringValue">The string passed in</param>
         /// <param name="MaxLength">The number of characters from the right side of the string to pass back</param>
         /// <returns>String result <see cref="string"/></returns>
