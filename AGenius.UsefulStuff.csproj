@@ -101,10 +101,8 @@
     <Compile Include="Helpers\SQLInfoEnumerator.cs" />
     <Compile Include="Utils.cs" />
     <Compile Include="Helpers\AssemblyHelper.cs" />
-    <Compile Include="Helpers\PropertyChangedEventArgs.cs" />
     <Compile Include="Helpers\FolderNameEditor.cs" />
     <Compile Include="Helpers\FormWindowSettings.cs" />
-    <Compile Include="Helpers\RecordSavedEventArgs.cs" />
     <Compile Include="Helpers\Temporaryfiles.cs" />
     <Compile Include="Extensions\ArrayExtensions.cs" />
     <Compile Include="Extensions\EventHandlerExtensions.cs" />
