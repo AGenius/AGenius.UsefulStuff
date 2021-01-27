@@ -14,23 +14,12 @@ using System.Data.Common;
 
 namespace AGenius.UsefulStuff.Helpers
 {
+
+
     /// <summary>
     /// This class is used to help encapsulate the use of Dapper objects to access SQL Server
     /// </summary>
-    [Serializable]
-    public class DataAccessHelperException : ApplicationException
-    {
-        public DataAccessHelperException(string Message, Exception innerException) : base(Message, innerException) { }
-        public DataAccessHelperException(string Message) : base(Message) { }
-        public DataAccessHelperException() { }
-
-        #region Serializeable Code
-        public DataAccessHelperException(SerializationInfo info, StreamingContext context) : base(info, context) { }
-        #endregion Serializeable Code
-    }
-
-
-    public class DataAccessFunctions : IDisposable
+    public class SQLDatabaseHelper : IDisposable
     {
         /// <summary>Event Handler for the ErrorEventArgs event</summary>
 
@@ -64,7 +53,7 @@ namespace AGenius.UsefulStuff.Helpers
             }
             catch (DbException ex)
             {
-                throw new DataAccessHelperException(ex.Message);
+                throw new DatabaseAccessHelperException(ex.Message);
             }
 
         }
@@ -91,7 +80,7 @@ namespace AGenius.UsefulStuff.Helpers
             }
             catch (DbException ex)
             {
-                throw new DataAccessHelperException(ex.Message);
+                throw new DatabaseAccessHelperException(ex.Message);
             }
         }
         /// <summary>Return a single record for the specified ID </summary>
@@ -117,7 +106,7 @@ namespace AGenius.UsefulStuff.Helpers
             }
             catch (DbException ex)
             {
-                throw new DataAccessHelperException(ex.Message);
+                throw new DatabaseAccessHelperException(ex.Message);
             }
         }
         /// <summary>Return an object that matches the selection criteria </summary>
@@ -153,7 +142,7 @@ namespace AGenius.UsefulStuff.Helpers
             }
             catch (DbException ex)
             {
-                throw new DataAccessHelperException(ex.Message);
+                throw new DatabaseAccessHelperException(ex.Message);
             }
         }
         public TENTITY ReadRecord<TENTITY>(string KeyFieldName, int FieldValue) where TENTITY : class
@@ -184,7 +173,7 @@ namespace AGenius.UsefulStuff.Helpers
             }
             catch (DbException ex)
             {
-                throw new DataAccessHelperException(ex.Message);
+                throw new DatabaseAccessHelperException(ex.Message);
             }
         }
         /// <summary>Return a single objects that match the selection criteria </summary>
@@ -217,7 +206,7 @@ namespace AGenius.UsefulStuff.Helpers
             }
             catch (DbException ex)
             {
-                throw new DataAccessHelperException(ex.Message);
+                throw new DatabaseAccessHelperException(ex.Message);
             }
         }
         /// <summary>Return a list of objects from a stored procedure with parameters</summary>
@@ -247,7 +236,7 @@ namespace AGenius.UsefulStuff.Helpers
             }
             catch (DbException ex)
             {
-                throw new DataAccessHelperException(ex.Message);
+                throw new DatabaseAccessHelperException(ex.Message);
             }
         }
         public IList<TENTITY> ReadRecordsSQL<TENTITY>(string SQLQuery = "") where TENTITY : class
@@ -269,7 +258,7 @@ namespace AGenius.UsefulStuff.Helpers
             }
             catch (DbException ex)
             {
-                throw new DataAccessHelperException(ex.Message);
+                throw new DatabaseAccessHelperException(ex.Message);
             }
         }
 
@@ -303,7 +292,7 @@ namespace AGenius.UsefulStuff.Helpers
             }
             catch (DbException ex)
             {
-                throw new DataAccessHelperException(ex.Message);
+                throw new DatabaseAccessHelperException(ex.Message);
             }
         }
 
@@ -329,7 +318,7 @@ namespace AGenius.UsefulStuff.Helpers
             }
             catch (DbException ex)
             {
-                throw new DataAccessHelperException(ex.Message);
+                throw new DatabaseAccessHelperException(ex.Message);
             }
         }
         /// <summary>Execute an SQL Statement </summary>
@@ -351,7 +340,7 @@ namespace AGenius.UsefulStuff.Helpers
             }
             catch (DbException ex)
             {
-                throw new DataAccessHelperException(ex.Message);
+                throw new DatabaseAccessHelperException(ex.Message);
             }
         }
         /// <summary>Update an Entity record</summary>
@@ -375,7 +364,7 @@ namespace AGenius.UsefulStuff.Helpers
             }
             catch (DbException ex)
             {
-                throw new DataAccessHelperException(ex.Message);
+                throw new DatabaseAccessHelperException(ex.Message);
             }
         }
         /// <summary>Delete an Entity record</summary>
@@ -398,7 +387,7 @@ namespace AGenius.UsefulStuff.Helpers
             }
             catch (DbException ex)
             {
-                throw new DataAccessHelperException(ex.Message);
+                throw new DatabaseAccessHelperException(ex.Message);
             }
         }
 

@@ -96,8 +96,9 @@
     <Compile Include="Helpers\AMS\Registry.cs" />
     <Compile Include="Helpers\AMS\Xml.cs" />
     <Compile Include="Helpers\AMS\XmlHelper.cs" />
+    <Compile Include="Helpers\DataAccessException.cs" />
     <Compile Include="Helpers\SQLiteDatabaseHelper.cs" />
-    <Compile Include="Helpers\DapperDatabaseHelper.cs" />
+    <Compile Include="Helpers\SQLDatabaseHelper.cs" />
     <Compile Include="Helpers\SQLInfoEnumerator.cs" />
     <Compile Include="Utils.cs" />
     <Compile Include="Helpers\AssemblyHelper.cs" />
