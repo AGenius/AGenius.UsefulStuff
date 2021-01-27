@@ -1,21 +1,19 @@
-﻿using System;
+﻿
+
+
+using Dapper;
+using Dapper.Contrib.Extensions;
+using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Data.SqlClient;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Dapper.Contrib.Extensions;
-using Dapper;
-using System.ComponentModel.DataAnnotations;
 using System.Reflection;
 using System.Runtime.Serialization;
-using System.Data.Common;
 
 namespace AGenius.UsefulStuff.Helpers
 {
-
-
     /// <summary>
     /// This class is used to help encapsulate the use of Dapper objects to access SQL Server
     /// </summary>
@@ -23,11 +21,22 @@ namespace AGenius.UsefulStuff.Helpers
     {
         /// <summary>Event Handler for the ErrorEventArgs event</summary>
 
-        public string DBConnectionString { get; set; }
+        public string DBConnectionString
+        {
+            get; set;
+        }
         public Boolean? LastSaveState
         {
             get;
             private set;
+        }
+        public SQLDatabaseHelper()
+        {
+            DBConnectionString = "";
+        }
+        public SQLDatabaseHelper(string ConnectionString)
+        {
+            DBConnectionString = ConnectionString;
         }
         public void Dispose()
         {
@@ -42,7 +51,8 @@ namespace AGenius.UsefulStuff.Helpers
         {
             if (string.IsNullOrEmpty(DBConnectionString))
             {
-                throw new ArgumentException("Connection String not set");
+                _lastError = "Connection String not set";
+                throw new ArgumentException(_lastError);
             }
             try
             {
@@ -53,6 +63,7 @@ namespace AGenius.UsefulStuff.Helpers
             }
             catch (DbException ex)
             {
+                _lastError = ex.Message;
                 throw new DatabaseAccessHelperException(ex.Message);
             }
 
@@ -67,11 +78,13 @@ namespace AGenius.UsefulStuff.Helpers
             {
                 if (string.IsNullOrEmpty(DBConnectionString))
                 {
-                    throw new ArgumentException("Connection String not set");
+                    _lastError = "Connection String not set";
+                    throw new ArgumentException(_lastError);
                 }
                 if (!ID.HasValue || ID.Value <= 0)
                 {
-                    throw new ArgumentException("Invalid ID specified");
+                    _lastError = "Invalid ID specified";
+                    throw new ArgumentException(_lastError);
                 }
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
@@ -80,6 +93,7 @@ namespace AGenius.UsefulStuff.Helpers
             }
             catch (DbException ex)
             {
+                _lastError = ex.Message;
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
@@ -93,11 +107,13 @@ namespace AGenius.UsefulStuff.Helpers
             {
                 if (string.IsNullOrEmpty(DBConnectionString))
                 {
-                    throw new ArgumentException("Connection String not set");
+                    _lastError = "Connection String not set";
+                    throw new ArgumentException(_lastError);
                 }
                 if (string.IsNullOrEmpty(ID))
                 {
-                    throw new ArgumentException("Invalid ID specified");
+                    _lastError = "Invalid ID specified";
+                    throw new ArgumentException(_lastError);
                 }
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
@@ -106,6 +122,36 @@ namespace AGenius.UsefulStuff.Helpers
             }
             catch (DbException ex)
             {
+                _lastError = ex.Message;
+                throw new DatabaseAccessHelperException(ex.Message);
+            }
+        }
+        /// <summary>Return a single record for the specified ID </summary>
+        /// <typeparam name="TENTITY">Entity Object type</typeparam>
+        /// <param name="ID">a Guid representing the ID of the record</param>
+        /// <returns></returns>
+        public TENTITY ReadRecord<TENTITY>(Guid ID) where TENTITY : class
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(DBConnectionString))
+                {
+                    _lastError = "Connection String not set";
+                    throw new ArgumentException(_lastError);
+                }
+                if (string.IsNullOrEmpty(ID.ToString()))
+                {
+                    _lastError = "Invalid ID specified";
+                    throw new ArgumentException(_lastError);
+                }
+                using (IDbConnection db = new SqlConnection(DBConnectionString))
+                {
+                    return db.Get<TENTITY>(ID.ToString());
+                }
+            }
+            catch (DbException ex)
+            {
+                _lastError = ex.Message;
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
@@ -114,24 +160,27 @@ namespace AGenius.UsefulStuff.Helpers
         /// <param name="FieldValue">The Value of the Key field to find</param>
         /// <param name="KeyFieldName">The Key FieldName</param>
         /// <returns>entity records</returns>
-        public TENTITY ReadRecord<TENTITY>(string KeyFieldName, string FieldValue) where TENTITY : class
+        public TENTITY ReadRecord<TENTITY>(string keyFieldName, string fieldValue, string operatorType = "=") where TENTITY : class
         {
             try
             {
                 string TableName = GetTableName<TENTITY>();
                 if (string.IsNullOrEmpty(TableName))
                 {
-                    throw new ArgumentException("Invalid Table Name");
+                    _lastError = "Invalid Table Name";
+                    throw new ArgumentException(_lastError);
                 }
-                if (string.IsNullOrEmpty(KeyFieldName) || FieldValue == null)
+                if (string.IsNullOrEmpty(keyFieldName) || fieldValue == null)
                 {
-                    throw new ArgumentException("Missing FieldName or Value for search");
+                    _lastError = "Missing FieldName or Value for search";
+                    throw new ArgumentException(_lastError);
                 }
                 if (string.IsNullOrEmpty(DBConnectionString))
                 {
-                    throw new ArgumentException("Connection String not set");
+                    _lastError = "Connection String not set";
+                    throw new ArgumentException(_lastError);
                 }
-                string sWhere = $"WHERE {KeyFieldName} = '{FieldValue}' ";
+                string sWhere = $"WHERE {keyFieldName} {operatorType} '{fieldValue}' ";
 
                 string sSQL = $"SELECT * FROM {TableName} {sWhere}";
                 // var Results = null;
@@ -142,6 +191,7 @@ namespace AGenius.UsefulStuff.Helpers
             }
             catch (DbException ex)
             {
+                _lastError = ex.Message;
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
@@ -152,15 +202,18 @@ namespace AGenius.UsefulStuff.Helpers
                 string TableName = GetTableName<TENTITY>();
                 if (string.IsNullOrEmpty(TableName))
                 {
-                    throw new ArgumentException("Invalid Table Name");
+                    _lastError = "Invalid Table Name";
+                    throw new ArgumentException(_lastError);
                 }
                 if (string.IsNullOrEmpty(KeyFieldName))
                 {
-                    throw new ArgumentException("Missing FieldName or Value for search");
+                    _lastError = "Missing FieldName or Value for search";
+                    throw new ArgumentException(_lastError);
                 }
                 if (string.IsNullOrEmpty(DBConnectionString))
                 {
-                    throw new ArgumentException("Connection String not set");
+                    _lastError = "Connection String not set";
+                    throw new ArgumentException(_lastError);
                 }
                 string sWhere = $"WHERE {KeyFieldName} = {FieldValue} ";
 
@@ -173,31 +226,33 @@ namespace AGenius.UsefulStuff.Helpers
             }
             catch (DbException ex)
             {
+                _lastError = ex.Message;
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
-        /// <summary>Return a single objects that match the selection criteria </summary>
+        /// <summary>Return a single objects that matches the selection criteria </summary>
         /// <typeparam name="TENTITY">Entity Object type</typeparam>
         /// <param name="Where">criteria</param>
         /// <returns>entity records</returns>
-        public TENTITY ReadRecordWithWhere<TENTITY>(string Where = "")
-            where TENTITY : class
+        public TENTITY ReadRecordWithWhere<TENTITY>(string Where = "") where TENTITY : class
         {
             try
             {
                 string TableName = GetTableName<TENTITY>();
                 if (string.IsNullOrEmpty(TableName))
                 {
-                    throw new ArgumentException("Invalid Table Name");
+                    _lastError = "Invalid Table Name";
+                    throw new ArgumentException(_lastError);
                 }
 
                 if (string.IsNullOrEmpty(DBConnectionString))
                 {
-                    throw new ArgumentException("Connection String not set");
+                    _lastError = "Connection String not set";
+                    throw new ArgumentException(_lastError);
                 }
                 string sWhere = string.IsNullOrEmpty(Where) ? "" : $"WHERE {Where}";
 
-                string sSQL = $"SELECT * FROM {TableName} {sWhere}";
+                string sSQL = $"SELECT TOP 1 * FROM {TableName} {sWhere}";
                 // var Results = null;
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
@@ -206,6 +261,7 @@ namespace AGenius.UsefulStuff.Helpers
             }
             catch (DbException ex)
             {
+                _lastError = ex.Message;
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
@@ -218,14 +274,15 @@ namespace AGenius.UsefulStuff.Helpers
         ///param.Add( "@@Name" , obj.Name );
         ///        param.Add( "@City" , obj.City );
         ///        param.Add( "@Address" , obj.Address );</remarks>
-        public IList<TENTITY> ReadRecords<TENTITY>(string SprocName, DynamicParameters Params)
+        public IList<TENTITY> ReadRecordsSproc<TENTITY>(string SprocName, DynamicParameters Params)
             where TENTITY : class
         {
             try
             {
                 if (string.IsNullOrEmpty(DBConnectionString))
                 {
-                    throw new ArgumentException("Connection String not set");
+                    _lastError = "Connection String not set";
+                    throw new ArgumentException(_lastError);
                 }
 
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
@@ -236,6 +293,7 @@ namespace AGenius.UsefulStuff.Helpers
             }
             catch (DbException ex)
             {
+                _lastError = ex.Message;
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
@@ -243,47 +301,12 @@ namespace AGenius.UsefulStuff.Helpers
         {
             try
             {
-
-
                 if (string.IsNullOrEmpty(DBConnectionString))
                 {
-                    throw new ArgumentException("Connection String not set");
+                    _lastError = "Connection String not set";
+                    throw new ArgumentException(_lastError);
                 }
-
-                using (IDbConnection db = new SqlConnection(DBConnectionString))
-                {
-                    return db.Query<TENTITY>(SQLQuery).ToList();
-                }
-
-            }
-            catch (DbException ex)
-            {
-                throw new DatabaseAccessHelperException(ex.Message);
-            }
-        }
-
-        /// <summary>Return a list of objects that match the selection criteria </summary>
-        /// <typeparam name="TENTITY">Entity Object type</typeparam>
-        /// <param name="Where">criteria</param>
-        /// <returns>entity records</returns>
-        public IList<TENTITY> ReadRecords<TENTITY>(string Where = "") where TENTITY : class
-        {
-            try
-            {
-                string TableName = GetTableName<TENTITY>();
-                if (string.IsNullOrEmpty(TableName))
-                {
-                    throw new ArgumentException("Invalid Table Name");
-                }
-
-                if (string.IsNullOrEmpty(DBConnectionString))
-                {
-                    throw new ArgumentException("Connection String not set");
-                }
-                string sWhere = string.IsNullOrEmpty(Where) ? "" : $"WHERE {Where}";
-
-                string sSQL = $"SELECT * FROM {TableName} {sWhere}";
-                // var Results = null;
+                string sSQL = SQLQuery.Replace("[tablename]", GetTableName<TENTITY>());
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
                     return db.Query<TENTITY>(sSQL).ToList();
@@ -292,6 +315,189 @@ namespace AGenius.UsefulStuff.Helpers
             }
             catch (DbException ex)
             {
+                _lastError = ex.Message;
+                throw new DatabaseAccessHelperException(ex.Message);
+            }
+        }
+
+        /// <summary>Return a list of objects that match the selection criteria </summary>
+        /// <typeparam name="TENTITY">Entity Object type</typeparam>
+        /// <param name="Where">criteria</param>
+        /// <returns>entity records</returns>
+        public IList<TENTITY> ReadRecords<TENTITY>(string Where = "")
+            where TENTITY : class
+        {
+            try
+            {
+                string TableName = GetTableName<TENTITY>();
+                if (string.IsNullOrEmpty(TableName))
+                {
+                    _lastError = "Invalid Table Name";
+                    throw new ArgumentException(_lastError);
+                }
+                if (string.IsNullOrEmpty(DBConnectionString))
+                {
+                    _lastError = "Connection String not set";
+                    throw new ArgumentException(_lastError);
+                }
+                string sWhere = string.IsNullOrEmpty(Where) ? "" : $"WHERE {Where}";
+                string sSQL = $"SELECT * FROM {TableName} {sWhere}";
+                // var Results = null;
+                using (IDbConnection db = new SqlConnection(DBConnectionString))
+                {
+                    return db.Query<TENTITY>(sSQL).ToList();
+                }
+            }
+            catch (DbException ex)
+            {
+                _lastError = ex.Message;
+                throw new DatabaseAccessHelperException(ex.Message);
+            }
+        }
+        /// <summary>Return a list of objects that match the selection criteria </summary>
+        /// <typeparam name="TENTITY">Entity Object type</typeparam>
+        /// <param name="Where">criteria</param>
+        /// <param name="TopCount">Only return n records</param>
+        /// <returns>entity records</returns>
+        public IList<TENTITY> ReadRecords<TENTITY>(string Where, int TopCount)
+            where TENTITY : class
+        {
+            try
+            {
+                string TableName = GetTableName<TENTITY>();
+                if (string.IsNullOrEmpty(TableName))
+                {
+                    _lastError = "Invalid Table Name";
+                    throw new ArgumentException(_lastError);
+                }
+                if (string.IsNullOrEmpty(DBConnectionString))
+                {
+                    _lastError = "Connection String not set";
+                    throw new ArgumentException(_lastError);
+                }
+                string sWhere = string.IsNullOrEmpty(Where) ? "" : $"WHERE {Where}";
+                string sSQL = $"SELECT TOP {TopCount} * FROM {TableName} {sWhere}";
+                // var Results = null;
+                using (IDbConnection db = new SqlConnection(DBConnectionString))
+                {
+                    return db.Query<TENTITY>(sSQL).ToList();
+                }
+            }
+            catch (DbException ex)
+            {
+                _lastError = ex.Message;
+                throw new DatabaseAccessHelperException(ex.Message);
+            }
+        }
+        public IList<TENTITY> ReadRecords<TENTITY>(string Where = "", string OverrideTableName = "")
+            where TENTITY : class
+        {
+            try
+            {
+                string TableName = GetTableName<TENTITY>();
+                if (!string.IsNullOrEmpty(OverrideTableName))
+                {
+                    TableName = OverrideTableName;
+                }
+                if (string.IsNullOrEmpty(TableName))
+                {
+                    _lastError = "Invalid Table Name";
+                    throw new ArgumentException(_lastError);
+                }
+                if (string.IsNullOrEmpty(DBConnectionString))
+                {
+                    _lastError = "Connection String not set";
+                    throw new ArgumentException(_lastError);
+                }
+                string sWhere = string.IsNullOrEmpty(Where) ? "" : $"WHERE {Where}";
+                string sSQL = $"SELECT * FROM {TableName} {sWhere}";
+                // var Results = null;
+                using (IDbConnection db = new SqlConnection(DBConnectionString))
+                {
+                    return db.Query<TENTITY>(sSQL).ToList();
+                }
+            }
+            catch (DbException ex)
+            {
+                _lastError = ex.Message;
+                throw new DatabaseAccessHelperException(ex.Message);
+            }
+        }
+        /// <summary> Multi Queries </summary>
+        /// <typeparam name="TENTITY"></typeparam>
+        /// <param name="splitOnField"></typeparam>
+        /// <param name="detailPropertyName"></typeparam>
+        /// <param name="SQLQuery"></param>
+        /// <returns></returns>
+        public IList<TENTITY> ReadRecords<TENTITY, DETAIL>(string SQLQuery, string splitOnField, string detailPropertyName)
+            where TENTITY : class
+            where DETAIL : class
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(DBConnectionString))
+                {
+                    _lastError = "Connection String not set";
+                    throw new ArgumentException(_lastError);
+                }
+                string sSQL = SQLQuery.Replace("[tablename]", GetTableName<TENTITY>());
+                using (IDbConnection db = new SqlConnection(DBConnectionString))
+                {
+                    var results = db.Query<TENTITY, DETAIL, TENTITY>(sSQL,
+                                                                   (parent, detail) =>
+                                                                   {
+                                                                       parent.GetType().GetProperty(detailPropertyName).SetValue(parent, detail, null);
+                                                                       return parent;
+                                                                   },
+                                                                   splitOn: splitOnField, commandTimeout: 360)
+                        .Distinct()
+                        .ToList();
+                    return results;
+                }
+            }
+            catch (DbException ex)
+            {
+                _lastError = ex.Message;
+                throw new DatabaseAccessHelperException(ex.Message);
+            }
+        }
+
+        public IList<TENTITY> ReadRecords<TENTITY, DETAIL1, DETAIL2>(string SQLQuery,
+                                                                    string splitOnField,
+                                                                    string detailPropertyName1,
+                                                                    string detailPropertyName2)
+         where TENTITY : class
+         where DETAIL1 : class
+         where DETAIL2 : class
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(DBConnectionString))
+                {
+                    _lastError = "Connection String not set";
+                    throw new ArgumentException(_lastError);
+                }
+                string sSQL = SQLQuery.Replace("[tablename]", GetTableName<TENTITY>());
+                using (IDbConnection db = new SqlConnection(DBConnectionString))
+                {
+                    var results = db.Query<TENTITY, DETAIL1, DETAIL2, TENTITY>(sSQL,
+                                                                   (parent, detail1, detail2) =>
+                                                                   {
+                                                                       // Correct the ID of the parent
+                                                                       parent.GetType().GetProperty("ID").SetValue(parent, detail1.GetType().GetProperty("HeaderID").GetValue(detail1), null);
+                                                                       parent.GetType().GetProperty(detailPropertyName1).SetValue(parent, detail1, null);
+                                                                       parent.GetType().GetProperty(detailPropertyName2).SetValue(parent, detail2, null);
+                                                                       return parent;
+                                                                   },
+                                                                   splitOn: splitOnField)
+                        .Distinct()
+                        .ToList();
+                    return results;
+                }
+            }
+            catch (DbException ex)
+            {
+                _lastError = ex.Message;
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
@@ -307,7 +513,8 @@ namespace AGenius.UsefulStuff.Helpers
             {
                 if (string.IsNullOrEmpty(DBConnectionString))
                 {
-                    throw new ArgumentException("Connection String not set");
+                    _lastError = "Connection String not set";
+                    throw new ArgumentException(_lastError);
                 }
 
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
@@ -318,6 +525,47 @@ namespace AGenius.UsefulStuff.Helpers
             }
             catch (DbException ex)
             {
+                _lastError = ex.Message;
+                throw new DatabaseAccessHelperException(ex.Message);
+            }
+        }
+        public bool InsertRecords<TENTITY>(List<TENTITY> Records) where TENTITY : class
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(DBConnectionString))
+                {
+                    _lastError = "Connection String not set";
+                    throw new ArgumentException(_lastError);
+                }
+
+                using (IDbConnection db = new SqlConnection(DBConnectionString))
+                {
+                    db.Insert(Records);
+                    return true;
+
+
+                    //db.Open();
+                    //var trans = db.BeginTransaction();
+                    //try
+                    //{
+                    //    long rows = db.Insert(Records, trans);
+                    //    trans.Commit();
+
+                    //    return rows;
+                    //}
+                    //catch (Exception ex)
+                    //{
+                    //    trans.Rollback();
+                    //    return -1;
+                    //}
+
+                }
+
+            }
+            catch (DbException ex)
+            {
+                _lastError = ex.Message;
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
@@ -329,17 +577,117 @@ namespace AGenius.UsefulStuff.Helpers
             {
                 if (string.IsNullOrEmpty(DBConnectionString))
                 {
-                    throw new ArgumentException("Connection String not set");
+                    _lastError = "Connection String not set";
+                    throw new ArgumentException(_lastError);
                 }
 
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
-                    db.Execute(sqlCmd);
+                    db.Execute(sqlCmd, null, null, 0); // Excute with no timeout
                 }
 
             }
             catch (DbException ex)
             {
+                _lastError = ex.Message;
+                throw new DatabaseAccessHelperException(ex.Message);
+            }
+        }
+        /// <summary>Execute an SQL Statement </summary>
+        /// <param name="sqlCmd">String holding the SQL Command</param>
+        public object ExecuteScalar(string sqlCmd)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(DBConnectionString))
+                {
+                    _lastError = "Connection String not set";
+                    throw new ArgumentException(_lastError);
+                }
+
+                using (IDbConnection db = new SqlConnection(DBConnectionString))
+                {
+                    return db.ExecuteScalar(sqlCmd);
+                }
+
+            }
+            catch (DbException ex)
+            {
+                _lastError = ex.Message;
+                throw new DatabaseAccessHelperException(ex.Message);
+            }
+        }
+        /// <summary>Replicate the MSACCESS DLookup feature.<br />
+        /// This will perform a simple lookup of a value from a field based on specific <br />
+        /// selection criteria <br />WHERE statement is not required in the Criteria specified</summary>
+        /// <param name="FieldName">Field Name for the return value</param>
+        /// <param name="tableName">Table or View name to use</param>
+        /// <param name="Criteria">the Where criteria - WHERE statement not required</param>
+        public object DLookup(string FieldName, string tableName, string Criteria)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(DBConnectionString))
+                {
+                    _lastError = "Connection String not set";
+                    throw new ArgumentException(_lastError);
+                }
+
+                if (string.IsNullOrEmpty(tableName))
+                {
+                    _lastError = "Invalid Table Name";
+                    throw new ArgumentException(_lastError);
+                }
+                if (string.IsNullOrEmpty(FieldName))
+                {
+                    _lastError = "Missing FieldName or Value for return";
+                    throw new ArgumentException(_lastError);
+                }
+
+                string sWhere = $"WHERE {Criteria.ToLower().Replace("where ", "")} ";
+                string sSQL = $"SELECT {FieldName} FROM {tableName} {sWhere}";
+                using (IDbConnection db = new SqlConnection(DBConnectionString))
+                {
+                    return db.ExecuteScalar(sSQL);
+                }
+            }
+            catch (DbException ex)
+            {
+                _lastError = ex.Message;
+                throw new DatabaseAccessHelperException(ex.Message);
+            }
+        }
+        /// <summary>Replicate the MSACCESS DCount feature.<br />
+        /// This will perform a simple count of a number of rows in the table/view with the provided criteria<br />
+        /// selection criteria <br />WHERE statement is not required in the Criteria specified</summary>        
+        /// <param name="tableName">Table or View name to use</param>
+        /// <param name="Criteria">the Where criteria - WHERE statement not required</param>
+        public int DCount(string tableName, string Criteria)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(DBConnectionString))
+                {
+                    _lastError = "Connection String not set";
+                    throw new ArgumentException(_lastError);
+                }
+
+                if (string.IsNullOrEmpty(tableName))
+                {
+                    _lastError = "Invalid Table Name";
+                    throw new ArgumentException(_lastError);
+                }
+
+                string sWhere = $"WHERE {Criteria.ToLower().Replace("where ", "")} ";
+                string sSQL = $"SELECT count(*) FROM {tableName} {sWhere}";
+                using (IDbConnection db = new SqlConnection(DBConnectionString))
+                {
+                    return db.Query<int>(sSQL).FirstOrDefault();
+                }
+            }
+            catch (DbException ex)
+            {
+                _lastError = ex.Message;
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
@@ -353,17 +701,18 @@ namespace AGenius.UsefulStuff.Helpers
             {
                 if (string.IsNullOrEmpty(DBConnectionString))
                 {
-                    throw new ArgumentException("Connection String not set");
+                    _lastError = "Connection String not set";
+                    throw new ArgumentException(_lastError);
                 }
 
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
-                    bool result = db.Update(Record);
-                    return result;
+                    return db.Update(Record);
                 }
             }
             catch (DbException ex)
             {
+                _lastError = ex.Message;
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
@@ -377,7 +726,8 @@ namespace AGenius.UsefulStuff.Helpers
             {
                 if (string.IsNullOrEmpty(DBConnectionString))
                 {
-                    throw new ArgumentException("Connection String not set");
+                    _lastError = "Connection String not set";
+                    throw new ArgumentException(_lastError);
                 }
 
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
@@ -387,6 +737,7 @@ namespace AGenius.UsefulStuff.Helpers
             }
             catch (DbException ex)
             {
+                _lastError = ex.Message;
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
@@ -394,11 +745,16 @@ namespace AGenius.UsefulStuff.Helpers
         /// <summary> Return the TableName of the POCO </summary>
         /// <typeparam name="TENTITY">the PCO Entity</typeparam>
         /// <returns>string</returns>
-        private string GetTableName<TENTITY>()
+        public string GetTableName<TENTITY>()
         {
             var attr = typeof(TENTITY).GetCustomAttribute<Dapper.Contrib.Extensions.TableAttribute>(false);
             return attr != null ? attr.Name : "";
         }
+        public string LastError()
+        {
+            return _lastError;
+        }
+
 
     }
 }
