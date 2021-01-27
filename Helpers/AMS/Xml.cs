@@ -309,19 +309,29 @@ namespace AGenius.UsefulStuff.AMS.Profile
 		{
 			VerifyAndAdjustSection(ref section);
 			VerifyAndAdjustEntry(ref entry);
-			
 			try
-			{ 	
+			{
 				XmlDocument doc = GetXmlDocument();
+				if (doc == null)
+				{
+					return null;
+				}
 				XmlElement root = doc.DocumentElement;
-				
+				if (root == null)
+				{
+					return null;
+				}
 				XmlNode entryNode = root.SelectSingleNode(GetSectionsPath(section) + "/" + GetEntryPath(entry));
+				if (entryNode == null)
+				{
+					return null;
+				}
 				return entryNode.InnerText;
 			}
 			catch
-			{	
+			{
 				return null;
-			}			
+			}
 		}
 
 		/// <summary>
