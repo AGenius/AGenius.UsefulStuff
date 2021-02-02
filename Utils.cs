@@ -22,7 +22,7 @@ namespace AGenius.UsefulStuff
         #region Scramble Methods
         public static string ApplicationPath = Directory.GetParent(System.Reflection.Assembly.GetEntryAssembly().Location).FullName;
 
- 
+
         /// <summary>
         /// Handle a list of enums
         /// </summary>
@@ -221,7 +221,7 @@ namespace AGenius.UsefulStuff
             //Random the position values of the pos array for the string Pass
             int i = 0;
             while (i < Length - 1)
-            {                
+            {
                 bool flag = false;
                 int temp = rd.Next(0, Length);
                 for (int j = 0; j < Length; j++)
@@ -373,6 +373,39 @@ namespace AGenius.UsefulStuff
         public static TENTITY DeSerializeObject<TENTITY>(string serializedString)
         {
             return JsonConvert.DeserializeObject<TENTITY>(serializedString);
+        }
+        /// <summary>
+        /// Decode and convert a JSON Web Token string to a JSON object string
+        /// </summary>
+        /// <param name="JWTTokenString">The JWT token to be decoded</param>
+        /// <returns>string containing the JSON object</returns>
+        public static string JWTtoJSON(string JWTTokenString)
+        {
+            var jwtHandler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
+            string jsonResult = string.Empty;
+
+            //Check if readable token (string is in a JWT format)            
+            if (jwtHandler.CanReadToken(JWTTokenString))
+            {
+                var token = jwtHandler.ReadJwtToken(JWTTokenString);
+
+                //Extract the payload of the JWT                
+                string payload = "{";
+                foreach (var item in token.Payload)
+                {
+                    if (item.Value.GetType().Name == "JArray")
+                    {
+                        payload += '"' + item.Key + "\":" + item.Value + ",";
+                    }
+                    else
+                    {
+                        payload += '"' + item.Key + "\":\"" + item.Value + "\",";
+                    }
+                }
+                payload += "}";
+                return Newtonsoft.Json.Linq.JToken.Parse(payload).ToString(Newtonsoft.Json.Formatting.Indented);
+            }
+            return null;
         }
         #endregion
 

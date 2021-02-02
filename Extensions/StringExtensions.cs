@@ -187,6 +187,15 @@ namespace AGenius.UsefulStuff
                 return string.Empty;
             }
         }
+        /// <summary>
+        /// Decode and convert a JSON Web Token string to a JSON object string
+        /// </summary>
+        /// <param name="JWTTokenString">The string to decode</param>
+        /// <returns>JSON string</returns>
+        public static string JWTtoJSON(this string JWTTokenString)
+        {
+            return Utils.JWTtoJSON(JWTTokenString);
+        }
 
         /// <summary>Simple string encryption using a simple hex swap method</summary>
         /// <param name="StringValue">String to Encrypt</param>

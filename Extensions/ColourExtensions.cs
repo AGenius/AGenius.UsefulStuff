@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 
 namespace AGenius.UsefulStuff
 {
+    /// <summary>
+    /// Colour Extensions
+    /// </summary>
     public static class ColourExtensions
     {
         public static Color LightenBy(this Color color, int percent)

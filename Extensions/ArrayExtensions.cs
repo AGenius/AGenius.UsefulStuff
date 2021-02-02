@@ -2,6 +2,9 @@
 
 namespace AGenius.UsefulStuff
 {
+    /// <summary>
+    /// ArrayExtensions
+    /// </summary>
     public static class ArrayExtensions
     {
         /// <summary>

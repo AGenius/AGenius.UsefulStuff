@@ -4,9 +4,17 @@ using System.Linq;
 
 namespace AGenius.UsefulStuff
 {
+    /// <summary>
+    /// DateTimeExtensions
+    /// </summary>
     public static class DateTimeExtensions
     {
         static List<string> monthNames = new List<string> { "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" };
+        /// <summary>
+        /// Return the full Month Name
+        /// </summary>
+        /// <param name="date"></param>
+        /// <returns></returns>
         public static string MonthName(this DateTime date)
         {
             return monthNames[date.Month - 1];
@@ -16,7 +24,7 @@ namespace AGenius.UsefulStuff
         /// </summary>
         /// <param name="date"></param>
         /// <param name="fromCurrent">start from month of date </param>
-        /// <returns>List<string></returns>
+        /// <returns>List of strings</returns>
         public static List<string> MonthNameList(this DateTime date, bool fromCurrent = true)
         {
             int start = 1;
