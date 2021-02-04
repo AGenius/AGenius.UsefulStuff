@@ -44,5 +44,14 @@ namespace AGenius.UsefulStuff
 
             return new string(result.ToArray());
         }
+        /// <summary>
+        /// Return a DateTime derived from a Unix Epoch time (seconds from 01/01/1970
+        /// </summary>
+        /// <param name="unixTime">The long value representing the Unix Time</param>
+        /// <returns>Date Time value <see cref="DateTime"/></returns>
+        public static DateTime DateTimeFromUnixTime(this long unixTime)
+        {
+            return Utils.DateTimeFromUnixTime(unixTime);
+        }
     }
 }
