@@ -414,7 +414,7 @@ namespace AGenius.UsefulStuff.Helpers
                 return true;
             }
 
-            catch (Exception fail)
+            catch (Exception)
             {
                 return false;
             }
@@ -429,7 +429,7 @@ namespace AGenius.UsefulStuff.Helpers
                 return true;
             }
 
-            catch (Exception fail)
+            catch (Exception)
             {
                 return false;
             }
@@ -460,7 +460,7 @@ namespace AGenius.UsefulStuff.Helpers
                 return true;
             }
 
-            catch (Exception fail)
+            catch (Exception)
             {
                 return false;
             }
@@ -485,7 +485,7 @@ namespace AGenius.UsefulStuff.Helpers
                 return HasRows;
             }
 
-            catch (Exception fail)
+            catch (Exception)
             {
                 return false;
             }
@@ -508,7 +508,7 @@ namespace AGenius.UsefulStuff.Helpers
 
             }
 
-            catch (Exception fail)
+            catch (Exception)
             {
                 return false;
             }

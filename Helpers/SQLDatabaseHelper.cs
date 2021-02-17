@@ -154,8 +154,9 @@ namespace AGenius.UsefulStuff.Helpers
         }
         /// <summary>Return an object that matches the selection criteria </summary>
         /// <typeparam name="TENTITY">Entity Object type</typeparam>
-        /// <param name="FieldValue">The Value of the Key field to find</param>
-        /// <param name="KeyFieldName">The Key FieldName</param>
+        /// <param name="fieldValue">The Value of the Key field to find</param>
+        /// <param name="keyFieldName">The Key FieldName</param>
+        /// <param name="operatorType">Comparison Operator - Default is Equals</param>
         /// <returns>entity records</returns>
         public TENTITY ReadRecord<TENTITY>(string keyFieldName, string fieldValue, string operatorType = "=") where TENTITY : class
         {
@@ -422,8 +423,9 @@ namespace AGenius.UsefulStuff.Helpers
         }
         /// <summary> Multi Queries </summary>
         /// <typeparam name="TENTITY"></typeparam>
-        /// <param name="splitOnField"></typeparam>
-        /// <param name="detailPropertyName"></typeparam>
+        /// <typeparam name="DETAIL"></typeparam>
+        /// <param name="splitOnField"></param>
+        /// <param name="detailPropertyName"></param>
         /// <param name="SQLQuery"></param>
         /// <returns></returns>
         public IList<TENTITY> ReadRecords<TENTITY, DETAIL>(string SQLQuery, string splitOnField, string detailPropertyName)

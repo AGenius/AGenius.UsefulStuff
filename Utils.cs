@@ -20,6 +20,7 @@ namespace AGenius.UsefulStuff
     public static class Utils
     {
         #region Scramble Methods
+        /// <summary>The path to the assembly</summary>
         public static string ApplicationPath = Directory.GetParent(System.Reflection.Assembly.GetEntryAssembly().Location).FullName;
 
         /// <summary>
@@ -27,7 +28,7 @@ namespace AGenius.UsefulStuff
         /// </summary>
         /// <param name="unixTime">The long value representing the Unix Time</param>
         /// <returns>Date Time value <see cref="DateTime"/></returns>
-        public static DateTime DateTimeFromUnixTime( long unixTime)
+        public static DateTime DateTimeFromUnixTime(long unixTime)
         {
             return new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(unixTime);
         }
@@ -115,7 +116,8 @@ namespace AGenius.UsefulStuff
             return null;
         }
         /// <summary>Write the contents of a string to a file </summary>
-        /// <param name="filepath">File to write to</param>        
+        /// <param name="filepath">File to write to</param>   
+        /// <param name="contents">The string content to write</param>
         public static void WriteTextFile(string filepath, string contents)
         {
             try
@@ -290,6 +292,7 @@ namespace AGenius.UsefulStuff
 
         /// <summary>Unscramble a string that was previously scrambled - User Provided Seed </summary>
         /// <param name="ScrambledString">String to scramble</param>
+        /// <param name="Seed">The numeric seed to use when scrambling</param>
         public static string UnScrambleString(string ScrambledString, int Seed)
         {
             try
@@ -324,8 +327,9 @@ namespace AGenius.UsefulStuff
             return ScrambleString(StringToScramble, 96);
         }
 
-        /// <summary>Scramble a string - will produce dfiffent results each time - User Provided Seed </summary>
+        /// <summary>Scramble a string - will produce dfiffent results each time - User Provided Seed</summary>
         /// <param name="StringToScramble">String to scramble</param>
+        /// <param name="Seed">The numeric seed to use when scrambling</param>
         public static string ScrambleString(string StringToScramble, int Seed)
         {
             try
@@ -367,10 +371,14 @@ namespace AGenius.UsefulStuff
             }
         }
 
-
-
         #endregion
         #region JSON Serialization methods
+        /// <summary>
+        /// Convert an Object to a JSON String
+        /// </summary>
+        /// <typeparam name="TENTITY">Entity type</typeparam>
+        /// <param name="objectRecord">The object record</param>
+        /// <returns>JSON String</returns>
         public static string SerializeObject<TENTITY>(TENTITY objectRecord)
         {
             string serialVersion = JsonConvert.SerializeObject(objectRecord, Formatting.Indented, new JsonSerializerSettings()
@@ -379,6 +387,12 @@ namespace AGenius.UsefulStuff
             });
             return serialVersion;
         }
+        /// <summary>
+        /// Deserialize a JSON string an object 
+        /// </summary>
+        /// <typeparam name="TENTITY">Entity type</typeparam>
+        /// <param name="serializedString">JSON String</param>
+        /// <returns>Object of type TENTITY</returns>
         public static TENTITY DeSerializeObject<TENTITY>(string serializedString)
         {
             return JsonConvert.DeserializeObject<TENTITY>(serializedString);
@@ -498,7 +512,7 @@ namespace AGenius.UsefulStuff
         /// <param name="BCCList">BCC List to send email too, this is a ; seperated list (optional)</param>
         /// <param name="CCList">CC List to send email too, this is a ; seperated list (optional)</param>
         /// <param name="imagespath">Path to where any images are located to embed in the Email body. will convert any src= references to the embeded image</param>
-        /// <param name="AttachmentPaths">A list of attachments to include in the email message (optional) <see cref="List{string}"/></param>
+        /// <param name="AttachmentPaths">A list of attachments to include in the email message (optional) <see cref="List{T}"/></param>
         /// <param name="LogErrors">Log any errors to "SMTPErrors.Log" file in the application folder</param>
         /// <returns>True if successful or False if an error occurs. <seealso cref="EmailFailedReason"/></returns>
         public static bool SendEmailMessage(bool isHTML,

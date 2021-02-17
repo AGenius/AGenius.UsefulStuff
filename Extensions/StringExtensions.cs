@@ -182,7 +182,7 @@ namespace AGenius.UsefulStuff
                 // Step 6. Return the decrypted string in UTF8 format
                 return utf8.GetString(results);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return string.Empty;
             }
@@ -284,7 +284,7 @@ namespace AGenius.UsefulStuff
         }
         /// <summary>Returns the Values from the Fields Parameter passed in as FieldName=FieldValue</summary>
         /// <param name="SearchFieldString">FieldName=FieldValue</param>
-        /// <returns>string result  <see cref="string[]"/></returns>
+        /// <returns>string result <see cref="Array"/> </returns>
         public static string[] ToFieldValues(this string[] SearchFieldString)
         {
             string[] values = new string[SearchFieldString.Length];
