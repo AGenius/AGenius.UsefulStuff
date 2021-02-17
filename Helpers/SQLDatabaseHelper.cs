@@ -425,8 +425,9 @@ namespace AGenius.UsefulStuff.Helpers
         }
         /// <summary> Multi Queries </summary>
         /// <typeparam name="TENTITY"></typeparam>
-        /// <param name="splitOnField"></typeparam>
-        /// <param name="detailPropertyName"></typeparam>
+        /// <typeparam name="DETAIL"></typeparam>
+        /// <param name="splitOnField"></param>
+        /// <param name="detailPropertyName"></param>
         /// <param name="SQLQuery"></param>
         /// <returns></returns>
         public IList<TENTITY> ReadRecords<TENTITY, DETAIL>(string SQLQuery, string splitOnField, string detailPropertyName)
@@ -708,6 +709,76 @@ namespace AGenius.UsefulStuff.Helpers
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
                     return db.Update(Record);
+                }
+            }
+            catch (DbException ex)
+            {
+                _lastError = ex.Message;
+                throw new DatabaseAccessHelperException(ex.Message);
+            }
+        }
+        /// <summary>Update an Entity record</summary>
+        /// <typeparam name="TENTITY">Entity Object type</typeparam>
+        /// <param name="Record">The Record to Update</param>
+        /// <param name="originalEntity">A Copy of the original Record before changes made</param>
+        /// <returns>True/false for success</returns>
+        public bool UpdateRecord<TENTITY>(TENTITY Record, TENTITY originalEntity) where TENTITY : class
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(DBConnectionString))
+                {
+                    _lastError = "Connection String not set";
+                    throw new ArgumentException(_lastError);
+                }
+
+                // If Changes Only true and an original record is passed then perform a compare to get a list of differences then
+                // build an update query
+                if (originalEntity != null)
+                {
+                    // Get a list of all the changes (compare original to current)
+                    // This will also return the field type and an entry for the ID (false passed into the Compare)
+                    List<ObjectExtensions.Variance> diffs = ((TENTITY)originalEntity).DetailedCompare(Record, false);
+                    if (diffs != null && diffs.Count > 0)
+                    {
+                        string TableName = GetTableName<TENTITY>();
+                        string update = $"UPDATE {TableName}\r";
+                        string fieldsList = string.Empty;
+                        string IDField = string.Empty;
+                        foreach (var field in diffs)
+                        {
+                            if (field.isKeyField)
+                            {
+                                IDField = field.PropertyName;
+                            }
+                            else
+                            {
+                                if (!string.IsNullOrEmpty(fieldsList))
+                                {
+                                    fieldsList += ",\r";
+                                }
+                                fieldsList += $"{field.PropertyName} = @{field.PropertyName}";
+                            }
+                        }
+                        if (!string.IsNullOrEmpty(fieldsList))
+                        {
+                            fieldsList += "\r";
+                        }
+                        update += $"SET {fieldsList}\r WHERE {IDField} = @{IDField}";
+                        using (IDbConnection db = new SqlConnection(DBConnectionString))
+                        {
+                            int rows = db.Execute(update, Record);
+                            return rows != 0;
+                        }
+                    }
+                    return false;
+                }
+                else
+                {
+                    using (IDbConnection db = new SqlConnection(DBConnectionString))
+                    {
+                        return db.Update(Record);
+                    }
                 }
             }
             catch (DbException ex)
