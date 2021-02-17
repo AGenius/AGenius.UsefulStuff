@@ -1,7 +1,4 @@
-﻿
-
-
-using Dapper;
+﻿using Dapper;
 using Dapper.Contrib.Extensions;
 using System;
 using System.Collections.Generic;
@@ -425,9 +422,8 @@ namespace AGenius.UsefulStuff.Helpers
         }
         /// <summary> Multi Queries </summary>
         /// <typeparam name="TENTITY"></typeparam>
-        /// <typeparam name="DETAIL"></typeparam>
-        /// <param name="splitOnField"></param>
-        /// <param name="detailPropertyName"></param>
+        /// <param name="splitOnField"></typeparam>
+        /// <param name="detailPropertyName"></typeparam>
         /// <param name="SQLQuery"></param>
         /// <returns></returns>
         public IList<TENTITY> ReadRecords<TENTITY, DETAIL>(string SQLQuery, string splitOnField, string detailPropertyName)
