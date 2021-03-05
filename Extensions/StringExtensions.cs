@@ -106,12 +106,13 @@ namespace AGenius.UsefulStuff
             byte[] tdesKey = hashProvider.ComputeHash(utf8.GetBytes(passphrase));
 
             // Step 2. Create a new TripleDESCryptoServiceProvider object
-            var tdesAlgorithm = new TripleDESCryptoServiceProvider();
-
-            // Step 3. Setup the encoder
-            tdesAlgorithm.Key = tdesKey;
-            tdesAlgorithm.Mode = CipherMode.ECB;
-            tdesAlgorithm.Padding = PaddingMode.PKCS7;
+            var tdesAlgorithm = new TripleDESCryptoServiceProvider
+            {
+                // Step 3. Setup the encoder
+                Key = tdesKey,
+                Mode = CipherMode.ECB,
+                Padding = PaddingMode.PKCS7
+            };
 
             // Step 4. Convert the input string to a byte[]
             var dataToEncrypt = utf8.GetBytes(StringValue);
@@ -152,12 +153,13 @@ namespace AGenius.UsefulStuff
                 var tdesKey = hashProvider.ComputeHash(utf8.GetBytes(passphrase));
 
                 // Step 2. Create a new TripleDESCryptoServiceProvider object
-                var tdesAlgorithm = new TripleDESCryptoServiceProvider();
-
-                // Step 3. Setup the decoder
-                tdesAlgorithm.Key = tdesKey;
-                tdesAlgorithm.Mode = CipherMode.ECB;
-                tdesAlgorithm.Padding = PaddingMode.PKCS7;
+                var tdesAlgorithm = new TripleDESCryptoServiceProvider
+                {
+                    // Step 3. Setup the decoder
+                    Key = tdesKey,
+                    Mode = CipherMode.ECB,
+                    Padding = PaddingMode.PKCS7
+                };
 
                 // Convert.FromBase64String(message) does not work well with spaces in the string for some odd reason
                 // Plus sign will be interpreted as a space when u call the FromBase64String method
@@ -223,16 +225,16 @@ namespace AGenius.UsefulStuff
                     if (iDec > 0)
                     {
                         // now add the char value to the new string
-                        stmp = stmp + Convert.ToChar(iDec);
+                        stmp += Convert.ToChar(iDec);
                         if (stmp.Length > 50)
                         {
                             // This increase performance on large strings
-                            NewString = NewString + stmp;
+                            NewString += stmp;
                             stmp = "";
                         }
                     }
                 }
-                NewString = NewString + stmp;
+                NewString += stmp;
                 return NewString;
             }
 

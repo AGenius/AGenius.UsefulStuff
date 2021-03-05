@@ -17,7 +17,7 @@ namespace AGenius.UsefulStuff.Helpers
     public class SQLiteDatabaseHelper : IDisposable
     {
         /// <summary>Event Handler for the ErrorEventArgs event</summary>
-        string dbFilePath = "default.db3";
+        public string dbFilePath = "default.db3";
         public string DBConnectionString
         {
             get; set;
@@ -43,7 +43,7 @@ namespace AGenius.UsefulStuff.Helpers
         {
             //   throw new NotImplementedException();
         }
-        private string _lastError = string.Empty;
+        private string _lastError;
 
         /// <summary>Read ALL records for an entity </summary>
         /// <typeparam name="TENTITY">Entity Object type</typeparam>
@@ -517,8 +517,7 @@ namespace AGenius.UsefulStuff.Helpers
         {
             SQLiteConnection cnn = new SQLiteConnection(DBConnectionString);
             cnn.Open();
-            SQLiteCommand mycommand = new SQLiteCommand(cnn);
-            mycommand.CommandText = SQLQuery;
+            SQLiteCommand mycommand = new SQLiteCommand(cnn) { CommandText = SQLQuery };
             object value = mycommand.ExecuteScalar();
             cnn.Close();
 

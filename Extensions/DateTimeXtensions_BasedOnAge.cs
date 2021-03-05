@@ -61,8 +61,7 @@ namespace AGenius.UsefulStuff
         /// <param name="date">DateTime to be checked.</param>
         /// <returns>True if the difference is more than 1 hour, false otherwise.</returns>          
         public static bool IsOlderThanAnHour(this DateTime date)
-        {
-            var t = date.Subtract(DateTime.Now);
+        {          
             return date.Subtract(DateTime.Now).Hours < 0;
         }
 

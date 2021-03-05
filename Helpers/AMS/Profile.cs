@@ -191,7 +191,7 @@ namespace AGenius.UsefulStuff.AMS.Profile
 		///   This method needs to be implemented by derived classes.  Check the 
 		///   documentation to see what other exceptions derived versions may raise.
 		///   See <see cref="IProfile.SetValue">IProfile.SetValue</see> for additional remarks. </remarks>
-		/// <seealso cref="GetValue" />
+		/// <seealso cref="GetValue(string, string)"/> />
 		public abstract void SetValue(string section, string entry, object value);
 		
 		/// <summary>
@@ -746,9 +746,8 @@ namespace AGenius.UsefulStuff.AMS.Profile
 		/// <seealso cref="OnChanging" />
 		protected virtual void OnChanged(ProfileChangedArgs e)
 		{
-			if (Changed != null)
-				Changed(this, e);
-		}
+            Changed?.Invoke(this, e);
+        }
 		
 		/// <summary>
 		///   Runs a test to verify this object is working as expected. </summary>

@@ -42,7 +42,7 @@ namespace AGenius.UsefulStuff
                 if (TimeInMinutes > 0)
                 {
                     int hours = (TimeInMinutes - TimeInMinutes % 60) / 60;
-                    return $"{hours}{hour}{sep}{(TimeInMinutes - hours * 60).ToString("00")}{mins}";
+                    return $"{hours}{hour}{sep}{TimeInMinutes - hours * 60:00}{mins}";
                 }
                 else
                 {

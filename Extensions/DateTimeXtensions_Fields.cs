@@ -9,8 +9,8 @@ namespace AGenius.UsefulStuff
         private static readonly string Holidays;
         private static readonly int AdultAgeLimit;
 
-        private static List<DayOfWeek> _workdaysList;
-        private static List<DayOfWeek> _holidaysList;
+        private static readonly List<DayOfWeek> _workdaysList;
+        private static readonly List<DayOfWeek> _holidaysList;
         #endregion
 
         #region Constructors

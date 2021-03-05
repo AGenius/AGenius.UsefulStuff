@@ -9,7 +9,7 @@ namespace AGenius.UsefulStuff
     /// </summary>
     public static class DateTimeExtensions
     {
-        static List<string> monthNames = new List<string> { "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" };
+        static readonly List<string> monthNames = new List<string> { "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" };
         /// <summary>
         /// Return the full Month Name
         /// </summary>
@@ -33,8 +33,10 @@ namespace AGenius.UsefulStuff
                 start = date.Month;
             }
 
-            List<string> names = new List<string>();
-            names.Add(monthNames[start - 1]);
+            List<string> names = new List<string>
+            {
+                monthNames[start - 1]
+            };
 
             do
             {
@@ -84,7 +86,7 @@ namespace AGenius.UsefulStuff
                 .Take(Math.Abs(workingDays))
                 .Last();
         }
-        public static DateTime StartOfWeek(this DateTime dt, DayOfWeek startOfWeek)
+        public static DateTime StartOfWeek(this DateTime dt)
         {
             System.Globalization.CultureInfo ci = System.Threading.Thread.CurrentThread.CurrentCulture;
             DayOfWeek fdow = ci.DateTimeFormat.FirstDayOfWeek;
@@ -100,7 +102,7 @@ namespace AGenius.UsefulStuff
         }
         public static DateTime Round(this DateTime value, TimeSpan unit)
         {
-            return Round(value, unit, default(MidpointRounding));
+            return Round(value, unit, default);
         }
         public static DateTime Round(this DateTime value, TimeSpan unit, MidpointRounding style)
         {
@@ -147,6 +149,10 @@ namespace AGenius.UsefulStuff
 
             return age;
         }
+        /// <summary>Return a has based on the date</summary>
+        /// <param name="dateTime">The DataTime value to hash</param>
+        /// <param name="ResultLength">Return this many characters from the hash result (default : 8)</param>
+        /// <returns></returns>
         public static string DateHash(this DateTime dateTime, int ResultLength = 8)
         {
             long timeSince1970 = (long)dateTime.Subtract(DateTime.MinValue.AddYears(1969)).TotalMilliseconds;
@@ -156,9 +162,7 @@ namespace AGenius.UsefulStuff
 
             string rst = ((d - od) / 1000).EncodeBase36();
 
-            return rst.Substring(0, 8).ToUpper();
-        }
-
-     
+            return rst.Substring(0, ResultLength).ToUpper();
+        }     
     }
 }

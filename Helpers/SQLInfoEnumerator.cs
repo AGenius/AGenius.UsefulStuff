@@ -104,8 +104,7 @@ namespace AGenius.UsefulStuff.Helpers
             IntPtr m_connectionHandle = IntPtr.Zero;
             StringBuilder inConnection = new StringBuilder(InputParam);
             short stringLength = (short)inConnection.Length;
-            StringBuilder outConnection = new StringBuilder(DEFAULT_RESULT_SIZE);
-            short stringLength2Ptr = 0;
+            StringBuilder outConnection = new StringBuilder(DEFAULT_RESULT_SIZE);          
 
             try
             {
@@ -115,7 +114,7 @@ namespace AGenius.UsefulStuff.Helpers
                     {
                         if (SQL_SUCCESS == SQLAllocHandle(SQL_HANDLE_DBC, m_environmentHandle, out m_connectionHandle))
                         {
-                            if (SQL_NEED_DATA == SQLBrowseConnect(m_connectionHandle, inConnection, stringLength, outConnection, DEFAULT_RESULT_SIZE, out stringLength2Ptr))
+                            if (SQL_NEED_DATA == SQLBrowseConnect(m_connectionHandle, inConnection, stringLength, outConnection, DEFAULT_RESULT_SIZE, out short stringLength2Ptr))
                             {
                                 if (SQL_NEED_DATA != SQLBrowseConnect(m_connectionHandle, inConnection, stringLength, outConnection, DEFAULT_RESULT_SIZE, out stringLength2Ptr))
                                 {

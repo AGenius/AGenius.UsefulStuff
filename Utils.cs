@@ -163,11 +163,11 @@ namespace AGenius.UsefulStuff
                 {
                     LogPath = ApplicationPath;
                 }
-                string sPath = Path.Combine(LogPath, SubFolder != null ? SubFolder : "", $"{LogFileName}.log");
+                string sPath = Path.Combine(LogPath, SubFolder ?? "", $"{LogFileName}.log");
 
                 if (System.IO.File.Exists(sPath).Equals(false))
                 {
-                    Directory.CreateDirectory(Path.Combine(LogPath, SubFolder != null ? SubFolder : ""));
+                    Directory.CreateDirectory(Path.Combine(LogPath, SubFolder ?? ""));
 
                     File.AppendAllText(sPath, @"-----------------------------" + Environment.NewLine);
                     File.AppendAllText(sPath, $"{LogFileName} Log file{Environment.NewLine}");
@@ -196,12 +196,12 @@ namespace AGenius.UsefulStuff
                     {
                         Directory.CreateDirectory(Path.Combine(LogPath, SubFolder, "Completed"));
                         // If a subfolder is provided then keep tidy and move to a completed sub folder
-                        File.Move(sPath, $@"{ApplicationPath}\{SubFolder}\Completed\{LogFileName}_{DateTime.Now.ToString("dd-mm-yyyy HHmmss")}.log");
+                        File.Move(sPath, $@"{ApplicationPath}\{SubFolder}\Completed\{LogFileName}_{DateTime.Now:dd-mm-yyyy HHmmss}.log");
                     }
                     else
                     {
                         // If no subfolder is provided then rename file to include datetime stamp
-                        File.Move(sPath, $@"{ApplicationPath}\{LogFileName}_{DateTime.Now.ToString("dd-mm-yyyy HHmmss")}.log");
+                        File.Move(sPath, $@"{ApplicationPath}\{LogFileName}_{DateTime.Now:dd-mm-yyyy HHmmss}.log");
                     }
 
                 }
@@ -308,7 +308,7 @@ namespace AGenius.UsefulStuff
                     lTemp = Convert.ToChar(ScrambledString.Substring(i, 1)) - 32;
                     lTemp = Seed - lTemp;
                     lTemp = (lTemp - bytKey) % Seed;
-                    strTemp = strTemp + Convert.ToChar((lTemp) + 32);
+                    strTemp += Convert.ToChar((lTemp) + 32);
                 }
                 return strTemp;
             }
@@ -351,9 +351,9 @@ namespace AGenius.UsefulStuff
                     {
                         lTemp = Convert.ToChar(strTemp.Substring(i, 1)) - 32;
                         lTemp = (lTemp + bytKey) % Seed;
-                        strUnscrambled = strUnscrambled + Convert.ToChar((Seed - lTemp) + 32);
+                        strUnscrambled += Convert.ToChar((Seed - lTemp) + 32);
                     }
-                    strUnscrambled = strUnscrambled + bytKey.ToString("X");
+                    strUnscrambled += bytKey.ToString("X");
 
                     if (UnScrambleString(strUnscrambled, Seed) == StringToScramble)
                     {
@@ -404,8 +404,7 @@ namespace AGenius.UsefulStuff
         /// <returns>string containing the JSON object</returns>
         public static string JWTtoJSON(string JWTTokenString)
         {
-            var jwtHandler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
-            string jsonResult = string.Empty;
+            var jwtHandler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();           
 
             //Check if readable token (string is in a JWT format)            
             if (jwtHandler.CanReadToken(JWTTokenString))
@@ -574,7 +573,7 @@ namespace AGenius.UsefulStuff
 
                         if (!imagespath.EndsWith(@"\"))
                         {
-                            imagespath = imagespath + @"\";
+                            imagespath += @"\";
                         }
                         string strItem = "";
 

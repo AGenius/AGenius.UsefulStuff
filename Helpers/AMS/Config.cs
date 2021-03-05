@@ -298,7 +298,7 @@ namespace AGenius.UsefulStuff.AMS.Profile
 			// If the file does not exist, use the writer to quickly create it
 			if ((m_buffer == null || m_buffer.IsEmpty) && !File.Exists(Name))
 			{				
-				XmlTextWriter writer = null;
+				XmlTextWriter writer;
 				
 				// If there's a buffer, write to it without creating the file
 				if (m_buffer == null)
@@ -352,53 +352,51 @@ namespace AGenius.UsefulStuff.AMS.Profile
 			
 			XmlDocument doc = GetXmlDocument();
 			XmlElement root = doc.DocumentElement;
-			
-			XmlAttribute attribute = null;
-			XmlNode sectionNode = null;
-			
-			// Check if we need to deal with the configSections element
-			if (!isAppSettings)
-			{
-				// Get the configSections element and add it if it's not there
-				XmlNode sectionsNode = root.SelectSingleNode("configSections");
-				if (sectionsNode == null)
-					sectionsNode = root.AppendChild(doc.CreateElement("configSections"));			
-	
-				XmlNode sectionGroupNode = sectionsNode;
-				if (hasGroupName)
-				{
-					// Get the sectionGroup element and add it if it's not there
-					sectionGroupNode = sectionsNode.SelectSingleNode("sectionGroup[@name=\"" + m_groupName + "\"]");
-					if (sectionGroupNode == null)
-					{
-						XmlElement element = doc.CreateElement("sectionGroup");
-						attribute = doc.CreateAttribute("name");
-						attribute.Value = m_groupName;
-						element.Attributes.Append(attribute);			
-						sectionGroupNode = sectionsNode.AppendChild(element);			
-					}
-				}
-	
-				// Get the section element and add it if it's not there
-				sectionNode = sectionGroupNode.SelectSingleNode("section[@name=\"" + section + "\"]");
-				if (sectionNode == null)
-				{
-					XmlElement element = doc.CreateElement("section");
-					attribute = doc.CreateAttribute("name");
-					attribute.Value = section;
-					element.Attributes.Append(attribute);			
-	
-					sectionNode = sectionGroupNode.AppendChild(element);			
-				}
-	
-				// Update the type attribute
-				attribute = doc.CreateAttribute("type");
-				attribute.Value = SECTION_TYPE;
-				sectionNode.Attributes.Append(attribute);			
-			}
+            XmlAttribute attribute;
+            XmlNode sectionNode;
+            // Check if we need to deal with the configSections element
+            if (!isAppSettings)
+            {
+                // Get the configSections element and add it if it's not there
+                XmlNode sectionsNode = root.SelectSingleNode("configSections");
+                if (sectionsNode == null)
+                    sectionsNode = root.AppendChild(doc.CreateElement("configSections"));
 
-			// Get the element with the sectionGroup name and add it if it's not there
-			XmlNode groupNode = root;
+                XmlNode sectionGroupNode = sectionsNode;
+                if (hasGroupName)
+                {
+                    // Get the sectionGroup element and add it if it's not there
+                    sectionGroupNode = sectionsNode.SelectSingleNode("sectionGroup[@name=\"" + m_groupName + "\"]");
+                    if (sectionGroupNode == null)
+                    {
+                        XmlElement element = doc.CreateElement("sectionGroup");
+                        attribute = doc.CreateAttribute("name");
+                        attribute.Value = m_groupName;
+                        element.Attributes.Append(attribute);
+                        sectionGroupNode = sectionsNode.AppendChild(element);
+                    }
+                }
+
+                // Get the section element and add it if it's not there
+                sectionNode = sectionGroupNode.SelectSingleNode("section[@name=\"" + section + "\"]");
+                if (sectionNode == null)
+                {
+                    XmlElement element = doc.CreateElement("section");
+                    attribute = doc.CreateAttribute("name");
+                    attribute.Value = section;
+                    element.Attributes.Append(attribute);
+
+                    sectionNode = sectionGroupNode.AppendChild(element);
+                }
+
+                // Update the type attribute
+                attribute = doc.CreateAttribute("type");
+                attribute.Value = SECTION_TYPE;
+                sectionNode.Attributes.Append(attribute);
+            }
+
+            // Get the element with the sectionGroup name and add it if it's not there
+            XmlNode groupNode = root;
 			if (hasGroupName)
 			{
 				groupNode = root.SelectSingleNode(m_groupName);
