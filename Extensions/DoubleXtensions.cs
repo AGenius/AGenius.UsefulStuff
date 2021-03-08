@@ -26,5 +26,15 @@ namespace AGenius.UsefulStuff
         {
             return (long)Math.Truncate(number);
         }
+        /// <summary>
+        /// Rounds the value to the nearest increment
+        /// </summary>
+        /// <param name="number">The given double number.</param>
+        /// <param name="increment">The increment to round by</param>
+        /// <returns></returns>
+        public static int RoundToX(this double number, double increment)
+        {
+            return (int)(Math.Ceiling(number / increment) * increment);
+        }
     }
 }

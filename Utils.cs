@@ -19,6 +19,47 @@ namespace AGenius.UsefulStuff
     /// </summary>
     public static class Utils
     {
+        /// <summary>Copy contents of a directory to a new locaiton</summary>
+        /// <param name="sourceDirName">The Source Directory Path</param>
+        /// <param name="destDirName">The Target Directory Path</param>
+        /// <param name="copySubDirs">Set true if you want all sub directories also copied.</param>
+        public static void DirectoryCopy(string sourceDirName, string destDirName, bool copySubDirs)
+        {
+            // Get the subdirectories for the specified directory.
+            DirectoryInfo dir = new DirectoryInfo(sourceDirName);
+
+            if (!dir.Exists)
+            {
+                throw new DirectoryNotFoundException(
+                    $"Source directory does not exist or could not be found: {sourceDirName}");
+            }
+
+            DirectoryInfo[] dirs = dir.GetDirectories();
+            // If the destination directory doesn't exist, create it.
+            if (!Directory.Exists(destDirName))
+            {
+                Directory.CreateDirectory(destDirName);
+            }
+
+            // Get the files in the directory and copy them to the new location.
+            FileInfo[] files = dir.GetFiles();
+            foreach (FileInfo file in files)
+            {
+                string temppath = Path.Combine(destDirName, file.Name);
+                file.CopyTo(temppath, false);
+            }
+
+            // If copying subdirectories, copy them and their contents to new location.
+            if (copySubDirs)
+            {
+                foreach (DirectoryInfo subdir in dirs)
+                {
+                    string temppath = Path.Combine(destDirName, subdir.Name);
+                    DirectoryCopy(subdir.FullName, temppath, copySubDirs);
+                }
+            }
+        }
+
         #region Scramble Methods
         /// <summary>The path to the assembly</summary>
         public static string ApplicationPath = Directory.GetParent(System.Reflection.Assembly.GetEntryAssembly().Location).FullName;
