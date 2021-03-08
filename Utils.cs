@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -19,6 +20,37 @@ namespace AGenius.UsefulStuff
     /// </summary>
     public static class Utils
     {
+        /// <summary>Determine if an executable is running</summary>
+        /// <param name="FullPath">The full path to the EXE file</param>
+        /// <returns>true/false <see cref="bool"/></returns>
+        public static bool isExeRunning(string FullPath)
+        {
+            try
+            {
+                string FilePath = Path.GetDirectoryName(FullPath);
+                string FileName = Path.GetFileNameWithoutExtension(FullPath).ToLower();
+                bool isRunning = false;
+
+                Process[] pList = Process.GetProcessesByName(FileName);
+                foreach (Process p in pList)
+                {
+                    if (p.MainModule.FileName.StartsWith(FilePath, StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        isRunning = true;
+                        break;
+                    }
+                }
+
+                return isRunning;
+            }
+            catch
+            {
+
+
+            }
+            return true; // Ensures if it errors it will not cause it to be re-lanuched as it was possibly terminated
+        }
+
         /// <summary>Copy contents of a directory to a new locaiton</summary>
         /// <param name="sourceDirName">The Source Directory Path</param>
         /// <param name="destDirName">The Target Directory Path</param>
@@ -315,8 +347,90 @@ namespace AGenius.UsefulStuff
 
             return Pass;
         }
-        /// <summary>return the next filename by adding (1) or (2) etc</summary>
 
+        /// <summary>return the next filename by adding _(1) or _(2) etc or _1 or _2</summary>
+        /// <param name="FileName">Base Filename to start</param>
+        /// <param name="addBrackets">Add () around the new file number if applicable</param>
+        /// <returns>FileName</returns>
+        public static string GetNewfileName(string FileName, bool addBrackets)
+        {
+            string fileExt = Path.GetExtension(FileName).Replace(".", "");
+            string FolderPath = Path.GetDirectoryName(FileName);
+            string basefilename = Path.GetFileNameWithoutExtension(FileName);
+            int counter = 1;
+            //string fullFileName = string.Format(@"{0}\{1} ({2}).{3}", FolderPath, basefilename, counter, fileExt);            
+            string fullFileName = $"{FolderPath}\\{basefilename}.{fileExt}";
+            while (File.Exists(fullFileName))
+            {
+                counter++;
+                if (addBrackets)
+                {
+                    fullFileName = $"{FolderPath}\\{basefilename}_({counter}).{fileExt}";
+                }
+                else
+                {
+                    fullFileName = $"{FolderPath}\\{basefilename}_{counter}.{fileExt}";
+                }
+            }
+            return fullFileName;
+        }
+        /// <summary>return the next filename by adding _(1) or _(2) etc or _1 or _2</summary>
+        /// <param name="FileName">Base Filename to start</param>
+        /// <param name="addBrackets">Add () around the new file number if applicable</param>
+        /// <param name="filesList">Compare files using the provided list</param>
+        /// <returns>FileName</returns>
+        public static string GetNewfileName(string FileName, bool addBrackets, List<string> filesList)
+        {
+            string fileExt = Path.GetExtension(FileName).Replace(".", "");
+            string FolderPath = Path.GetDirectoryName(FileName);
+            string basefilename = Path.GetFileNameWithoutExtension(FileName);
+            int counter = 1;
+            //string fullFileName = string.Format(@"{0}\{1} ({2}).{3}", FolderPath, basefilename, counter, fileExt);            
+            string fullFileName = $"{FolderPath}\\{basefilename}.{fileExt}";
+            string foundFile = filesList.Find(x => x.ToLower() == fullFileName.ToLower());
+            while (!string.IsNullOrEmpty(foundFile))
+            {
+                counter++;
+                if (addBrackets)
+                {
+                    fullFileName = $"{FolderPath}\\{basefilename}_({counter}).{fileExt}";
+                }
+                else
+                {
+                    fullFileName = $"{FolderPath}\\{basefilename}_{counter}.{fileExt}";
+                }
+                foundFile = filesList.Find(x => x.ToLower() == fullFileName.ToLower());
+            }
+            return fullFileName;
+        }
+        /// <summary>Return a list of files from a given location</summary>
+        /// <param name="rootPath">Directory location to use</param>
+        /// <param name="fileExt">Only return files of this extension</param>
+        /// <param name="searchOption">The required search option <see cref="SearchOption"/></param>
+        /// <returns></returns>
+        public static List<string> GetFilesList(string rootPath, string fileExt, SearchOption searchOption)
+        {
+            if (!Directory.Exists(rootPath.Replace(@"\\", @"\").ToLower()))
+            {
+                return null;
+            }
+            string[] filePaths = Directory.GetFiles($"{rootPath.Replace(@"\\", @"\").ToLower()}", fileExt, searchOption);
+            List<string> filenames = new List<string>();
+
+            if (filePaths.Length > 0)
+            {
+                /// add to list of documents to convert to single PDF 
+                foreach (string docFile in filePaths)
+                {
+                    filenames.Add(docFile);
+                }
+            }
+            return filenames;
+        }
+        /// <summary>Return a random number </summary>
+        /// <param name="min"></param>
+        /// <param name="max"></param>
+        /// <returns></returns>
         public static int RandomNumber(int min, int max)
         {
             Random random = new Random();
@@ -445,7 +559,7 @@ namespace AGenius.UsefulStuff
         /// <returns>string containing the JSON object</returns>
         public static string JWTtoJSON(string JWTTokenString)
         {
-            var jwtHandler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();           
+            var jwtHandler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
 
             //Check if readable token (string is in a JWT format)            
             if (jwtHandler.CanReadToken(JWTTokenString))
