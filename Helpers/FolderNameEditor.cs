@@ -43,9 +43,8 @@ namespace AGenius.UsefulStuff.Helpers
                 IShellItem item;
                 if (!string.IsNullOrEmpty(DirectoryPath))
                 {
-                    IntPtr idl;
                     uint atts = 0;
-                    if (SHILCreateFromPath(DirectoryPath, out idl, ref atts) == 0)
+                    if (SHILCreateFromPath(DirectoryPath, out IntPtr idl, ref atts) == 0)
                     {
                         if (SHCreateShellItem(IntPtr.Zero, IntPtr.Zero, idl, out item) == 0)
                         {
@@ -62,8 +61,7 @@ namespace AGenius.UsefulStuff.Helpers
                     return DialogResult.Abort;
 
                 dialog.GetResult(out item);
-                string path;
-                item.GetDisplayName(SIGDN.SIGDN_FILESYSPATH, out path);
+                item.GetDisplayName(SIGDN.SIGDN_FILESYSPATH, out string path);
                 DirectoryPath = path;
                 return DialogResult.OK;
             }
