@@ -6,3 +6,4 @@
 using System.Diagnostics.CodeAnalysis;
 
 [assembly: SuppressMessage("Style", "IDE0044:Add readonly modifier", Justification = "<Pending>", Scope = "member", Target = "~F:AGenius.UsefulStuff.Helpers.SQLiteDatabaseHelper._lastError")]
+[assembly: SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "<Pending>", Scope = "member", Target = "~P:AGenius.UsefulStuff.ObjectExtensions.Variance.isKeyField")]
