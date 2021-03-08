@@ -20,13 +20,13 @@ namespace AGenius.UsefulStuff.Helpers
             {
                 if (_EntryAssemblyAttribCollection == null)
                 {
-                    _EntryAssemblyAttribCollection = AssemblyAttribs(EntryAssembly);
+                    _EntryAssemblyAttribCollection = AssemblyAttributes(EntryAssembly);
                 }
                 return _EntryAssemblyAttribCollection;
             }
         }
         /// <summary>returns string name / string value pair of all attribs for specified assembly</summary>
-        public static NameValueCollection AssemblyAttribs(Assembly a)
+        public static NameValueCollection AssemblyAttributes(Assembly a)
         {
             string TypeName;
             string Name;
