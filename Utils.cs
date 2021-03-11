@@ -419,7 +419,7 @@ namespace AGenius.UsefulStuff
 
             if (filePaths.Length > 0)
             {
-                /// add to list of documents to convert to single PDF 
+                // add to list of documents to convert to single PDF 
                 foreach (string docFile in filePaths)
                 {
                     filenames.Add(docFile);

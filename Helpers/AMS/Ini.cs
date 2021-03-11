@@ -39,23 +39,24 @@ using System.IO;
 
 namespace AGenius.UsefulStuff.AMS.Profile
 {
-	/// <summary>
-	///   Profile class that utilizes an INI-formatted file to retrieve and save its data. </summary>
-	/// <remarks>
-	///   This class works with INI files, which use a simple two-dimensional text format of sections
-	///   and entries to organize their data.  Here's a sample of the format:
-	///   <code>
-	///   [A Section]
-	///   An Entry=Some Value
-	///   Another Entry=Another Value
-	///     
-	///   [Another Section]
-	///   This is cool=True
-	///   </code>
-	///   This class utilizes the <see cref="GetPrivateProfileString" /> and <see cref="WritePrivateProfileString" /> Win32 APIs
-	///   to read and write the INI file.</remarks>
-	public class Ini : Profile
-	{
+    /// <summary>
+    ///   Profile class that utilizes an INI-formatted file to retrieve and save its data. </summary>
+    /// <remarks>
+    ///   This class works with INI files, which use a simple two-dimensional text format of sections
+    ///   and entries to organize their data.  Here's a sample of the format:
+    ///   <code>
+    ///   [A Section]
+    ///   An Entry=Some Value
+    ///   Another Entry=Another Value
+    ///     
+    ///   [Another Section]
+    ///   This is cool=True
+    ///   </code>
+    ///   This class utilizes the <see cref="GetPrivateProfileString" /> and <see cref="WritePrivateProfileString" /> Win32 APIs
+    ///   to read and write the INI file.</remarks>
+    public class Ini : Profile
+#pragma warning restore CS0419 // Ambiguous reference in cref attribute
+    {
 		/// <summary>
 		///   Initializes a new instance of the Ini class by setting the <see cref="Profile.Name" /> to <see cref="Profile.DefaultName" />. </summary>
 		public Ini()

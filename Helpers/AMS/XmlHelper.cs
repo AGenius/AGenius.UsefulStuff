@@ -196,18 +196,17 @@ namespace AGenius.UsefulStuff.AMS.Profile
 			return Buffer(true);
 		}
 
-		/// <summary>
-		///   Gets whether buffering is active or not. </summary>
-		/// <remarks>
-		///   <i>Buffering</i> is the caching of an <see cref="XmlDocument" /> object so that subsequent reads or writes
-		///   are all done through it.  This dramatically increases the performance of those operations, but it requires
-		///   that the buffer is flushed (or closed) to commit any changes done to the underlying file.
-		///   <para>
-		///   This property may be used to determine if the buffer is active without actually activating it.  
-		///   The <see cref="Buffer" /> method activates the buffer, which then needs to be flushed (or closed) to update the file. </para></remarks>
-		/// <seealso cref="Buffer" />
-		/// <seealso cref="XmlBuffer" />
-		public bool Buffering
+        /// <summary>
+        ///   Gets whether buffering is active or not. </summary>
+        /// <remarks>
+        ///   <i>Buffering</i> is the caching of an <see cref="XmlDocument" /> object so that subsequent reads or writes
+        ///   are all done through it.  This dramatically increases the performance of those operations, but it requires
+        ///   that the buffer is flushed (or closed) to commit any changes done to the underlying file.
+        ///   <para>
+        ///   This property may be used to determine if the buffer is active without actually activating it.  
+        ///   The <see cref="Buffer(bool)" /> method activates the buffer, which then needs to be flushed (or closed) to update the file. </para></remarks>
+        /// <seealso cref="XmlBuffer" />
+        public bool Buffering
 		{
 			get 
 			{

@@ -100,6 +100,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Helpers\MimeTypesList.cs" />
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="Helpers\AMS\Config.cs" />
     <Compile Include="Helpers\AMS\Events.cs" />
