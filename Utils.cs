@@ -624,7 +624,7 @@ namespace AGenius.UsefulStuff
             form.Opacity = 0; //make fully invisible       
         }
         #endregion
-        /// <summary>Find the Value of an Objects Propertie for a given field name using reflection</summary>
+        /// <summary>Find the Value of an Objects Property for a given field name using reflection</summary>
         /// <typeparam name="TEntity">Entity Object Type</typeparam>
         /// <param name="EntityObject">The Object Reference</param>
         /// <param name="PropertyName">Name of the Property to find</param>
