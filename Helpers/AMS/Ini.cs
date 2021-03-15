@@ -55,7 +55,6 @@ namespace AGenius.UsefulStuff.AMS.Profile
     ///   This class utilizes the <see cref="GetPrivateProfileString" /> and <see cref="WritePrivateProfileString" /> Win32 APIs
     ///   to read and write the INI file.</remarks>
     public class Ini : Profile
-#pragma warning restore CS0419 // Ambiguous reference in cref attribute
     {
 		/// <summary>
 		///   Initializes a new instance of the Ini class by setting the <see cref="Profile.Name" /> to <see cref="Profile.DefaultName" />. </summary>
