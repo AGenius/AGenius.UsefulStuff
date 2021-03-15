@@ -624,7 +624,7 @@ namespace AGenius.UsefulStuff
             form.Opacity = 0; //make fully invisible       
         }
         #endregion
-        /// <summary>Find the Value of an Objects Property for a given field name using reflection</summary>
+        /// <summary>Find the Value of an Objects Propertie for a given field name using reflection</summary>
         /// <typeparam name="TEntity">Entity Object Type</typeparam>
         /// <param name="EntityObject">The Object Reference</param>
         /// <param name="PropertyName">Name of the Property to find</param>
@@ -891,38 +891,21 @@ namespace AGenius.UsefulStuff
         /// <typeparam name="T">The object type</typeparam>
         /// <param name="ContentString">The content to process</param>
         /// <param name="TheEntity">The object holding the properties</param>
+        /// <param name="ReplaceIfNullWith">If the field is null then replace the field place holder with this value</param>
         /// <param name="StartField">The expected string for the start of a field place holder</param>
         /// <param name="EndField">The expected string for the end of a field place holder</param>
         /// <returns>The new string content with the new content</returns>
         /// <remarks>Will detect DATETIME and replace with the current date and time as ToLongDateString <see cref="DateTime.Now"/> </remarks>
-        public static string ReplaceObjectFields<T>(string ContentString, T TheEntity, string StartField = "[[", string EndField = "]]")
+        public static string ReplaceObjectFields<T>(string ContentString, T TheEntity, string ReplaceIfNullWith = null, string StartField = "[[", string EndField = "]]")
         {
             string NewContentString = ContentString;
-            List<string> FieldsList = new List<string>();
-            bool bDone = false;
+            List<string> FieldsList = GetTokensFromString(ContentString, StartField, EndField);
 
-            // Find all the fields in the content string
-            do
-            {
-                NewContentString = NewContentString.GetAfter(StartField);
-                if (!string.IsNullOrEmpty(NewContentString) && NewContentString.Contains(EndField))
-                {
-                    FieldsList.Add(NewContentString.GetBefore(EndField));
-                    NewContentString = NewContentString.GetAfter(EndField);
-                }
-                else
-                {
-                    bDone = true;
-                }
-            }
-            while (!bDone);
-
-            // Process the found fields
-            NewContentString = ContentString;
+            // Process the found fields            
             foreach (string fieldNameEntry in FieldsList)
             {
                 string fieldName = fieldNameEntry;
-                string objectName = string.Empty;                
+                string objectName = string.Empty;
                 if (fieldName.Contains("."))
                 {
                     // Extract object name
@@ -939,13 +922,17 @@ namespace AGenius.UsefulStuff
 
                             break;
                         default:
-                            try
+
+                            if (TheEntity.GetPropertyValue(fieldName) != null)
                             {
                                 NewContentString = FormatFieldValue(NewContentString, TheEntity.GetPropertyValue(fieldName), fieldName, objectName, StartField, EndField);
                             }
-                            catch (Exception)
+                            else
                             {
-
+                                if (ReplaceIfNullWith != null)
+                                {
+                                    NewContentString = FormatFieldValue(NewContentString, ReplaceIfNullWith, fieldName, objectName, StartField, EndField);
+                                }
                             }
 
                             break;
@@ -953,20 +940,23 @@ namespace AGenius.UsefulStuff
                 }
                 else
                 {
-                    try
+                    if (fieldName.ToUpper() == "NOW")
                     {
-                        if (fieldName.ToUpper() == "NOW")
+                        NewContentString = NewContentString.Replace($"{StartField}{fieldName}{EndField}", DateTime.Now.ToLongDateString());
+                    }
+                    else
+                    {
+                        if (TheEntity.GetPropertyValue(fieldName) != null)
                         {
-                            NewContentString = NewContentString.Replace($"{StartField}{fieldName}{EndField}", DateTime.Now.ToLongDateString());
+                            NewContentString = FormatFieldValue(NewContentString, TheEntity.GetPropertyValue(fieldName), fieldName, "", StartField, EndField);
                         }
                         else
                         {
-                            NewContentString = FormatFieldValue(NewContentString, TheEntity.GetPropertyValue(fieldName), fieldName);
+                            if (ReplaceIfNullWith != null)
+                            {
+                                NewContentString = FormatFieldValue(NewContentString, ReplaceIfNullWith, fieldName, objectName, StartField, EndField);
+                            }
                         }
-                    }
-                    catch (Exception)
-                    {
-
                     }
                 }
             }
@@ -998,6 +988,61 @@ namespace AGenius.UsefulStuff
             {
                 return newTemplateText.Replace(searchString, fieldValue.ToString());
             }
+        }
+        /// <summary>Returns a list of tokens from a supplied string</summary>        
+        /// <param name="ContentString">The content to process</param>
+        /// <param name="StartField">The expected string for the start of a field place holder</param>
+        /// <param name="EndField">The expected string for the end of a field place holder</param>
+        /// <returns>List of tokens in a list object></returns>     
+        public static List<string> GetTokensFromString(string ContentString, string StartField = "[[", string EndField = "]]")
+        {
+            string NewContentString = ContentString;
+            List<string> FieldsList = new List<string>();
+            bool bDone = false;
+
+            // Find all the fields in the content string
+            do
+            {
+                NewContentString = NewContentString.GetAfter(StartField);
+                if (!string.IsNullOrEmpty(NewContentString) && NewContentString.Contains(EndField))
+                {
+                    FieldsList.Add(NewContentString.GetBefore(EndField));
+                    NewContentString = NewContentString.GetAfter(EndField);
+                }
+                else
+                {
+                    bDone = true;
+                }
+            }
+            while (!bDone);
+
+            return FieldsList;
+        }
+        /// <summary>Replace the tokens in a string that are considered empty</summary>
+        /// <param name="ContentString">The content to process</param>      
+        /// <param name="LenthLimit">How many characters to check, anything at this or below will be removed</param>
+        /// <param name="StartField">The expected string for the start of a field place holder</param>
+        /// <param name="EndField">The expected string for the end of a field place holder</param>
+        /// <returns></returns>
+        /// <remarks>The process will check each found token by trimming and if the result is less than the supplied LenthLimit characters then it is removed</remarks>
+        public static string ReplaceEmptyTokensInString(string ContentString, int LenthLimit = 1, string StartField = "[[", string EndField = "]]")
+        {
+            List<string> tokens = ContentString.GetTokensFromString(StartField, EndField);
+            if (tokens != null && tokens.Count > 0)
+            {
+                foreach (string token in tokens)
+                {
+                    if (token.Trim().Length <= LenthLimit)
+                    {
+                        ContentString = ContentString.Replace(StartField + token + EndField, "");
+                    }
+                    else
+                    {
+                        ContentString = ContentString.Replace(StartField + token + EndField, token);
+                    }
+                }
+            }
+            return ContentString;
         }
         /// <summary>
         /// Send an Email using System.Net.Mail

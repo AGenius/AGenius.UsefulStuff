@@ -429,7 +429,7 @@ namespace AGenius.UsefulStuff
         {
             if (inclusive)
             {
-                return $"{StartValue}{StringValue.GetAfter(StartValue).GetBefore(EndValue)}{EndValue}";               
+                return $"{StartValue}{StringValue.GetAfter(StartValue).GetBefore(EndValue)}{EndValue}";
             }
             return StringValue.GetAfter(StartValue).GetBefore(EndValue);
         }
@@ -440,7 +440,7 @@ namespace AGenius.UsefulStuff
         public static string GetBetween(this string StringValue, string SearchString)
         {
             return StringValue.GetAfter(SearchString).GetBefore(SearchString);
-        } 
+        }
         /// <summary>Return the string portion on the right of the string</summary>
         /// <param name="StringValue">The string passed in</param>
         /// <param name="MaxLength">The number of characters from the right side of the string to pass back</param>
@@ -465,21 +465,43 @@ namespace AGenius.UsefulStuff
 
         #region ContainsValue / HasValue
 
+        #region Field Replacement
+
         /// <summary>Replace field placeholders in a string with object properties of the same name</summary>
         /// <typeparam name="T">The object type</typeparam>
         /// <param name="StringValue">The content to process</param>
         /// <param name="TheEntity">The object holding the properties</param>
+        /// <param name="ReplaceIfNullWith">If the field is null then replace the field place holder with this value</param>
         /// <param name="StartField">The expected string for the start of a field place holder</param>
         /// <param name="EndField">The expected string for the end of a field place holder</param>
         /// <returns>The new string content with the new content</returns>
         /// <remarks>Will detect DATETIME and replace with the current date and time as ToLongDateString <see cref="DateTime.Now"/> </remarks>
-        public static string ReplaceObjectFields<T>(this string StringValue, T TheEntity, string StartField = "[[", string EndField = "]]")
-        {             
-            return Utils.ReplaceObjectFields(StringValue,TheEntity, StartField, EndField);
+        public static string ReplaceObjectFields<T>(this string StringValue, T TheEntity, string ReplaceIfNullWith = null, string StartField = "[[", string EndField = "]]")
+        {
+            return Utils.ReplaceObjectFields(StringValue, TheEntity, ReplaceIfNullWith, StartField, EndField);
         }
-        #region Field Replacement
-
+        /// <summary>Returns a list of tokens from a supplied string</summary>        
+        /// <param name="StringValue">The content to process</param>
+        /// <param name="StartField">The expected string for the start of a field place holder</param>
+        /// <param name="EndField">The expected string for the end of a field place holder</param>
+        /// <returns>List of tokens in a list object></returns>
+        public static List<string> GetTokensFromString(this string StringValue, string StartField = "[[", string EndField = "]]")
+        {
+            return Utils.GetTokensFromString(StringValue, StartField, EndField);
+        }
+        /// <summary>Replace the tokens in a string that are considered empty</summary>
+        /// <param name="StringValue">The content to process</param>      
+        /// <param name="LenthLimit">How many characters to check, anything at this or below will be removed</param>
+        /// <param name="StartField">The expected string for the start of a field place holder</param>
+        /// <param name="EndField">The expected string for the end of a field place holder</param>
+        /// <returns></returns>
+        /// <remarks>The process will check each found token by trimming and if the result is less than the supplied LenthLimit characters then it is removed</remarks>
+        public static string ReplaceEmptyTokensInString(this string StringValue, int LenthLimit = 1, string StartField = "[[", string EndField = "]]")
+        {
+            return Utils.ReplaceEmptyTokensInString(StringValue, LenthLimit, StartField, EndField);
+        }
         #endregion
+
         /// <summary>
         /// Find
         /// </summary>
