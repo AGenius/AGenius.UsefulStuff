@@ -465,6 +465,21 @@ namespace AGenius.UsefulStuff
 
         #region ContainsValue / HasValue
 
+        /// <summary>Replace field placeholders in a string with object properties of the same name</summary>
+        /// <typeparam name="T">The object type</typeparam>
+        /// <param name="StringValue">The content to process</param>
+        /// <param name="TheEntity">The object holding the properties</param>
+        /// <param name="StartField">The expected string for the start of a field place holder</param>
+        /// <param name="EndField">The expected string for the end of a field place holder</param>
+        /// <returns>The new string content with the new content</returns>
+        /// <remarks>Will detect DATETIME and replace with the current date and time as ToLongDateString <see cref="DateTime.Now"/> </remarks>
+        public static string ReplaceObjectFields<T>(this string StringValue, T TheEntity, string StartField = "[[", string EndField = "]]")
+        {             
+            return Utils.ReplaceObjectFields(StringValue,TheEntity, StartField, EndField);
+        }
+        #region Field Replacement
+
+        #endregion
         /// <summary>
         /// Find
         /// </summary>

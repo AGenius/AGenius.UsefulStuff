@@ -887,6 +887,118 @@ namespace AGenius.UsefulStuff
                 return false;
             }
         }
+        /// <summary>Replace field placeholders in a string with object properties of the same name</summary>
+        /// <typeparam name="T">The object type</typeparam>
+        /// <param name="ContentString">The content to process</param>
+        /// <param name="TheEntity">The object holding the properties</param>
+        /// <param name="StartField">The expected string for the start of a field place holder</param>
+        /// <param name="EndField">The expected string for the end of a field place holder</param>
+        /// <returns>The new string content with the new content</returns>
+        /// <remarks>Will detect DATETIME and replace with the current date and time as ToLongDateString <see cref="DateTime.Now"/> </remarks>
+        public static string ReplaceObjectFields<T>(string ContentString, T TheEntity, string StartField = "[[", string EndField = "]]")
+        {
+            string NewContentString = ContentString;
+            List<string> FieldsList = new List<string>();
+            bool bDone = false;
+
+            // Find all the fields in the content string
+            do
+            {
+                NewContentString = NewContentString.GetAfter(StartField);
+                if (!string.IsNullOrEmpty(NewContentString) && NewContentString.Contains(EndField))
+                {
+                    FieldsList.Add(NewContentString.GetBefore(EndField));
+                    NewContentString = NewContentString.GetAfter(EndField);
+                }
+                else
+                {
+                    bDone = true;
+                }
+            }
+            while (!bDone);
+
+            // Process the found fields
+            NewContentString = ContentString;
+            foreach (string fieldNameEntry in FieldsList)
+            {
+                string fieldName = fieldNameEntry;
+                string objectName = string.Empty;                
+                if (fieldName.Contains("."))
+                {
+                    // Extract object name
+                    objectName = fieldNameEntry.Split('.')[0];
+                    fieldName = fieldNameEntry.Split('.')[1];
+
+                    switch (objectName.ToUpper())
+                    {
+                        case "DATETIME":
+                            if (fieldName.ToUpper() == "NOW")
+                            {
+                                NewContentString = NewContentString.Replace($"{StartField}{objectName}.{fieldName}{EndField}", DateTime.Now.ToLongDateString());
+                            }
+
+                            break;
+                        default:
+                            try
+                            {
+                                NewContentString = FormatFieldValue(NewContentString, TheEntity.GetPropertyValue(fieldName), fieldName, objectName, StartField, EndField);
+                            }
+                            catch (Exception)
+                            {
+
+                            }
+
+                            break;
+                    }
+                }
+                else
+                {
+                    try
+                    {
+                        if (fieldName.ToUpper() == "NOW")
+                        {
+                            NewContentString = NewContentString.Replace($"{StartField}{fieldName}{EndField}", DateTime.Now.ToLongDateString());
+                        }
+                        else
+                        {
+                            NewContentString = FormatFieldValue(NewContentString, TheEntity.GetPropertyValue(fieldName), fieldName);
+                        }
+                    }
+                    catch (Exception)
+                    {
+
+                    }
+                }
+            }
+
+            return NewContentString;
+        }
+        private static string FormatFieldValue(string newTemplateText, object fieldValue, string fieldName, string objectName = "", string StartField = "[[", string EndField = "]]")
+        {
+            string searchString = $"{StartField}{fieldName}{EndField}";
+
+            if (!string.IsNullOrEmpty(objectName))
+            {
+                searchString = $"{StartField}{objectName}.{fieldName}{EndField}";
+            }
+
+            if (fieldValue == null)
+            {
+                return newTemplateText.Replace(searchString, string.Empty);
+            }
+            if (fieldValue.GetType().Name == "DateTime")
+            {
+                return newTemplateText.Replace(searchString, ((DateTime)fieldValue).ToShortDateString());
+            }
+            else if (fieldValue.GetType().Name == "Double")
+            {
+                return newTemplateText.Replace(searchString, ((double)fieldValue).ToString("c2"));
+            }
+            else
+            {
+                return newTemplateText.Replace(searchString, fieldValue.ToString());
+            }
+        }
         /// <summary>
         /// Send an Email using System.Net.Mail
         /// </summary>
