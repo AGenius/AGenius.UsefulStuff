@@ -14,6 +14,8 @@ namespace AGenius.UsefulStuff.Helpers
         {
             return Assembly.GetEntryAssembly().Location + UserFilesListFilenamePrefix;
         }
+        /// <summary>Add a manually created file name to the list</summary>
+        /// <param name="filename">The file name (full path)</param>
         public static void AddToUsedFilesList(string filename)
         {
             lock (UsedFilesListLock)
@@ -22,6 +24,10 @@ namespace AGenius.UsefulStuff.Helpers
                     writer.WriteLine(filename);
             }
         }
+        /// <summary>Return a new Temporary file and record it </summary>
+        /// <param name="extension">The Extension of the new file</param>
+        /// <param name="subFolder">Place new temp files in this sub folder in the Temp directory</param>
+        /// <returns>New string file name and extension</returns>
         public static string GetNew(string extension = ".tmp", string subFolder = "")
         {
             string fileName;
@@ -53,6 +59,8 @@ namespace AGenius.UsefulStuff.Helpers
             AddToUsedFilesList(fileName);
             return fileName;
         }
+
+        /// <summary>Delete all previously recorded temporary files</summary>
         public static void DeleteAllPreviouslyUsed()
         {
             lock (UsedFilesListLock)
