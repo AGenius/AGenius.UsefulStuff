@@ -431,7 +431,7 @@ namespace AGenius.UsefulStuff
             {
                 return $"{StartValue}{StringValue.GetAfter(StartValue).GetBefore(EndValue)}{EndValue}";               
             }
-            return StringValue.GetBefore(EndValue).GetAfter(StartValue);
+            return StringValue.GetAfter(StartValue).GetBefore(EndValue);
         }
         /// <summary>Get a string between the search string</summary>
         /// <param name="StringValue">The String to process</param>
