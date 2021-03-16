@@ -594,18 +594,27 @@ namespace AGenius.UsefulStuff
         /// <param name="interval">Interval to pause between each increase</param>
         public async static void FadeIn(Form form, int interval = 10)
         {
-            //Object is not fully invisible. Fade it in
-            form.Opacity = 0;
-
             FormBorderStyle currentBorder = form.FormBorderStyle;
-            form.FormBorderStyle = FormBorderStyle.None;
-            while (form.Opacity < 1.0)
+
+            try
             {
-                await Task.Delay(interval);
-                form.Opacity += 0.05;
+                //Object is not fully invisible. Fade it in
+                form.Opacity = 0;
+                form.FormBorderStyle = FormBorderStyle.None;
+                while (form.Opacity < 1.0)
+                {
+                    await Task.Delay(interval);
+                    form.Opacity += 0.05;
+                }
+                form.Opacity = 1; //make fully visible       
+                form.FormBorderStyle = currentBorder;
             }
-            form.Opacity = 1; //make fully visible       
-            form.FormBorderStyle = currentBorder;
+            catch (Exception)
+            {
+                // Set to full visible as some error has occured (possible form now closed)
+                form.Opacity = 1;
+                form.FormBorderStyle = currentBorder;
+            }
         }
         /// <summary>
         /// Fade out of view a WinForms form
@@ -614,14 +623,22 @@ namespace AGenius.UsefulStuff
         /// <param name="interval">Interval to pause between each decrease</param>
         public async static void FadeOut(Form form, int interval = 10)
         {
-            //Object is fully visible. Fade it out
-            form.Opacity = 1;
-            while (form.Opacity > 0.0)
+            try
             {
-                await Task.Delay(interval);
-                form.Opacity -= 0.05;
+                //Object is fully visible. Fade it out
+                form.Opacity = 1;
+                while (form.Opacity > 0.0)
+                {
+                    await Task.Delay(interval);
+                    form.Opacity -= 0.05;
+                }
+                form.Opacity = 0; //make fully invisible       
             }
-            form.Opacity = 0; //make fully invisible       
+            catch (Exception)
+            {
+                // Set to full invisible as some error has occured (possible form now closed)
+                form.Opacity = 0; //make fully invisible       
+            }
         }
         #endregion
         /// <summary>Find the Value of an Objects Propertie for a given field name using reflection</summary>
