@@ -16,34 +16,35 @@ namespace AGenius.UsefulStuff.Helpers
     /// </summary>
     public class SQLDatabaseHelper : IDisposable
     {
-        /// <summary>Event Handler for the ErrorEventArgs event</summary>
-
+        /// <summary>Provides access to the  Connection string in use</summary>
         public string DBConnectionString
         {
             get; set;
         }
-        public Boolean? LastSaveState
-        {
-            get;
-            private set;
-        }
+
+        /// <summary>Initializes a new instance of the <see cref="SQLDatabaseHelper"/> class </summary>
         public SQLDatabaseHelper()
         {
             DBConnectionString = "";
         }
-        public SQLDatabaseHelper(string ConnectionString)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SQLDatabaseHelper"/> class using the supplied connection string  
+        /// </summary>
+        /// <param name="connectionString">The connection string used to open the SQL connection</param>
+        public SQLDatabaseHelper(string connectionString)
         {
-            DBConnectionString = ConnectionString;
+            DBConnectionString = connectionString;
         }
         public void Dispose()
         {
             //   throw new NotImplementedException();
         }
+
         private string _lastError = string.Empty;
 
         /// <summary>Read ALL records for an entity </summary>
         /// <typeparam name="TENTITY">Entity Object type</typeparam>
-        /// <returns>Entity records</returns>
+        /// <returns><see cref="IList{T}"/> containing the Entity records</returns>
         public IList<TENTITY> ReadALL<TENTITY>() where TENTITY : class
         {
             if (string.IsNullOrEmpty(DBConnectionString))
@@ -60,15 +61,21 @@ namespace AGenius.UsefulStuff.Helpers
             }
             catch (DbException ex)
             {
+                if (ex.Message.Contains("deadlocked"))
+                {
+                    // Retry
+                    Utils.WriteLogFile(ex.Message, null, "Error", "Logs", true);
+                    return ReadALL<TENTITY>();
+                }
                 _lastError = ex.Message;
                 throw new DatabaseAccessHelperException(ex.Message);
             }
-
         }
+
         /// <summary>Return a single record for the specified ID </summary>
         /// <typeparam name="TENTITY">Entity Object type</typeparam>
-        /// <param name="ID"></param>
-        /// <returns></returns>
+        /// <param name="ID"><see cref="int"/> ID of the record to read</param>
+        /// <returns>The Entity record requested or null</returns>
         public TENTITY ReadRecord<TENTITY>(int? ID) where TENTITY : class
         {
             try
@@ -90,14 +97,21 @@ namespace AGenius.UsefulStuff.Helpers
             }
             catch (DbException ex)
             {
+                if (ex.Message.Contains("deadlocked"))
+                {
+                    // Retry
+                    Utils.WriteLogFile(ex.Message, null, "Error", "Logs", true);
+                    return ReadRecord<TENTITY>(ID);
+                }
                 _lastError = ex.Message;
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
+
         /// <summary>Return a single record for the specified ID </summary>
         /// <typeparam name="TENTITY">Entity Object type</typeparam>
-        /// <param name="ID"></param>
-        /// <returns></returns>
+        /// <param name="ID"><see cref="string"/> ID of the record to read</param>
+        /// <returns>The Entity record requested or null</returns>
         public TENTITY ReadRecord<TENTITY>(string ID) where TENTITY : class
         {
             try
@@ -119,14 +133,21 @@ namespace AGenius.UsefulStuff.Helpers
             }
             catch (DbException ex)
             {
+                if (ex.Message.Contains("deadlocked"))
+                {
+                    // Retry
+                    Utils.WriteLogFile(ex.Message, null, "Error", "Logs", true);
+                    return ReadRecord<TENTITY>(ID);
+                }
                 _lastError = ex.Message;
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
+
         /// <summary>Return a single record for the specified ID </summary>
         /// <typeparam name="TENTITY">Entity Object type</typeparam>
         /// <param name="ID">a Guid representing the ID of the record</param>
-        /// <returns></returns>
+        /// <returns>The Entity record requested or null</returns>
         public TENTITY ReadRecord<TENTITY>(Guid ID) where TENTITY : class
         {
             try
@@ -148,16 +169,23 @@ namespace AGenius.UsefulStuff.Helpers
             }
             catch (DbException ex)
             {
+                if (ex.Message.Contains("deadlocked"))
+                {
+                    // Retry
+                    Utils.WriteLogFile(ex.Message, null, "Error", "Logs", true);
+                    return ReadRecord<TENTITY>(ID);
+                }
                 _lastError = ex.Message;
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
+
         /// <summary>Return an object that matches the selection criteria </summary>
         /// <typeparam name="TENTITY">Entity Object type</typeparam>
         /// <param name="fieldValue">The Value of the Key field to find</param>
         /// <param name="keyFieldName">The Key FieldName</param>
         /// <param name="operatorType">Comparison Operator - Default is Equals</param>
-        /// <returns>entity records</returns>
+        /// <returns>The Entity record requested or null</returns>
         public TENTITY ReadRecord<TENTITY>(string keyFieldName, string fieldValue, string operatorType = "=") where TENTITY : class
         {
             try
@@ -189,11 +217,24 @@ namespace AGenius.UsefulStuff.Helpers
             }
             catch (DbException ex)
             {
+                if (ex.Message.Contains("deadlocked"))
+                {
+                    // Retry
+                    Utils.WriteLogFile(ex.Message, null, "Error", "Logs", true);
+                    return ReadRecord<TENTITY>(keyFieldName, fieldValue, operatorType);
+                }
                 _lastError = ex.Message;
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
-        public TENTITY ReadRecord<TENTITY>(string KeyFieldName, int FieldValue) where TENTITY : class
+
+        /// <summary>Return an object that matches the specified key field </summary>
+        /// <typeparam name="TENTITY">Entity Object type</typeparam>
+        /// <param name="keyFieldName"><see cref="string"/> representing the KeyField name in the table</param>
+        /// <param name="fieldValue"><see cref="int"/> representing the ID of the required record</param>
+        /// <param name="operatorType">Comparison Operator - Default is Equals</param>
+        /// <returns>The Entity record requested or null</returns>
+        public TENTITY ReadRecord<TENTITY>(string keyFieldName, int fieldValue, string operatorType = "=") where TENTITY : class
         {
             try
             {
@@ -203,7 +244,7 @@ namespace AGenius.UsefulStuff.Helpers
                     _lastError = "Invalid Table Name";
                     throw new ArgumentException(_lastError);
                 }
-                if (string.IsNullOrEmpty(KeyFieldName))
+                if (string.IsNullOrEmpty(keyFieldName))
                 {
                     _lastError = "Missing FieldName or Value for search";
                     throw new ArgumentException(_lastError);
@@ -212,9 +253,8 @@ namespace AGenius.UsefulStuff.Helpers
                 {
                     _lastError = "Connection String not set";
                     throw new ArgumentException(_lastError);
-                }
-                string sWhere = $"WHERE {KeyFieldName} = {FieldValue} ";
-
+                } 
+                string sWhere = $"WHERE {keyFieldName} {operatorType} '{fieldValue}' ";
                 string sSQL = $"SELECT * FROM {TableName} {sWhere}";
                 // var Results = null;
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
@@ -224,14 +264,21 @@ namespace AGenius.UsefulStuff.Helpers
             }
             catch (DbException ex)
             {
+                if (ex.Message.Contains("deadlocked"))
+                {
+                    // Retry
+                    Utils.WriteLogFile(ex.Message, null, "Error", "Logs", true);
+                    return ReadRecord<TENTITY>(keyFieldName, fieldValue);
+                }
                 _lastError = ex.Message;
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
+
         /// <summary>Return a single objects that matches the selection criteria </summary>
         /// <typeparam name="TENTITY">Entity Object type</typeparam>
         /// <param name="Where">criteria</param>
-        /// <returns>entity records</returns>
+        /// <returns>The Entity record requested or null</returns>
         public TENTITY ReadRecordWithWhere<TENTITY>(string Where = "") where TENTITY : class
         {
             try
@@ -247,7 +294,8 @@ namespace AGenius.UsefulStuff.Helpers
                 {
                     _lastError = "Connection String not set";
                     throw new ArgumentException(_lastError);
-                }
+                }                 
+
                 string sWhere = string.IsNullOrEmpty(Where) ? "" : $"WHERE {Where}";
 
                 string sSQL = $"SELECT TOP 1 * FROM {TableName} {sWhere}";
@@ -259,15 +307,22 @@ namespace AGenius.UsefulStuff.Helpers
             }
             catch (DbException ex)
             {
+                if (ex.Message.Contains("deadlocked"))
+                {
+                    // Retry
+                    Utils.WriteLogFile(ex.Message, null, "Error", "Logs", true);
+                    return ReadRecordWithWhere<TENTITY>(Where);
+                }
                 _lastError = ex.Message;
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
+
         /// <summary>Return a list of objects from a stored procedure with parameters</summary>
         /// <typeparam name="TENTITY">Entity Object type</typeparam>
         /// <param name="SprocName">Stored Procedure Name</param>
         /// <param name="Params"> DynamicParamters collection</param>
-        /// <returns>entity records</returns>
+        /// <returns><see cref="IList{T}"/> containing the Entity records</returns>
         /// <remarks>DynamicParameters param = new DynamicParameters();
         ///param.Add( "@@Name" , obj.Name );
         ///        param.Add( "@City" , obj.City );
@@ -291,10 +346,22 @@ namespace AGenius.UsefulStuff.Helpers
             }
             catch (DbException ex)
             {
+                if (ex.Message.Contains("deadlocked"))
+                {
+                    // Retry
+                    Utils.WriteLogFile(ex.Message, null, "Error", "Logs", true);
+                    return ReadRecordsSproc<TENTITY>(SprocName, Params);
+                }
                 _lastError = ex.Message;
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
+
+        /// <summary>Return a list of objects using the SQL Query string supplied</summary>
+        /// <typeparam name="TENTITY">Entity Object type</typeparam>
+        /// <param name="SQLQuery">The SQL Query to be used</param>        
+        /// <returns><see cref="IList{T}"/> containing the Entity records</returns>
+        /// <remarks>Use the token [tablename] to replace with the correct tablename for the requested entity</remarks>
         public IList<TENTITY> ReadRecordsSQL<TENTITY>(string SQLQuery = "") where TENTITY : class
         {
             try
@@ -309,10 +376,15 @@ namespace AGenius.UsefulStuff.Helpers
                 {
                     return db.Query<TENTITY>(sSQL).ToList();
                 }
-
             }
             catch (DbException ex)
             {
+                if (ex.Message.Contains("deadlocked"))
+                {
+                    // Retry
+                    Utils.WriteLogFile(ex.Message, null, "Error", "Logs", true);
+                    return ReadRecordsSQL<TENTITY>(SQLQuery);
+                }
                 _lastError = ex.Message;
                 throw new DatabaseAccessHelperException(ex.Message);
             }
@@ -321,7 +393,7 @@ namespace AGenius.UsefulStuff.Helpers
         /// <summary>Return a list of objects that match the selection criteria </summary>
         /// <typeparam name="TENTITY">Entity Object type</typeparam>
         /// <param name="Where">criteria</param>
-        /// <returns>entity records</returns>
+        /// <returns><see cref="IList{T}"/> containing the Entity records</returns>
         public IList<TENTITY> ReadRecords<TENTITY>(string Where = "")
             where TENTITY : class
         {
@@ -348,15 +420,22 @@ namespace AGenius.UsefulStuff.Helpers
             }
             catch (DbException ex)
             {
+                if (ex.Message.Contains("deadlocked"))
+                {
+                    // Retry
+                    Utils.WriteLogFile(ex.Message, null, "Error", "Logs", true);
+                    return ReadRecords<TENTITY>(Where);
+                }
                 _lastError = ex.Message;
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
+
         /// <summary>Return a list of objects that match the selection criteria </summary>
         /// <typeparam name="TENTITY">Entity Object type</typeparam>
         /// <param name="Where">criteria</param>
         /// <param name="TopCount">Only return n records</param>
-        /// <returns>entity records</returns>
+        /// <returns><see cref="IList{T}"/> containing the Entity records</returns>
         public IList<TENTITY> ReadRecords<TENTITY>(string Where, int TopCount)
             where TENTITY : class
         {
@@ -383,10 +462,22 @@ namespace AGenius.UsefulStuff.Helpers
             }
             catch (DbException ex)
             {
+                if (ex.Message.Contains("deadlocked"))
+                {
+                    // Retry
+                    Utils.WriteLogFile(ex.Message, null, "Error", "Logs", true);
+                    return ReadRecords<TENTITY>(Where, TopCount);
+                }
                 _lastError = ex.Message;
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
+
+        /// <summary>Return a list of objects that match the selection criteria </summary>
+        /// <typeparam name="TENTITY">Entity Object type</typeparam>
+        /// <param name="Where">criteria</param>
+        /// <param name="OverrideTableName">Supply the tablename to override the default tablename of the entity</param>
+        /// <returns><see cref="IList{T}"/> containing the Entity records</returns>
         public IList<TENTITY> ReadRecords<TENTITY>(string Where = "", string OverrideTableName = "")
             where TENTITY : class
         {
@@ -417,17 +508,24 @@ namespace AGenius.UsefulStuff.Helpers
             }
             catch (DbException ex)
             {
+                if (ex.Message.Contains("deadlocked"))
+                {
+                    // Retry
+                    Utils.WriteLogFile(ex.Message, null, "Error", "Logs", true);
+                    return ReadRecords<TENTITY>(Where, OverrideTableName);
+                }
                 _lastError = ex.Message;
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
+
         /// <summary> Multi Queries </summary>
-        /// <typeparam name="TENTITY"></typeparam>
-        /// <typeparam name="DETAIL"></typeparam>
-        /// <param name="splitOnField"></param>
-        /// <param name="detailPropertyName"></param>
-        /// <param name="SQLQuery"></param>
-        /// <returns></returns>
+        /// <typeparam name="TENTITY">Entity Object type</typeparam>
+        /// <typeparam name="DETAIL">The expected Detail entity object type</typeparam>
+        /// <param name="SQLQuery">SQL Query to use</param>
+        /// <param name="splitOnField">The field name to split on</param>
+        /// <param name="detailPropertyName">The detail name property name</param>
+        /// <returns><see cref="IList{T}"/> containing the Entity records</returns>
         public IList<TENTITY> ReadRecords<TENTITY, DETAIL>(string SQLQuery, string splitOnField, string detailPropertyName)
             where TENTITY : class
             where DETAIL : class
@@ -456,11 +554,25 @@ namespace AGenius.UsefulStuff.Helpers
             }
             catch (DbException ex)
             {
+                if (ex.Message.Contains("deadlocked"))
+                {
+                    // Retry
+                    Utils.WriteLogFile(ex.Message, null, "Error", "Logs", true);
+                }
                 _lastError = ex.Message;
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
 
+        /// <summary> Multi Queries </summary>
+        /// <typeparam name="TENTITY">Entity Object type</typeparam>
+        /// <typeparam name="DETAIL1">The expected Detail entity object type</typeparam>
+        /// <typeparam name="DETAIL2">The expected Detail entity object type</typeparam>
+        /// <param name="SQLQuery">SQL Query to use</param>
+        /// <param name="splitOnField">The field name to split on</param>
+        /// <param name="detailPropertyName1">The detail name property name</param>
+        /// <param name="detailPropertyName2">The detail name property name</param>
+        /// <returns><see cref="IList{T}"/> containing the Entity records</returns>
         public IList<TENTITY> ReadRecords<TENTITY, DETAIL1, DETAIL2>(string SQLQuery,
                                                                     string splitOnField,
                                                                     string detailPropertyName1,
@@ -496,6 +608,11 @@ namespace AGenius.UsefulStuff.Helpers
             }
             catch (DbException ex)
             {
+                if (ex.Message.Contains("deadlocked"))
+                {
+                    // Retry
+                    Utils.WriteLogFile(ex.Message, null, "Error", "Logs", true);
+                }
                 _lastError = ex.Message;
                 throw new DatabaseAccessHelperException(ex.Message);
             }
@@ -505,7 +622,7 @@ namespace AGenius.UsefulStuff.Helpers
         /// <summary>Insert a new Entity record</summary>
         /// <typeparam name="TENTITY">Entity Object type</typeparam>
         /// <param name="Record">The Record to insert</param>
-        /// <returns>Long ID</returns>
+        /// <returns><see cref="long"/> ID of the inserted record</returns>
         public long InsertRecord<TENTITY>(TENTITY Record) where TENTITY : class
         {
             try
@@ -528,6 +645,11 @@ namespace AGenius.UsefulStuff.Helpers
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
+
+        /// <summary>Insert mew entity records from a supplied list</summary>
+        /// <typeparam name="TENTITY">Entity Object type</typeparam>
+        /// <param name="Records">a <see cref="List{T}" of records to insert/></param>
+        /// <returns><see cref="bool"/> true/false for success/failure</returns>
         public bool InsertRecords<TENTITY>(List<TENTITY> Records) where TENTITY : class
         {
             try
@@ -568,6 +690,7 @@ namespace AGenius.UsefulStuff.Helpers
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
+
         /// <summary>Execute an SQL Statement </summary>
         /// <param name="sqlCmd">String holding the SQL Command</param>
         public void ExecuteSQL(string sqlCmd)
@@ -592,6 +715,7 @@ namespace AGenius.UsefulStuff.Helpers
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
+
         /// <summary>Execute an SQL Statement </summary>
         /// <param name="sqlCmd">String holding the SQL Command</param>
         public object ExecuteScalar(string sqlCmd)
@@ -616,13 +740,15 @@ namespace AGenius.UsefulStuff.Helpers
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
-        /// <summary>Replicate the MSACCESS DLookup feature.<br />
-        /// This will perform a simple lookup of a value from a field based on specific <br />
-        /// selection criteria <br />WHERE statement is not required in the Criteria specified</summary>
+
+        /// <summary>Replicate the MSACCESS DLookup feature.
+        /// This will perform a simple lookup of a value from a field based on specific 
+        /// selection criteria</summary>
         /// <param name="FieldName">Field Name for the return value</param>
         /// <param name="tableName">Table or View name to use</param>
-        /// <param name="Criteria">the Where criteria - WHERE statement not required</param>
-        public object DLookup(string FieldName, string tableName, string Criteria)
+        /// <param name="Criteria">The Where criteria (optional)</param>
+        /// <remarks>WHERE statement is not required in the Criteria specified</remarks>
+        public object DLookup(string FieldName, string tableName, string Criteria = "")
         {
             try
             {
@@ -642,8 +768,8 @@ namespace AGenius.UsefulStuff.Helpers
                     _lastError = "Missing FieldName or Value for return";
                     throw new ArgumentException(_lastError);
                 }
+                string sWhere = string.IsNullOrEmpty(Criteria) ? "" : $"WHERE {Criteria}";
 
-                string sWhere = $"WHERE {Criteria.ToLower().Replace("where ", "")} ";
                 string sSQL = $"SELECT {FieldName} FROM {tableName} {sWhere}";
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
@@ -656,12 +782,15 @@ namespace AGenius.UsefulStuff.Helpers
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
-        /// <summary>Replicate the MSACCESS DCount feature.<br />
-        /// This will perform a simple count of a number of rows in the table/view with the provided criteria<br />
+
+        /// <summary>Replicate the MSACCESS DCount feature.
+        /// This will perform a simple count of a number of rows in the table/view with the provided criteria
         /// selection criteria <br />WHERE statement is not required in the Criteria specified</summary>        
         /// <param name="tableName">Table or View name to use</param>
-        /// <param name="Criteria">the Where criteria - WHERE statement not required</param>
-        public int DCount(string tableName, string Criteria)
+        /// <param name="Criteria">The Where criteria (optional)</param>
+        /// <returns><see cref="long"/> number of records counted</returns>
+        /// <remarks>WHERE statement is not required in the Criteria specified</remarks>
+        public long DCount(string tableName, string Criteria = "")
         {
             try
             {
@@ -676,8 +805,8 @@ namespace AGenius.UsefulStuff.Helpers
                     _lastError = "Invalid Table Name";
                     throw new ArgumentException(_lastError);
                 }
+                string sWhere = string.IsNullOrEmpty(Criteria) ? "" : $"WHERE {Criteria}";
 
-                string sWhere = $"WHERE {Criteria.ToLower().Replace("where ", "")} ";
                 string sSQL = $"SELECT count(*) FROM {tableName} {sWhere}";
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
@@ -690,10 +819,11 @@ namespace AGenius.UsefulStuff.Helpers
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
+
         /// <summary>Update an Entity record</summary>
         /// <typeparam name="TENTITY">Entity Object type</typeparam>
         /// <param name="Record">The Record to Update</param>
-        /// <returns>True/false for success</returns>
+        /// <returns><see cref="bool"/> true/false for success/failure</returns>
         public bool UpdateRecord<TENTITY>(TENTITY Record) where TENTITY : class
         {
             try
@@ -715,11 +845,12 @@ namespace AGenius.UsefulStuff.Helpers
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
+
         /// <summary>Update an Entity record</summary>
         /// <typeparam name="TENTITY">Entity Object type</typeparam>
         /// <param name="Record">The Record to Update</param>
         /// <param name="originalEntity">A Copy of the original Record before changes made</param>
-        /// <returns>True/false for success</returns>
+        /// <returns><see cref="bool"/> true/false for success/failure</returns>
         public bool UpdateRecord<TENTITY>(TENTITY Record, TENTITY originalEntity) where TENTITY : class
         {
             try
@@ -788,7 +919,7 @@ namespace AGenius.UsefulStuff.Helpers
         /// <summary>Delete an Entity record</summary>
         /// <typeparam name="TENTITY">Entity Object type</typeparam>
         /// <param name="Record">The Record to Delete</param>
-        /// <returns>True/false for success</returns>
+        /// <returns><see cref="bool"/> true/false for success/failure</returns>
         public bool DeleteRecord<TENTITY>(TENTITY Record) where TENTITY : class
         {
             try
@@ -813,17 +944,19 @@ namespace AGenius.UsefulStuff.Helpers
 
         /// <summary> Return the TableName of the POCO </summary>
         /// <typeparam name="TENTITY">the PCO Entity</typeparam>
-        /// <returns>string</returns>
+        /// <returns><see cref="string"/> holding the tablename</returns>
         public string GetTableName<TENTITY>()
         {
             var attr = typeof(TENTITY).GetCustomAttribute<Dapper.Contrib.Extensions.TableAttribute>(false);
             return attr != null ? attr.Name : "";
         }
+        /// <summary>
+        /// Returns the last error message if any of the specified action
+        /// </summary>
+        /// <returns><see cref="string"/> value containing any error messages.</returns>
         public string LastError()
         {
             return _lastError;
         }
-
-
     }
 }

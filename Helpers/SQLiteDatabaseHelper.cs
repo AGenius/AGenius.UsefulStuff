@@ -16,27 +16,29 @@ namespace AGenius.UsefulStuff.Helpers
     /// </summary>
     public class SQLiteDatabaseHelper : IDisposable
     {
-        /// <summary>Event Handler for the ErrorEventArgs event</summary>
+        /// <summary>The SQL Lite database file name used</summary>
         public string dbFilePath = "default.db3";
+        /// <summary>Provides access to the  Connection string in use</summary>
         public string DBConnectionString
         {
             get; set;
         }
-        public Boolean? LastSaveState
-        {
-            get;
-            private set;
-        }
+        /// <summary>Initializes a new instance of the <see cref="SQLiteDatabaseHelper"/> class </summary>
         public SQLiteDatabaseHelper()
         {
             DBConnectionString = "Data Source=" + dbFilePath;
         }
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SQLiteDatabaseHelper"/> class using the supplied database file name  
+        /// </summary>
+        /// <param name="DatabaseName">The SQLite database file name(full path)</param>
         public SQLiteDatabaseHelper(string DatabaseName)
         {
             if (!DatabaseName.EndsWith(".db3"))
             {
                 DatabaseName += ".db3";
             }
+            dbFilePath = DatabaseName;
             DBConnectionString = String.Format("Data Source={0}", DatabaseName);
         }
         public void Dispose()
@@ -47,7 +49,7 @@ namespace AGenius.UsefulStuff.Helpers
 
         /// <summary>Read ALL records for an entity </summary>
         /// <typeparam name="TENTITY">Entity Object type</typeparam>
-        /// <returns>Entity records</returns>
+        /// <returns><see cref="IList{T}"/> containing the Entity records</returns>
         public IList<TENTITY> ReadALL<TENTITY>() where TENTITY : class
         {
             if (string.IsNullOrEmpty(DBConnectionString))
@@ -67,10 +69,11 @@ namespace AGenius.UsefulStuff.Helpers
             }
 
         }
+
         /// <summary>Return a single record for the specified ID </summary>
         /// <typeparam name="TENTITY">Entity Object type</typeparam>
-        /// <param name="ID"></param>
-        /// <returns></returns>
+        /// <param name="ID"><see cref="int"/> ID of the record to read</param>
+        /// <returns>The Entity record requested or null</returns>
         public TENTITY ReadRecord<TENTITY>(int? ID) where TENTITY : class
         {
             try
@@ -93,10 +96,11 @@ namespace AGenius.UsefulStuff.Helpers
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
+
         /// <summary>Return a single record for the specified ID </summary>
         /// <typeparam name="TENTITY">Entity Object type</typeparam>
-        /// <param name="ID"></param>
-        /// <returns></returns>
+        /// <param name="ID"><see cref="string"/> ID of the record to read</param>
+        /// <returns>The Entity record requested or null</returns>
         public TENTITY ReadRecord<TENTITY>(string ID) where TENTITY : class
         {
             try
@@ -119,29 +123,64 @@ namespace AGenius.UsefulStuff.Helpers
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
+
+        /// <summary>Return a single record for the specified ID </summary>
+        /// <typeparam name="TENTITY">Entity Object type</typeparam>
+        /// <param name="ID">a Guid representing the ID of the record</param>
+        /// <returns>The Entity record requested or null</returns>
+        public TENTITY ReadRecord<TENTITY>(Guid ID) where TENTITY : class
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(DBConnectionString))
+                {
+                    _lastError = "Connection String not set";
+                    throw new ArgumentException(_lastError);
+                }
+                if (string.IsNullOrEmpty(ID.ToString()))
+                {
+                    _lastError = "Invalid ID specified";
+                    throw new ArgumentException(_lastError);
+                }
+                using (IDbConnection db = new SQLiteConnection(DBConnectionString))
+                {
+                    return db.Get<TENTITY>(ID.ToString());
+                }
+            }
+            catch (DbException ex)
+            {
+                _lastError = ex.Message;
+                throw new DatabaseAccessHelperException(ex.Message);
+            }
+        }
+
         /// <summary>Return an object that matches the selection criteria </summary>
         /// <typeparam name="TENTITY">Entity Object type</typeparam>
-        /// <param name="FieldValue">The Value of the Key field to find</param>
-        /// <param name="KeyFieldName">The Key FieldName</param>
-        /// <returns>entity records</returns>
-        public TENTITY ReadRecord<TENTITY>(string KeyFieldName, string FieldValue) where TENTITY : class
+        /// <param name="fieldValue">The Value of the Key field to find</param>
+        /// <param name="keyFieldName">The Key FieldName</param>
+        /// <param name="operatorType">Comparison Operator - Default is Equals</param>
+        /// <returns>The Entity record requested or null</returns>
+        public TENTITY ReadRecord<TENTITY>(string keyFieldName, string fieldValue, string operatorType = "=") where TENTITY : class
         {
             try
             {
                 string TableName = GetTableName<TENTITY>();
                 if (string.IsNullOrEmpty(TableName))
                 {
-                    throw new ArgumentException("Invalid Table Name");
+                    _lastError = "Invalid Table Name";
+                    throw new ArgumentException(_lastError);
                 }
-                if (string.IsNullOrEmpty(KeyFieldName) || FieldValue == null)
+                if (string.IsNullOrEmpty(keyFieldName) || fieldValue == null)
                 {
-                    throw new ArgumentException("Missing FieldName or Value for search");
+                    _lastError = "Missing FieldName or Value for search";
+                    throw new ArgumentException(_lastError);
                 }
                 if (string.IsNullOrEmpty(DBConnectionString))
                 {
-                    throw new ArgumentException("Connection String not set");
+                    _lastError = "Connection String not set";
+                    throw new ArgumentException(_lastError);
                 }
-                string sWhere = $"WHERE {KeyFieldName} = '{FieldValue}' ";
+                string sWhere = $"WHERE {keyFieldName} {operatorType} '{fieldValue}' ";
 
                 string sSQL = $"SELECT * FROM {TableName} {sWhere}";
                 // var Results = null;
@@ -152,28 +191,38 @@ namespace AGenius.UsefulStuff.Helpers
             }
             catch (DbException ex)
             {
+                _lastError = ex.Message;
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
-        public TENTITY ReadRecord<TENTITY>(string KeyFieldName, int FieldValue) where TENTITY : class
+
+        /// <summary>Return an object that matches the specified key field </summary>
+        /// <typeparam name="TENTITY">Entity Object type</typeparam>
+        /// <param name="keyFieldName"><see cref="string"/> representing the KeyField name in the table</param>
+        /// <param name="fieldValue"><see cref="int"/> representing the ID of the required record</param>
+        /// <param name="operatorType">Comparison Operator - Default is Equals</param>
+        /// <returns>The Entity record requested or null</returns>
+        public TENTITY ReadRecord<TENTITY>(string keyFieldName, int fieldValue, string operatorType = "=") where TENTITY : class
         {
             try
             {
                 string TableName = GetTableName<TENTITY>();
                 if (string.IsNullOrEmpty(TableName))
                 {
-                    throw new ArgumentException("Invalid Table Name");
+                    _lastError = "Invalid Table Name";
+                    throw new ArgumentException(_lastError);
                 }
-                if (string.IsNullOrEmpty(KeyFieldName))
+                if (string.IsNullOrEmpty(keyFieldName))
                 {
-                    throw new ArgumentException("Missing FieldName or Value for search");
+                    _lastError = "Missing FieldName or Value for search";
+                    throw new ArgumentException(_lastError);
                 }
                 if (string.IsNullOrEmpty(DBConnectionString))
                 {
-                    throw new ArgumentException("Connection String not set");
+                    _lastError = "Connection String not set";
+                    throw new ArgumentException(_lastError);
                 }
-                string sWhere = $"WHERE {KeyFieldName} = {FieldValue} ";
-
+                string sWhere = $"WHERE {keyFieldName} {operatorType} '{fieldValue}' ";
                 string sSQL = $"SELECT * FROM {TableName} {sWhere}";
                 // var Results = null;
                 using (IDbConnection db = new SQLiteConnection(DBConnectionString))
@@ -183,13 +232,15 @@ namespace AGenius.UsefulStuff.Helpers
             }
             catch (DbException ex)
             {
+                _lastError = ex.Message;
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
-        /// <summary>Return a single objects that match the selection criteria </summary>
+
+        /// <summary>Return a single objects that matches the selection criteria </summary>
         /// <typeparam name="TENTITY">Entity Object type</typeparam>
         /// <param name="Where">criteria</param>
-        /// <returns>entity records</returns>
+        /// <returns>The Entity record requested or null</returns>
         public TENTITY ReadRecordWithWhere<TENTITY>(string Where = "")
             where TENTITY : class
         {
@@ -219,11 +270,12 @@ namespace AGenius.UsefulStuff.Helpers
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
+
         /// <summary>Return a list of objects from a stored procedure with parameters</summary>
         /// <typeparam name="TENTITY">Entity Object type</typeparam>
         /// <param name="SprocName">Stored Procedure Name</param>
         /// <param name="Params"> DynamicParamters collection</param>
-        /// <returns>entity records</returns>
+        /// <returns><see cref="IList{T}"/> containing the Entity records</returns>
         /// <remarks>DynamicParameters param = new DynamicParameters();
         ///param.Add( "@@Name" , obj.Name );
         ///        param.Add( "@City" , obj.City );
@@ -249,6 +301,12 @@ namespace AGenius.UsefulStuff.Helpers
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
+
+        /// <summary>Return a list of objects using the SQL Query string supplied</summary>
+        /// <typeparam name="TENTITY">Entity Object type</typeparam>
+        /// <param name="SQLQuery">The SQL Query to be used</param>        
+        /// <returns><see cref="IList{T}"/> containing the Entity records</returns>
+        /// <remarks>Use the token [tablename] to replace with the correct tablename for the requested entity</remarks>
         public IList<TENTITY> ReadRecordsSQL<TENTITY>(string SQLQuery = "") where TENTITY : class
         {
             try
@@ -271,7 +329,7 @@ namespace AGenius.UsefulStuff.Helpers
         /// <summary>Return a list of objects that match the selection criteria </summary>
         /// <typeparam name="TENTITY">Entity Object type</typeparam>
         /// <param name="Where">criteria</param>
-        /// <returns>entity records</returns>
+        /// <returns><see cref="IList{T}"/> containing the Entity records</returns>
         public IList<TENTITY> ReadRecords<TENTITY>(string Where = "") where TENTITY : class
         {
             try
@@ -302,11 +360,89 @@ namespace AGenius.UsefulStuff.Helpers
             }
         }
 
+        /// <summary>Replicate the MSACCESS DLookup feature.
+        /// This will perform a simple lookup of a value from a field based on specific 
+        /// selection criteria</summary>
+        /// <param name="FieldName">Field Name for the return value</param>
+        /// <param name="tableName">Table or View name to use</param>
+        /// <param name="Criteria">The Where criteria (optional)</param>
+        /// <remarks>WHERE statement is not required in the Criteria specified</remarks>
+        public object DLookup(string FieldName, string tableName, string Criteria = "")
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(DBConnectionString))
+                {
+                    _lastError = "Connection String not set";
+                    throw new ArgumentException(_lastError);
+                }
+
+                if (string.IsNullOrEmpty(tableName))
+                {
+                    _lastError = "Invalid Table Name";
+                    throw new ArgumentException(_lastError);
+                }
+                if (string.IsNullOrEmpty(FieldName))
+                {
+                    _lastError = "Missing FieldName or Value for return";
+                    throw new ArgumentException(_lastError);
+                }
+                string sWhere = string.IsNullOrEmpty(Criteria) ? "" : $"WHERE {Criteria}";
+
+                string sSQL = $"SELECT {FieldName} FROM {tableName} {sWhere}";
+                using (IDbConnection db = new SQLiteConnection(DBConnectionString))
+                {
+                    return db.ExecuteScalar(sSQL);
+                }
+            }
+            catch (DbException ex)
+            {
+                _lastError = ex.Message;
+                throw new DatabaseAccessHelperException(ex.Message);
+            }
+        }
+
+        /// <summary>Replicate the MSACCESS DCount feature.
+        /// This will perform a simple count of a number of rows in the table/view with the provided criteria
+        /// selection criteria <br />WHERE statement is not required in the Criteria specified</summary>        
+        /// <param name="tableName">Table or View name to use</param>
+        /// <param name="Criteria">The Where criteria (optional)</param>
+        /// <returns><see cref="long"/> number of records counted</returns>
+        /// <remarks>WHERE statement is not required in the Criteria specified</remarks>
+        public long DCount(string tableName, string Criteria = "")
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(DBConnectionString))
+                {
+                    _lastError = "Connection String not set";
+                    throw new ArgumentException(_lastError);
+                }
+
+                if (string.IsNullOrEmpty(tableName))
+                {
+                    _lastError = "Invalid Table Name";
+                    throw new ArgumentException(_lastError);
+                }
+                string sWhere = string.IsNullOrEmpty(Criteria) ? "" : $"WHERE {Criteria}";
+
+                string sSQL = $"SELECT count(*) FROM {tableName} {sWhere}";
+                using (IDbConnection db = new SQLiteConnection(DBConnectionString))
+                {
+                    return db.Query<int>(sSQL).FirstOrDefault();
+                }
+            }
+            catch (DbException ex)
+            {
+                _lastError = ex.Message;
+                throw new DatabaseAccessHelperException(ex.Message);
+            }
+        }
 
         /// <summary>Insert a new Entity record</summary>
         /// <typeparam name="TENTITY">Entity Object type</typeparam>
         /// <param name="Record">The Record to insert</param>
-        /// <returns>Long ID</returns>
+        /// <returns><see cref="long"/> ID of the inserted record</returns>
         public long InsertRecord<TENTITY>(TENTITY Record) where TENTITY : class
         {
             try
@@ -327,6 +463,7 @@ namespace AGenius.UsefulStuff.Helpers
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
+
         /// <summary>Execute an SQL Statement </summary>
         /// <param name="sqlCmd">String holding the SQL Command</param>
         public void ExecuteSQL(string sqlCmd)
@@ -349,10 +486,28 @@ namespace AGenius.UsefulStuff.Helpers
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
+
+        /// <summary>Execute an SQL Statement </summary>
+        /// <param name="sqlCmd">String holding the SQL Command</param>
+        public string ExecuteScalar(string sqlCmd)
+        {
+            SQLiteConnection cnn = new SQLiteConnection(DBConnectionString);
+            cnn.Open();
+            SQLiteCommand mycommand = new SQLiteCommand(cnn) { CommandText = sqlCmd };
+            object value = mycommand.ExecuteScalar();
+            cnn.Close();
+
+            if (value != null)
+            {
+                return value.ToString();
+            }
+            return "";
+        }
+
         /// <summary>Update an Entity record</summary>
         /// <typeparam name="TENTITY">Entity Object type</typeparam>
         /// <param name="Record">The Record to Update</param>
-        /// <returns>True/false for success</returns>
+        /// <returns><see cref="bool"/> true/false for success/failure</returns>
         public bool UpdateRecord<TENTITY>(TENTITY Record) where TENTITY : class
         {
             try
@@ -372,10 +527,11 @@ namespace AGenius.UsefulStuff.Helpers
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
+
         /// <summary>Delete an Entity record</summary>
         /// <typeparam name="TENTITY">Entity Object type</typeparam>
         /// <param name="Record">The Record to Delete</param>
-        /// <returns>True/false for success</returns>
+        /// <returns><see cref="bool"/> true/false for success/failure</returns>
         public bool DeleteRecord<TENTITY>(TENTITY Record) where TENTITY : class
         {
             try
@@ -398,12 +554,15 @@ namespace AGenius.UsefulStuff.Helpers
 
         /// <summary> Return the TableName of the POCO </summary>
         /// <typeparam name="TENTITY">the PCO Entity</typeparam>
-        /// <returns>string</returns>
+        /// <returns><see cref="string"/> holding the tablename</returns>
         public string GetTableName<TENTITY>()
         {
             var attr = typeof(TENTITY).GetCustomAttribute<Dapper.Contrib.Extensions.TableAttribute>(false);
             return attr != null ? attr.Name : "";
         }
+        /// <summary>Create a table if it does not exist</summary>
+        /// <param name="TableName">The Table Name to create</param>
+        /// <returns><see cref="bool"/> true/false for success/failure</returns>
         public bool CreateTable(string TableName)
         {
             try
@@ -419,9 +578,14 @@ namespace AGenius.UsefulStuff.Helpers
                 return false;
             }
         }
+
+        /// <summary>Create an index for a table if it does not exist</summary>
+        /// <param name="TableName">The table Name</param>
+        /// <param name="IndexName">The index Name</param>
+        /// <param name="IndexCol">The indexed column name</param>
+        /// <returns><see cref="bool"/> true/false for success/failure</returns>
         public bool CreateIndex(string TableName, string IndexName, string IndexCol)
         {
-
             try
             {
                 //Create Index 
@@ -434,37 +598,51 @@ namespace AGenius.UsefulStuff.Helpers
                 return false;
             }
         }
-        public bool AddColumn(string TableName, string ColName, string Type, int Size, bool AllowNull)
+
+        /// <summary>Add a new column to a table if it does not exist</summary>
+        /// <param name="tableName">The Table Name to create</param>
+        /// <param name="columnName">The column name to create</param>
+        /// <param name="columnType">The column type</param>
+        /// <param name="columnSize">The column size</param>
+        /// <param name="allowNull">Does the column allow null values</param>
+        /// <returns><see cref="bool"/> true/false for success/failure</returns>
+        public bool AddColumn(string tableName, string columnName, string columnType, int columnSize, bool allowNull)
         {
             try
             {
-                //Create Columns
-                string sSQL = null;
-                sSQL = "ALTER TABLE {0} ADD COLUMN [{1}] {2}";
+                if (!columnExists(tableName, columnName))
+                {
+                    //Create Columns
+                    string sSQL = null;
+                    sSQL = "ALTER TABLE {0} ADD COLUMN [{1}] {2}";
 
-                if (Type.ToUpper() != "INTEGER" && Type.ToUpper() != "DATETIME" && Type.ToUpper() != "BLOB")
-                {
-                    sSQL += "({3}) ";
-                }
+                    if (columnType.ToUpper() != "INTEGER" && columnType.ToUpper() != "DATETIME" && columnType.ToUpper() != "BLOB")
+                    {
+                        sSQL += "({3}) ";
+                    }
 
-                if (AllowNull)
-                {
-                    sSQL += " NULL;";
+                    if (allowNull)
+                    {
+                        sSQL += " NULL;";
+                    }
+                    else
+                    {
+                        sSQL += " NOT NULL;";
+                    }
+                    sSQL = String.Format(sSQL, tableName, columnName, columnType.ToUpper(), columnSize);
+                    this.ExecuteSQL(String.Format(sSQL, tableName));
                 }
-                else
-                {
-                    sSQL += " NOT NULL;";
-                }
-                sSQL = String.Format(sSQL, TableName, ColName, Type.ToUpper(), Size);
-                this.ExecuteSQL(String.Format(sSQL, TableName));
                 return true;
             }
-
             catch (Exception)
             {
                 return false;
             }
         }
+
+        /// <summary>Check if a table exists in the database</summary>
+        /// <param name="tableName">The Table Name to check</param>
+        /// <returns><see cref="bool"/> true/false for success/failure</returns>
         public bool TableExists(String tableName)
         {
             bool HasRows;
@@ -490,6 +668,11 @@ namespace AGenius.UsefulStuff.Helpers
                 return false;
             }
         }
+
+        /// <summary>Check if a column exists in a given table</summary>
+        /// <param name="tableName">The Table Name to check</param>
+        /// <param name="columnName">The column name to check</param>
+        /// <returns><see cref="bool"/> true/false for success/failure</returns>
         public bool columnExists(String tableName, string columnName)
         {
             try
@@ -512,20 +695,6 @@ namespace AGenius.UsefulStuff.Helpers
             {
                 return false;
             }
-        }
-        public string ExecuteScalar(string SQLQuery)
-        {
-            SQLiteConnection cnn = new SQLiteConnection(DBConnectionString);
-            cnn.Open();
-            SQLiteCommand mycommand = new SQLiteCommand(cnn) { CommandText = SQLQuery };
-            object value = mycommand.ExecuteScalar();
-            cnn.Close();
-
-            if (value != null)
-            {
-                return value.ToString();
-            }
-            return "";
         }
     }
 }
