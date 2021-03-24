@@ -727,6 +727,30 @@ namespace AGenius.UsefulStuff.Helpers
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
+        /// <summary>Execute a SQL Query and return the Effected row count</summary>
+        /// <param name="sqlCmd">String holding the SQL Command</param>
+        /// <returns>The number of effected rows <see cref="long"/></returns>
+        public long ExecuteSQLWithEffectedCount(string sqlCmd)
+        {
+            _lastError = string.Empty;
+            try
+            {
+                if (string.IsNullOrEmpty(DBConnectionString))
+                {
+                    _lastError = "Connection String not set";
+                    throw new ArgumentException(_lastError);
+                }
+                using (IDbConnection db = new SqlConnection(DBConnectionString))
+                {
+                    return db.Execute(sqlCmd);
+                }
+            }
+            catch (DbException ex)
+            {
+                _lastError = ex.Message;
+                throw new DatabaseAccessHelperException(ex.Message);
+            }
+        }
 
         /// <summary>Replicate the MSACCESS DLookup feature.
         /// This will perform a simple lookup of a value from a field based on specific 
