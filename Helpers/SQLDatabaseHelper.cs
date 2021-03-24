@@ -71,7 +71,6 @@ namespace AGenius.UsefulStuff.Helpers
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
-
         /// <summary>Return a single record for the specified ID </summary>
         /// <typeparam name="TENTITY">Entity Object type</typeparam>
         /// <param name="ID"><see cref="int"/> ID of the record to read</param>
@@ -107,7 +106,6 @@ namespace AGenius.UsefulStuff.Helpers
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
-
         /// <summary>Return a single record for the specified ID </summary>
         /// <typeparam name="TENTITY">Entity Object type</typeparam>
         /// <param name="ID"><see cref="string"/> ID of the record to read</param>
@@ -143,7 +141,6 @@ namespace AGenius.UsefulStuff.Helpers
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
-
         /// <summary>Return a single record for the specified ID </summary>
         /// <typeparam name="TENTITY">Entity Object type</typeparam>
         /// <param name="ID">a Guid representing the ID of the record</param>
@@ -179,7 +176,6 @@ namespace AGenius.UsefulStuff.Helpers
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
-
         /// <summary>Return an object that matches the selection criteria </summary>
         /// <typeparam name="TENTITY">Entity Object type</typeparam>
         /// <param name="fieldValue">The Value of the Key field to find</param>
@@ -227,7 +223,6 @@ namespace AGenius.UsefulStuff.Helpers
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
-
         /// <summary>Return an object that matches the specified key field </summary>
         /// <typeparam name="TENTITY">Entity Object type</typeparam>
         /// <param name="keyFieldName"><see cref="string"/> representing the KeyField name in the table</param>
@@ -253,7 +248,7 @@ namespace AGenius.UsefulStuff.Helpers
                 {
                     _lastError = "Connection String not set";
                     throw new ArgumentException(_lastError);
-                } 
+                }
                 string sWhere = $"WHERE {keyFieldName} {operatorType} '{fieldValue}' ";
                 string sSQL = $"SELECT * FROM {TableName} {sWhere}";
                 // var Results = null;
@@ -274,7 +269,6 @@ namespace AGenius.UsefulStuff.Helpers
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
-
         /// <summary>Return a single objects that matches the selection criteria </summary>
         /// <typeparam name="TENTITY">Entity Object type</typeparam>
         /// <param name="Where">criteria</param>
@@ -294,7 +288,7 @@ namespace AGenius.UsefulStuff.Helpers
                 {
                     _lastError = "Connection String not set";
                     throw new ArgumentException(_lastError);
-                }                 
+                }
 
                 string sWhere = string.IsNullOrEmpty(Where) ? "" : $"WHERE {Where}";
 
@@ -317,7 +311,6 @@ namespace AGenius.UsefulStuff.Helpers
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
-
         /// <summary>Return a list of objects from a stored procedure with parameters</summary>
         /// <typeparam name="TENTITY">Entity Object type</typeparam>
         /// <param name="SprocName">Stored Procedure Name</param>
@@ -356,7 +349,6 @@ namespace AGenius.UsefulStuff.Helpers
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
-
         /// <summary>Return a list of objects using the SQL Query string supplied</summary>
         /// <typeparam name="TENTITY">Entity Object type</typeparam>
         /// <param name="SQLQuery">The SQL Query to be used</param>        
@@ -389,7 +381,6 @@ namespace AGenius.UsefulStuff.Helpers
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
-
         /// <summary>Return a list of objects that match the selection criteria </summary>
         /// <typeparam name="TENTITY">Entity Object type</typeparam>
         /// <param name="Where">criteria</param>
@@ -430,7 +421,6 @@ namespace AGenius.UsefulStuff.Helpers
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
-
         /// <summary>Return a list of objects that match the selection criteria </summary>
         /// <typeparam name="TENTITY">Entity Object type</typeparam>
         /// <param name="Where">criteria</param>
@@ -472,7 +462,6 @@ namespace AGenius.UsefulStuff.Helpers
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
-
         /// <summary>Return a list of objects that match the selection criteria </summary>
         /// <typeparam name="TENTITY">Entity Object type</typeparam>
         /// <param name="Where">criteria</param>
@@ -518,7 +507,6 @@ namespace AGenius.UsefulStuff.Helpers
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
-
         /// <summary> Multi Queries </summary>
         /// <typeparam name="TENTITY">Entity Object type</typeparam>
         /// <typeparam name="DETAIL">The expected Detail entity object type</typeparam>
@@ -563,7 +551,6 @@ namespace AGenius.UsefulStuff.Helpers
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
-
         /// <summary> Multi Queries </summary>
         /// <typeparam name="TENTITY">Entity Object type</typeparam>
         /// <typeparam name="DETAIL1">The expected Detail entity object type</typeparam>
@@ -861,8 +848,8 @@ namespace AGenius.UsefulStuff.Helpers
                     throw new ArgumentException(_lastError);
                 }
 
-                // If Changes Only true and an original record is passed then perform a compare to get a list of differences then
-                // build an update query
+                // If originalEntity record is passed then perform a compare to get a list of differences then
+                // build an update query to only commit those differences
                 if (originalEntity != null)
                 {
                     // Get a list of all the changes (compare original to current)
@@ -916,6 +903,157 @@ namespace AGenius.UsefulStuff.Helpers
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
+        /// <summary>
+        /// Updates table T with the values in param.
+        /// The table must have a key named "Id" and the value of id must be included in the "param" anon object. 
+        /// The Id value is used as the "where" clause in the generated SQL
+        /// </summary>
+        /// <typeparam name="TENTITY">Type to update. Translates to table name</typeparam>     
+        /// <param name="Record">Object holding the entity record</param>
+        /// <param name="param">list of fields</param>
+        /// <returns>The Id of the updated row. If no row was updated or id was not part of fields, returns null</returns>
+        public int? UpdateFields<TENTITY>(TENTITY Record, List<string> param)
+        {
+            _lastError = string.Empty;
+            List<string> names = new List<string>();
+            List<object> values = new List<object>();
+            List<DbType> types = new List<DbType>();
+
+            int? id = (int)Record.GetType().GetProperty("ID").GetValue(Record);
+            string TableName = GetTableName<TENTITY>();
+            if (string.IsNullOrEmpty(TableName))
+            {
+                _lastError = "Invalid Table Name";
+                throw new ArgumentException(_lastError);
+            }
+
+            foreach (string field in param)
+            {
+                if (field.ToLower() != "id")
+                {
+                    names.Add(field);
+                    values.Add(Record.GetType().GetProperty(field).GetValue(Record));
+                    if (Record.GetType().GetProperty(field).PropertyType.FullName.Contains("eDocStatus"))
+                    {
+                        types.Add(SQLDataTypeHelper.GetDbType(typeof(int)));
+                    }
+                    else
+                    {
+                        types.Add(SQLDataTypeHelper.GetDbType(Record.GetType().GetProperty(field).PropertyType));
+                    }
+                }
+            }
+
+            if (id != null && values.Count > 0)
+            {
+                string sql = $"UPDATE {TableName} SET {string.Join(",", names.Select(t => { t = $"{t} = @{t}"; return t; }))} WHERE ID=@id";
+                using (IDbConnection db = new SqlConnection(DBConnectionString))
+                {
+                    using (IDbCommand cmd = db.CreateCommand())
+                    {
+                        cmd.CommandText = sql;
+                        cmd.CommandType = CommandType.Text;
+                        for (int i = 0; i < names.Count; i++)
+                        {
+                            IDbDataParameter p = cmd.CreateParameter();
+                            p.ParameterName = $"@{names[i]}";
+                            if (values[i] == null)
+                            {
+                                p.Value = DBNull.Value;
+                            }
+                            else
+                            {
+                                p.Value = values[i];
+                            }
+
+                            p.DbType = types[i];
+                            cmd.Parameters.Add(p);
+                        }
+                        // Add the id parameter
+                        IDbDataParameter pID = cmd.CreateParameter();
+                        pID.ParameterName = $"@id";
+                        pID.Value = id;
+                        pID.DbType = DbType.Int32;
+                        cmd.Parameters.Add(pID);
+                        //return db.Execute(sql,cmd) > 0 ? id : null;
+                        db.Open();
+                        return cmd.ExecuteNonQuery();
+                    }
+                }
+            }
+            return null;
+        }
+        /// <summary>
+        /// Updates table T with the values in param.
+        /// The table must have a key named "Id" and the value of id must be included in the "param" anon object. 
+        /// The Id value is used as the "where" clause in the generated SQL
+        /// </summary>
+        /// <typeparam name="TENTITY">Type to update. Translates to table name</typeparam>     
+        /// <param name="Record">Object holding the entity record</param>
+        /// <param name="fieldName">The single field name</param>      
+        /// <param name="fieldValue">The new field value</param>        
+        /// <returns>The Id of the updated row. If no row was updated or id was not part of fields, returns null</returns>
+        public int? UpdateField<TENTITY>(TENTITY Record, string fieldName, object fieldValue)
+        {
+            _lastError = string.Empty;
+            List<string> names = new List<string>();
+            List<object> values = new List<object>();
+            List<DbType> types = new List<DbType>();
+
+            int? id = (int)Record.GetType().GetProperty("ID").GetValue(Record);
+            string TableName = GetTableName<TENTITY>();
+            if (string.IsNullOrEmpty(TableName))
+            {
+                _lastError = "Invalid Table Name";
+                throw new ArgumentException(_lastError);
+            }
+
+            if (fieldName.ToLower() != "id")
+            {
+                names.Add(fieldName);
+                values.Add(fieldValue);
+                types.Add(SQLDataTypeHelper.GetDbType(Record.GetType().GetProperty(fieldName).PropertyType));
+            }
+
+            if (id != null && values.Count > 0)
+            {
+                string sql = $"UPDATE {TableName} SET {string.Join(",", names.Select(t => { t = $"{t} = @{t}"; return t; }))} WHERE ID=@id";
+                using (IDbConnection db = new SqlConnection(DBConnectionString))
+                {
+                    using (IDbCommand cmd = db.CreateCommand())
+                    {
+                        cmd.CommandText = sql;
+                        cmd.CommandType = CommandType.Text;
+                        for (int i = 0; i < names.Count; i++)
+                        {
+                            IDbDataParameter p = cmd.CreateParameter();
+                            p.ParameterName = $"@{names[i]}";
+                            if (values[i] == null)
+                            {
+                                p.Value = DBNull.Value;
+                            }
+                            else
+                            {
+                                p.Value = values[i];
+                            }
+
+                            p.DbType = types[i];
+                            cmd.Parameters.Add(p);
+                        }
+                        // Add the id parameter
+                        IDbDataParameter pID = cmd.CreateParameter();
+                        pID.ParameterName = $"@id";
+                        pID.Value = id;
+                        pID.DbType = DbType.Int32;
+                        cmd.Parameters.Add(pID);
+                        //return db.Execute(sql,cmd) > 0 ? id : null;
+                        db.Open();
+                        return cmd.ExecuteNonQuery();
+                    }
+                }
+            }
+            return null;
+        }
         /// <summary>Delete an Entity record</summary>
         /// <typeparam name="TENTITY">Entity Object type</typeparam>
         /// <param name="Record">The Record to Delete</param>
@@ -942,7 +1080,7 @@ namespace AGenius.UsefulStuff.Helpers
             }
         }
 
-        /// <summary> Return the TableName of the POCO </summary>
+        /// <summary>Return the TableName of the POCO </summary>
         /// <typeparam name="TENTITY">the PCO Entity</typeparam>
         /// <returns><see cref="string"/> holding the tablename</returns>
         public string GetTableName<TENTITY>()
@@ -950,9 +1088,7 @@ namespace AGenius.UsefulStuff.Helpers
             var attr = typeof(TENTITY).GetCustomAttribute<Dapper.Contrib.Extensions.TableAttribute>(false);
             return attr != null ? attr.Name : "";
         }
-        /// <summary>
-        /// Returns the last error message if any of the specified action
-        /// </summary>
+        /// <summary>Returns the last error message if any of the specified action</summary>
         /// <returns><see cref="string"/> value containing any error messages.</returns>
         public string LastError()
         {
