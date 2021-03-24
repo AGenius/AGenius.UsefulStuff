@@ -1114,9 +1114,6 @@ namespace AGenius.UsefulStuff.Helpers
         }
         /// <summary>Returns the last error message if any of the specified action</summary>
         /// <returns><see cref="string"/> value containing any error messages.</returns>
-        public string LastError()
-        {
-            return _lastError;
-        }
+        public string LastError { get { return _lastError; } }
     }
 }
