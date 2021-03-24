@@ -92,9 +92,20 @@ namespace AGenius.UsefulStuff
             }
         }
 
-        #region Scramble Methods
+        #region Scramble Methods       
+       
         /// <summary>The path to the assembly</summary>
-        public static string ApplicationPath = Directory.GetParent(System.Reflection.Assembly.GetEntryAssembly().Location).FullName;
+        public static string ApplicationPath
+        {
+            get
+            {
+                if (System.Reflection.Assembly.GetEntryAssembly() != null)
+                {
+                    return Directory.GetParent(System.Reflection.Assembly.GetEntryAssembly().Location).FullName;
+                }
+                return null;
+            }
+        }
 
         /// <summary>
         /// Return a DateTime derived from a Unix Epoch time (seconds from 01/01/1970
