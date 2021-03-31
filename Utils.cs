@@ -734,7 +734,7 @@ namespace AGenius.UsefulStuff
 
                         if (!String.IsNullOrEmpty(strTemp))
                         {
-                            images.Add(strTemp);
+                            images.Add(strTemp.Replace("%20"," "));
                         }
                     }
                     while (!String.IsNullOrEmpty(tempcontent));
@@ -778,6 +778,9 @@ namespace AGenius.UsefulStuff
                                         break;
                                     case ".gif":
                                         imageitem = new LinkedResource(imagespath + strItem, MediaTypeNames.Image.Gif);
+                                        break;
+                                    case ".png":
+                                        imageitem = new LinkedResource(imagespath + strItem, "image/png");
                                         break;
                                     default:
                                         imageitem = null;
