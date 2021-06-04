@@ -40,13 +40,16 @@ namespace AGenius.UsefulStuff.Helpers
             //   throw new NotImplementedException();
         }
 
-        private string _lastError = string.Empty;
+        private string _lastError = "";
+        private string _lastQuery = "";
 
         /// <summary>Read ALL records for an entity </summary>
         /// <typeparam name="TENTITY">Entity Object type</typeparam>
         /// <returns><see cref="IList{T}"/> containing the Entity records</returns>
         public IList<TENTITY> ReadALL<TENTITY>() where TENTITY : class
         {
+            _lastError = "";
+            _lastQuery = "";
             if (string.IsNullOrEmpty(DBConnectionString))
             {
                 _lastError = "Connection String not set";
@@ -79,6 +82,8 @@ namespace AGenius.UsefulStuff.Helpers
         {
             try
             {
+                _lastError = "";
+                _lastQuery = "";
                 if (string.IsNullOrEmpty(DBConnectionString))
                 {
                     _lastError = "Connection String not set";
@@ -114,6 +119,8 @@ namespace AGenius.UsefulStuff.Helpers
         {
             try
             {
+                _lastError = "";
+                _lastQuery = "";
                 if (string.IsNullOrEmpty(DBConnectionString))
                 {
                     _lastError = "Connection String not set";
@@ -149,6 +156,8 @@ namespace AGenius.UsefulStuff.Helpers
         {
             try
             {
+                _lastError = "";
+                _lastQuery = "";
                 if (string.IsNullOrEmpty(DBConnectionString))
                 {
                     _lastError = "Connection String not set";
@@ -186,6 +195,8 @@ namespace AGenius.UsefulStuff.Helpers
         {
             try
             {
+                _lastError = "";
+                _lastQuery = "";
                 string TableName = GetTableName<TENTITY>();
                 if (string.IsNullOrEmpty(TableName))
                 {
@@ -205,6 +216,7 @@ namespace AGenius.UsefulStuff.Helpers
                 string sWhere = $"WHERE {keyFieldName} {operatorType} '{fieldValue}' ";
 
                 string sSQL = $"SELECT * FROM {TableName} {sWhere}";
+                _lastQuery = sSQL;
                 // var Results = null;
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
@@ -233,6 +245,8 @@ namespace AGenius.UsefulStuff.Helpers
         {
             try
             {
+                _lastError = "";
+                _lastQuery = "";
                 string TableName = GetTableName<TENTITY>();
                 if (string.IsNullOrEmpty(TableName))
                 {
@@ -251,6 +265,7 @@ namespace AGenius.UsefulStuff.Helpers
                 }
                 string sWhere = $"WHERE {keyFieldName} {operatorType} '{fieldValue}' ";
                 string sSQL = $"SELECT * FROM {TableName} {sWhere}";
+                _lastQuery = sSQL;
                 // var Results = null;
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
@@ -277,6 +292,8 @@ namespace AGenius.UsefulStuff.Helpers
         {
             try
             {
+                _lastError = "";
+                _lastQuery = "";
                 string TableName = GetTableName<TENTITY>();
                 if (string.IsNullOrEmpty(TableName))
                 {
@@ -293,6 +310,7 @@ namespace AGenius.UsefulStuff.Helpers
                 string sWhere = string.IsNullOrEmpty(Where) ? "" : $"WHERE {Where}";
 
                 string sSQL = $"SELECT TOP 1 * FROM {TableName} {sWhere}";
+                _lastQuery = sSQL;
                 // var Results = null;
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
@@ -325,6 +343,8 @@ namespace AGenius.UsefulStuff.Helpers
         {
             try
             {
+                _lastError = "";
+                _lastQuery = "";
                 if (string.IsNullOrEmpty(DBConnectionString))
                 {
                     _lastError = "Connection String not set";
@@ -358,12 +378,15 @@ namespace AGenius.UsefulStuff.Helpers
         {
             try
             {
+                _lastError = "";
+                _lastQuery = "";
                 if (string.IsNullOrEmpty(DBConnectionString))
                 {
                     _lastError = "Connection String not set";
                     throw new ArgumentException(_lastError);
                 }
                 string sSQL = SQLQuery.Replace("[tablename]", GetTableName<TENTITY>());
+                _lastQuery = sSQL;
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
                     return db.Query<TENTITY>(sSQL).ToList();
@@ -390,6 +413,8 @@ namespace AGenius.UsefulStuff.Helpers
         {
             try
             {
+                _lastError = "";
+                _lastQuery = "";
                 string TableName = GetTableName<TENTITY>();
                 if (string.IsNullOrEmpty(TableName))
                 {
@@ -403,6 +428,7 @@ namespace AGenius.UsefulStuff.Helpers
                 }
                 string sWhere = string.IsNullOrEmpty(Where) ? "" : $"WHERE {Where}";
                 string sSQL = $"SELECT * FROM {TableName} {sWhere}";
+                _lastQuery = sSQL;
                 // var Results = null;
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
@@ -431,6 +457,8 @@ namespace AGenius.UsefulStuff.Helpers
         {
             try
             {
+                _lastError = "";
+                _lastQuery = "";
                 string TableName = GetTableName<TENTITY>();
                 if (string.IsNullOrEmpty(TableName))
                 {
@@ -444,6 +472,7 @@ namespace AGenius.UsefulStuff.Helpers
                 }
                 string sWhere = string.IsNullOrEmpty(Where) ? "" : $"WHERE {Where}";
                 string sSQL = $"SELECT TOP {TopCount} * FROM {TableName} {sWhere}";
+                _lastQuery = sSQL;
                 // var Results = null;
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
@@ -472,6 +501,8 @@ namespace AGenius.UsefulStuff.Helpers
         {
             try
             {
+                _lastError = "";
+                _lastQuery = "";
                 string TableName = GetTableName<TENTITY>();
                 if (!string.IsNullOrEmpty(OverrideTableName))
                 {
@@ -489,6 +520,7 @@ namespace AGenius.UsefulStuff.Helpers
                 }
                 string sWhere = string.IsNullOrEmpty(Where) ? "" : $"WHERE {Where}";
                 string sSQL = $"SELECT * FROM {TableName} {sWhere}";
+                _lastQuery = sSQL;
                 // var Results = null;
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
@@ -520,12 +552,15 @@ namespace AGenius.UsefulStuff.Helpers
         {
             try
             {
+                _lastError = "";
+                _lastQuery = "";
                 if (string.IsNullOrEmpty(DBConnectionString))
                 {
                     _lastError = "Connection String not set";
                     throw new ArgumentException(_lastError);
                 }
                 string sSQL = SQLQuery.Replace("[tablename]", GetTableName<TENTITY>());
+                _lastQuery = sSQL;
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
                     var results = db.Query<TENTITY, DETAIL, TENTITY>(sSQL,
@@ -570,12 +605,15 @@ namespace AGenius.UsefulStuff.Helpers
         {
             try
             {
+                _lastError = "";
+                _lastQuery = "";
                 if (string.IsNullOrEmpty(DBConnectionString))
                 {
                     _lastError = "Connection String not set";
                     throw new ArgumentException(_lastError);
                 }
                 string sSQL = SQLQuery.Replace("[tablename]", GetTableName<TENTITY>());
+                _lastQuery = sSQL;
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
                     var results = db.Query<TENTITY, DETAIL1, DETAIL2, TENTITY>(sSQL,
@@ -614,6 +652,8 @@ namespace AGenius.UsefulStuff.Helpers
         {
             try
             {
+                _lastError = "";
+                _lastQuery = "";
                 if (string.IsNullOrEmpty(DBConnectionString))
                 {
                     _lastError = "Connection String not set";
@@ -641,6 +681,8 @@ namespace AGenius.UsefulStuff.Helpers
         {
             try
             {
+                _lastError = "";
+                _lastQuery = "";
                 if (string.IsNullOrEmpty(DBConnectionString))
                 {
                     _lastError = "Connection String not set";
@@ -684,6 +726,8 @@ namespace AGenius.UsefulStuff.Helpers
         {
             try
             {
+                _lastError = "";
+                _lastQuery = "";
                 if (string.IsNullOrEmpty(DBConnectionString))
                 {
                     _lastError = "Connection String not set";
@@ -709,6 +753,8 @@ namespace AGenius.UsefulStuff.Helpers
         {
             try
             {
+                _lastError = "";
+                _lastQuery = "";
                 if (string.IsNullOrEmpty(DBConnectionString))
                 {
                     _lastError = "Connection String not set";
@@ -732,7 +778,8 @@ namespace AGenius.UsefulStuff.Helpers
         /// <returns>The number of effected rows <see cref="long"/></returns>
         public long ExecuteSQLWithEffectedCount(string sqlCmd)
         {
-            _lastError = string.Empty;
+            _lastError = "";
+            _lastQuery = "";
             try
             {
                 if (string.IsNullOrEmpty(DBConnectionString))
@@ -763,6 +810,8 @@ namespace AGenius.UsefulStuff.Helpers
         {
             try
             {
+                _lastError = "";
+                _lastQuery = "";
                 if (string.IsNullOrEmpty(DBConnectionString))
                 {
                     _lastError = "Connection String not set";
@@ -782,6 +831,7 @@ namespace AGenius.UsefulStuff.Helpers
                 string sWhere = string.IsNullOrEmpty(Criteria) ? "" : $"WHERE {Criteria}";
 
                 string sSQL = $"SELECT {FieldName} FROM {tableName} {sWhere}";
+                _lastQuery = sSQL;
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
                     return db.ExecuteScalar(sSQL);
@@ -805,6 +855,8 @@ namespace AGenius.UsefulStuff.Helpers
         {
             try
             {
+                _lastError = "";
+                _lastQuery = "";
                 if (string.IsNullOrEmpty(DBConnectionString))
                 {
                     _lastError = "Connection String not set";
@@ -819,6 +871,7 @@ namespace AGenius.UsefulStuff.Helpers
                 string sWhere = string.IsNullOrEmpty(Criteria) ? "" : $"WHERE {Criteria}";
 
                 string sSQL = $"SELECT count(*) FROM {tableName} {sWhere}";
+                _lastQuery = sSQL;
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
                     return db.Query<int>(sSQL).FirstOrDefault();
@@ -839,6 +892,8 @@ namespace AGenius.UsefulStuff.Helpers
         {
             try
             {
+                _lastError = "";
+                _lastQuery = "";
                 if (string.IsNullOrEmpty(DBConnectionString))
                 {
                     _lastError = "Connection String not set";
@@ -866,6 +921,8 @@ namespace AGenius.UsefulStuff.Helpers
         {
             try
             {
+                _lastError = "";
+                _lastQuery = "";
                 if (string.IsNullOrEmpty(DBConnectionString))
                 {
                     _lastError = "Connection String not set";
@@ -905,6 +962,7 @@ namespace AGenius.UsefulStuff.Helpers
                             fieldsList += "\r";
                         }
                         update += $"SET {fieldsList}\r WHERE {IDField} = @{IDField}";
+                        _lastQuery = update;
                         using (IDbConnection db = new SqlConnection(DBConnectionString))
                         {
                             int rows = db.Execute(update, Record);
@@ -938,7 +996,8 @@ namespace AGenius.UsefulStuff.Helpers
         /// <returns>The Id of the updated row. If no row was updated or id was not part of fields, returns null</returns>
         public int? UpdateFields<TENTITY>(TENTITY Record, List<string> param)
         {
-            _lastError = string.Empty;
+            _lastError = "";
+            _lastQuery = "";
             List<string> names = new List<string>();
             List<object> values = new List<object>();
             List<DbType> types = new List<DbType>();
@@ -1019,7 +1078,8 @@ namespace AGenius.UsefulStuff.Helpers
         /// <returns>The Id of the updated row. If no row was updated or id was not part of fields, returns null</returns>
         public int? UpdateField<TENTITY>(TENTITY Record, string fieldName, object fieldValue)
         {
-            _lastError = string.Empty;
+            _lastError = "";
+            _lastQuery = "";
             List<string> names = new List<string>();
             List<object> values = new List<object>();
             List<DbType> types = new List<DbType>();
@@ -1086,6 +1146,8 @@ namespace AGenius.UsefulStuff.Helpers
         {
             try
             {
+                _lastError = "";
+                _lastQuery = "";
                 if (string.IsNullOrEmpty(DBConnectionString))
                 {
                     _lastError = "Connection String not set";
@@ -1115,5 +1177,7 @@ namespace AGenius.UsefulStuff.Helpers
         /// <summary>Returns the last error message if any of the specified action</summary>
         /// <returns><see cref="string"/> value containing any error messages.</returns>
         public string LastError { get { return _lastError; } }
+        public string LastQuery { get { return _lastError; } }
+
     }
 }
