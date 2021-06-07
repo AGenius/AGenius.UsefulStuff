@@ -1177,7 +1177,9 @@ namespace AGenius.UsefulStuff.Helpers
         /// <summary>Returns the last error message if any of the specified action</summary>
         /// <returns><see cref="string"/> value containing any error messages.</returns>
         public string LastError { get { return _lastError; } }
-        public string LastQuery { get { return _lastError; } }
+        /// <summary>Returns the last query string if any of the specified action</summary>
+        /// <returns><see cref="string"/> value containing the query string.</returns>
+        public string LastQuery { get { return _lastQuery; } }
 
     }
 }
