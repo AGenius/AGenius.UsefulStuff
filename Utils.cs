@@ -93,7 +93,7 @@ namespace AGenius.UsefulStuff
         }
 
         #region Scramble Methods       
-       
+
         /// <summary>The path to the assembly</summary>
         public static string ApplicationPath
         {
@@ -280,12 +280,12 @@ namespace AGenius.UsefulStuff
                     {
                         Directory.CreateDirectory(Path.Combine(LogPath, SubFolder, "Completed"));
                         // If a subfolder is provided then keep tidy and move to a completed sub folder
-                        File.Move(sPath, $@"{ApplicationPath}\{SubFolder}\Completed\{LogFileName}_{DateTime.Now:dd-mm-yyyy HHmmss}.log");
+                        File.Move(sPath, $@"{ApplicationPath}\{SubFolder}\Completed\{LogFileName}_{DateTime.Now:dd-MM-yyyy HHmmss}.log");
                     }
                     else
                     {
                         // If no subfolder is provided then rename file to include datetime stamp
-                        File.Move(sPath, $@"{ApplicationPath}\{LogFileName}_{DateTime.Now:dd-mm-yyyy HHmmss}.log");
+                        File.Move(sPath, $@"{ApplicationPath}\{LogFileName}_{DateTime.Now:dd-MM-yyyy HHmmss}.log");
                     }
 
                 }
@@ -734,7 +734,7 @@ namespace AGenius.UsefulStuff
 
                         if (!String.IsNullOrEmpty(strTemp))
                         {
-                            images.Add(strTemp.Replace("%20"," "));
+                            images.Add(strTemp.Replace("%20", " "));
                         }
                     }
                     while (!String.IsNullOrEmpty(tempcontent));
@@ -809,7 +809,11 @@ namespace AGenius.UsefulStuff
 
             catch (Exception ex)
             {
-                WriteLogFile($"Trace- {ex.Message} {Environment.NewLine}{ex.StackTrace}", "SMTPErrors", null, null, true, true);
+                if (LogErrors)
+                {
+                    WriteLogFile($"Trace- {ex.Message} {Environment.NewLine}{ex.StackTrace}", "SMTPErrors", null, null, true, true);
+                }
+
                 EmailFailedReason = ex.Message;
             }
 
@@ -913,8 +917,12 @@ namespace AGenius.UsefulStuff
             catch (Exception ex)
             {
                 EmailFailedReason = ex.Message;
-                WriteLogFile("Error Sending Email", "SMTPErrors", null, null, true, true);
-                WriteLogFile($"Trace- {ex.Message} {Environment.NewLine}{ex.StackTrace}", "SMTPErrors", null, null, true, true);
+                if (LogErrors)
+                {
+                    WriteLogFile("Error Sending Email", "SMTPErrors", null, null, true, true);
+                    WriteLogFile($"Trace- {ex.Message} {Environment.NewLine}{ex.StackTrace}", "SMTPErrors", null, null, true, true);
+                }
+
                 return false;
             }
         }
