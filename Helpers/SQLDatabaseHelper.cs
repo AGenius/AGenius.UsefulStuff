@@ -773,6 +773,34 @@ namespace AGenius.UsefulStuff.Helpers
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
+        /// <summary>Execute an SQL Statement </summary>
+        /// <param name="SprocName">String holding the SQL Stored Proceedure Name</param>
+        /// <param name="dParams">String holding the SQL params</param>
+        public object ExecuteSproc(string SprocName, DynamicParameters dParams)
+        {
+            try
+            {
+                _lastError = "";
+                _lastQuery = "";
+                if (string.IsNullOrEmpty(DBConnectionString))
+                {
+                    _lastError = "Connection String not set";
+                    throw new ArgumentException(_lastError);
+                }
+
+                using (IDbConnection db = new SqlConnection(DBConnectionString))
+                {
+                    return db.Execute(SprocName, dParams, commandType:
+                    CommandType.StoredProcedure);
+                }
+
+            }
+            catch (DbException ex)
+            {
+                _lastError = ex.Message;
+                throw new DatabaseAccessHelperException(ex.Message);
+            }
+        }
         /// <summary>Execute a SQL Query and return the Effected row count</summary>
         /// <param name="sqlCmd">String holding the SQL Command</param>
         /// <returns>The number of effected rows <see cref="long"/></returns>

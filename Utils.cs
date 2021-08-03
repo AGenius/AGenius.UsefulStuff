@@ -696,6 +696,7 @@ namespace AGenius.UsefulStuff
         /// <param name="imagespath">Path to where any images are located to embed in the Email body. will convert any src= references to the embeded image</param>
         /// <param name="AttachmentPaths">A list of attachments to include in the email message (optional) <see cref="List{T}"/></param>
         /// <param name="LogErrors">Log any errors to "SMTPErrors.Log" file in the application folder</param>
+        /// <param name="LogPath">The Path for the Errors log to be stored</param>
         /// <returns>True if successful or False if an error occurs. <seealso cref="EmailFailedReason"/></returns>
         public static bool SendEmailMessage(bool isHTML,
             string MailFrom,
@@ -712,7 +713,8 @@ namespace AGenius.UsefulStuff
             string CCList = null,
             string imagespath = null,
             List<string> AttachmentPaths = null,
-            bool LogErrors = false)
+            bool LogErrors = false,
+            string LogPath = null)
         {
             List<string> images = new List<string>(); // This is to store the images found
             AlternateView avHtml = null;
@@ -796,8 +798,8 @@ namespace AGenius.UsefulStuff
                         {
                             if (LogErrors)
                             {
-                                WriteLogFile("Possible invalid Image - " + strItem, "SMTPErrors", null, null, true, true);
-                                WriteLogFile($"Trace- {ex.Message} {Environment.NewLine}{ex.StackTrace}", "SMTPErrors", null, null, true, true);
+                                WriteLogFile("Possible invalid Image - " + strItem, "SMTPErrors", LogPath, null, true, true);
+                                WriteLogFile($"Trace- {ex.Message} {Environment.NewLine}{ex.StackTrace}", "SMTPErrors", LogPath, null, true, true);
                             }
 
                             EmailFailedReason = ex.Message;
@@ -811,7 +813,7 @@ namespace AGenius.UsefulStuff
             {
                 if (LogErrors)
                 {
-                    WriteLogFile($"Trace- {ex.Message} {Environment.NewLine}{ex.StackTrace}", "SMTPErrors", null, null, true, true);
+                    WriteLogFile($"Trace- {ex.Message} {Environment.NewLine}{ex.StackTrace}", "SMTPErrors", LogPath, null, true, true);
                 }
 
                 EmailFailedReason = ex.Message;
@@ -919,8 +921,8 @@ namespace AGenius.UsefulStuff
                 EmailFailedReason = ex.Message;
                 if (LogErrors)
                 {
-                    WriteLogFile("Error Sending Email", "SMTPErrors", null, null, true, true);
-                    WriteLogFile($"Trace- {ex.Message} {Environment.NewLine}{ex.StackTrace}", "SMTPErrors", null, null, true, true);
+                    WriteLogFile("Error Sending Email", "SMTPErrors", LogPath, null, true, true);
+                    WriteLogFile($"Trace- {ex.Message} {Environment.NewLine}{ex.StackTrace}", "SMTPErrors", LogPath, null, true, true);
                 }
 
                 return false;
