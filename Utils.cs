@@ -1102,8 +1102,6 @@ namespace AGenius.UsefulStuff
         /// <param name="SMTPPass">SMTP Password</param>
         /// <param name="SMTPPort">SMTP Port to use (optional, default=25) <see cref="int"/> </param>
         /// <param name="LogErrors">Log any errors to "SMTPErrors.Log" file in the application folder</param>
-        /// <param name="LogPath">Log any errors to "SMTPErrors.Log" file in the application folder</param>
-        /// <param name="priority">Log any errors to "SMTPErrors.Log" file in the application folder</param>
         /// <param name="LogPath">The Path for the Errors log to be stored</param>
         /// <param name="priority">Override the default mail priority</param>
         /// <returns></returns>
@@ -1120,7 +1118,7 @@ namespace AGenius.UsefulStuff
             string LogPath = null,
             MailPriority priority = MailPriority.Normal)
         {
-            return SendEmailMessage(isHTML, MailFrom, EmailTo, MessageBody, Subject, SMTPHost, SMTPUser, SMTPPass, SMTPPort, LogErrors, LogPath,priorityeds);
+            return SendEmailMessage(isHTML, MailFrom, EmailTo, MessageBody, Subject, SMTPHost, SMTPUser, SMTPPass, SMTPPort, LogErrors, LogPath, priority);
         }
         #endregion
     }
