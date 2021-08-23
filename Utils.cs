@@ -239,7 +239,7 @@ namespace AGenius.UsefulStuff
         /// <param name="SubFolder">Override the sub folder (logs) name</param>
         /// <param name="AddTimeStamp">Add a time stamp to the begining of the message</param>
         /// <param name="appendNewLine">Automatically add a new line after the message</param>
-        public static void WriteLogFile(string MessageText, string LogFileName, string LogPath = null, string SubFolder = "Logs", bool AddTimeStamp = false, bool appendNewLine = true)
+        public static void WriteLogFile(string MessageText, string LogFileName, string LogPath = null, string SubFolder = "Logs", bool AddTimeStamp = false, bool appendNewLine = true, int maxLogSize = 1024000)
         {
             try
             {
@@ -274,7 +274,7 @@ namespace AGenius.UsefulStuff
 
                 FileInfo fiLog = new FileInfo(sPath);
 
-                if (fiLog.Length > 1000000)
+                if (fiLog.Length > maxLogSize)
                 {
                     if (SubFolder != null)
                     {
@@ -697,6 +697,7 @@ namespace AGenius.UsefulStuff
         /// <param name="AttachmentPaths">A list of attachments to include in the email message (optional) <see cref="List{T}"/></param>
         /// <param name="LogErrors">Log any errors to "SMTPErrors.Log" file in the application folder</param>
         /// <param name="LogPath">The Path for the Errors log to be stored</param>
+        /// <param name="priority">Override the default mail priority</param>
         /// <returns>True if successful or False if an error occurs. <seealso cref="EmailFailedReason"/></returns>
         public static bool SendEmailMessage(bool isHTML,
             string MailFrom,
@@ -714,7 +715,9 @@ namespace AGenius.UsefulStuff
             string imagespath = null,
             List<string> AttachmentPaths = null,
             bool LogErrors = false,
-            string LogPath = null)
+            string LogPath = null,
+            MailPriority priority = MailPriority.Normal
+            )
         {
             List<string> images = new List<string>(); // This is to store the images found
             AlternateView avHtml = null;
@@ -883,6 +886,7 @@ namespace AGenius.UsefulStuff
                 mailMsg.Subject = Subject;
                 mailMsg.Body = MessageBody;
                 mailMsg.IsBodyHtml = isHTML;
+                mailMsg.Priority = priority;
                 if (isHTML)
                 {
                     if (images.Count > 0)
@@ -1098,6 +1102,10 @@ namespace AGenius.UsefulStuff
         /// <param name="SMTPPass">SMTP Password</param>
         /// <param name="SMTPPort">SMTP Port to use (optional, default=25) <see cref="int"/> </param>
         /// <param name="LogErrors">Log any errors to "SMTPErrors.Log" file in the application folder</param>
+        /// <param name="LogPath">Log any errors to "SMTPErrors.Log" file in the application folder</param>
+        /// <param name="priority">Log any errors to "SMTPErrors.Log" file in the application folder</param>
+        /// <param name="LogPath">The Path for the Errors log to be stored</param>
+        /// <param name="priority">Override the default mail priority</param>
         /// <returns></returns>
         public static bool SendEmailMessage(bool isHTML,
             string MailFrom,
@@ -1108,9 +1116,11 @@ namespace AGenius.UsefulStuff
             string SMTPUser,
             string SMTPPass,
             int SMTPPort = 25,
-            bool LogErrors = false)
+            bool LogErrors = false,
+            string LogPath = null,
+            MailPriority priority = MailPriority.Normal)
         {
-            return SendEmailMessage(isHTML, MailFrom, EmailTo, MessageBody, Subject, SMTPHost, SMTPUser, SMTPPass, SMTPPort, LogErrors);
+            return SendEmailMessage(isHTML, MailFrom, EmailTo, MessageBody, Subject, SMTPHost, SMTPUser, SMTPPass, SMTPPort, LogErrors, LogPath,priorityeds);
         }
         #endregion
     }
