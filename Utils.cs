@@ -1117,8 +1117,8 @@ namespace AGenius.UsefulStuff
             bool LogErrors = false,
             string LogPath = null,
             MailPriority priority = MailPriority.Normal)
-        {
-            return SendEmailMessage(isHTML, MailFrom, EmailTo, MessageBody, Subject, SMTPHost, SMTPUser, SMTPPass, SMTPPort, LogErrors, LogPath, priority);
+        {            
+            return SendEmailMessage(isHTML, MailFrom, EmailTo, MessageBody, Subject, SMTPHost, SMTPUser, SMTPPass, SMTPPort, false, false, null, null, null, null, LogErrors, LogPath, priority);
         }
         #endregion
     }
