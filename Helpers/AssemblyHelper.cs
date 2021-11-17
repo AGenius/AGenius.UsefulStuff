@@ -129,7 +129,7 @@ namespace AGenius.UsefulStuff.Helpers
                 nvc.Add("CodeBase", "(not supported)");
             }
             // build date
-            DateTime dt = AssemblyBuildDate(a, false);
+            DateTime dt = AssemblyBuildDate(a, true);
             if (dt == DateTime.MaxValue)
             {
                 nvc.Add("BuildDate", "(unknown)");
