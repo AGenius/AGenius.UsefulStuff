@@ -8,6 +8,8 @@ using Dapper;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Data.Common;
+using System.Text;
+using System.Transactions;
 
 namespace AGenius.UsefulStuff.Helpers
 {
@@ -18,6 +20,8 @@ namespace AGenius.UsefulStuff.Helpers
     {
         /// <summary>The SQL Lite database file name used</summary>
         public string dbFilePath = "default.db3";
+        /// <summary>Holds the db File Name</summary>
+        public string dbName { get; set; }
         /// <summary>Provides access to the  Connection string in use</summary>
         public string DBConnectionString
         {
@@ -40,6 +44,7 @@ namespace AGenius.UsefulStuff.Helpers
             }
             dbFilePath = DatabaseName;
             DBConnectionString = String.Format("Data Source={0}", DatabaseName);
+            dbName = System.IO.Path.GetFileName(DatabaseName).Replace(".db3", "");
         }
         public void Dispose()
         {
@@ -463,7 +468,102 @@ namespace AGenius.UsefulStuff.Helpers
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
+        /// <summary>Insert a number of records</summary>
+        /// <typeparam name="TENTITY">Entity Object type</typeparam>
+        /// <param name="Record">The Record to insert</param>
+        /// <returns><see cref="long"/> ID of the inserted record</returns>
+        public void InsertRecords(string tableName, List<Dictionary<string, object>> recordsCollection)
+        {
+            StringBuilder sbInsert = new StringBuilder();
 
+            try
+            {
+                if (string.IsNullOrEmpty(DBConnectionString))
+                {
+                    throw new ArgumentException("Connection String not set");
+                }
+
+                // Build columns list
+                string colNames = "";
+                foreach (var cols in recordsCollection[0])
+                {
+                    if (!string.IsNullOrEmpty(colNames))
+                    {
+                        colNames += ", ";
+                    }
+                    colNames += $"[{cols.Key}]";
+                }
+
+                foreach (var record in recordsCollection)
+                {
+                    string rowValues = "";
+                    foreach (var item in record)
+                    {
+                        if (!string.IsNullOrEmpty(rowValues))
+                        {
+                            rowValues += ", ";
+                        }
+                        if (item.Value.GetType().Name.ToLower() == "string")
+                        {
+
+                            rowValues += $"'{item.Value.ToString().Replace("'", "''")}'";
+                        }
+                        else
+                        {
+                            rowValues += item.Value.GetType().Name == "DBNull" ? "Null" : item.Value;
+                        }
+                    }
+                    sbInsert.AppendLine($"INSERT INTO [{tableName}] ({colNames}) VALUES ({rowValues});");
+                }
+
+                using (var db = new SQLiteConnection(DBConnectionString))
+                {
+                    db.Open();
+
+                    using (var transaction = db.BeginTransaction())
+                    {
+                        var affectedRows = db.Execute(sbInsert.ToString());
+
+                        transaction.Commit();
+                    }
+                }
+            }
+            catch (DbException ex)
+            {
+                throw new DatabaseAccessHelperException(ex.Message);
+            }
+        }
+        /// <summary>Read ALL records for an entity </summary>
+        /// <typeparam name="TENTITY">Entity Object type</typeparam>
+        /// <returns><see cref="IList{T}"/> containing the Entity records</returns>
+        public DataTable ReadDataTable(string tableName)
+        {
+            if (string.IsNullOrEmpty(DBConnectionString))
+            {
+                throw new ArgumentException("Connection String not set");
+            }
+            try
+            {
+                using (var db = new SQLiteConnection(DBConnectionString))
+                {
+                    db.Open();
+                    SQLiteCommand dbCommand = db.CreateCommand();
+                    dbCommand.CommandText = "SELECT * FROM " + tableName;
+
+                    SQLiteDataReader executeReader = dbCommand.ExecuteReader(CommandBehavior.SingleResult);
+                    DataTable dt = new DataTable();
+                    dt.Load(executeReader); // <-- FormatException
+                    db.Close();
+                    return dt;
+                }
+
+            }
+            catch (DbException ex)
+            {
+                throw new DatabaseAccessHelperException(ex.Message);
+            }
+
+        }
         /// <summary>Execute an SQL Statement </summary>
         /// <param name="sqlCmd">String holding the SQL Command</param>
         public void ExecuteSQL(string sqlCmd)
@@ -563,13 +663,13 @@ namespace AGenius.UsefulStuff.Helpers
         /// <summary>Create a table if it does not exist</summary>
         /// <param name="TableName">The Table Name to create</param>
         /// <returns><see cref="bool"/> true/false for success/failure</returns>
-        public bool CreateTable(string TableName)
+        public bool CreateTable(string TableName, string primaryKeyName = "id")
         {
             try
             {
                 //Create Table
-                this.ExecuteSQL($"CREATE TABLE IF NOT EXISTS {TableName} (id INTEGER PRIMARY KEY AUTOINCREMENT);");
-                this.CreateIndex(TableName, "idxid", "id");
+                this.ExecuteSQL($"CREATE TABLE IF NOT EXISTS {TableName} ({primaryKeyName} INTEGER PRIMARY KEY AUTOINCREMENT);");
+                this.CreateIndex(TableName, $"idx_{primaryKeyName}", primaryKeyName);
                 return true;
             }
 
