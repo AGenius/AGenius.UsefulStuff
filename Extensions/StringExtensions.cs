@@ -8,6 +8,7 @@ using System.Security;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Data.Entity.Design.PluralizationServices;
 
 //Copied from Tazmainiandevil/Useful.Extension
 namespace AGenius.UsefulStuff
@@ -908,5 +909,49 @@ namespace AGenius.UsefulStuff
         }
 
         #endregion IsAllAlphaOrNumbers
+
+        #region Plural/Singular convertion
+        private static readonly PluralizationService plservice = PluralizationService.CreateService(CultureInfo.GetCultureInfo("en-US"));
+        /// <summary>
+        /// Convert a Plural name to singular string
+        /// </summary>
+        /// <param name="word">The word to convert</param>
+        /// <returns>String containing the converted word</returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        public static string ToSingular(this string word)
+        {
+            if (word == null)
+                throw new ArgumentNullException("word");
+
+            bool isUpperWord = (string.Compare(word, word.ToUpper(), false) == 0);
+            if (isUpperWord)
+            {
+                string lowerWord = word.ToLower();
+                return (plservice.IsSingular(lowerWord) ? lowerWord : plservice.Singularize(lowerWord)).ToUpper();
+            }
+
+            return (plservice.IsSingular(word) ? word : plservice.Singularize(word));
+        }
+        /// <summary>
+        /// Convert a singular word to a plural version
+        /// </summary>
+        /// <param name="word">The word to convert</param>
+        /// <returns>String containing the converted word</returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        public static string ToPlural(this string word)
+        {
+            if (word == null)
+                throw new ArgumentNullException("word");
+
+            bool isUpperWord = (string.Compare(word, word.ToUpper(), false) == 0);
+            if (isUpperWord)
+            {
+                string lowerWord = word.ToLower();
+                return (plservice.IsPlural(lowerWord) ? lowerWord : plservice.Pluralize(lowerWord)).ToUpper();
+            }
+
+            return (plservice.IsPlural(word) ? word : plservice.Pluralize(word));
+        }
+        #endregion
     }
 }
