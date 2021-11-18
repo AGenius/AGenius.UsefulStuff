@@ -199,6 +199,40 @@ namespace AGenius.UsefulStuff
 
             return null;
         }
+        /// <summary>Read the contents of a text file into a string list</summary>
+        /// <param name="filepath">File to read</param>
+        /// <returns>List of files</returns>
+        public static IList<string> ReadTextFileToList(string filepath)
+        {
+            try
+            {
+                string test = Path.GetPathRoot(filepath);
+
+                if (String.IsNullOrEmpty(test) || (test.StartsWith(@"\") && !test.StartsWith(@"\\")))
+                {
+
+                    // No Full path supplied so start from Application root
+                    if (test.StartsWith(@"\"))
+                    {
+                        filepath = ApplicationPath + filepath;
+                    }
+                    else
+                    {
+                        filepath = $"{ApplicationPath}\\{filepath}";
+                    }
+                }
+
+                if (File.Exists(filepath).Equals(true))
+                {
+                    return File.ReadAllLines(filepath);
+                }
+            }
+            catch (Exception)
+            {
+            }
+
+            return null;
+        }
         /// <summary>Write the contents of a string to a file </summary>
         /// <param name="filepath">File to write to</param>   
         /// <param name="contents">The string content to write</param>
