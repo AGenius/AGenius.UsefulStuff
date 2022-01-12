@@ -384,8 +384,8 @@ namespace AGenius.UsefulStuff.Helpers
                 {
                     _lastError = "Connection String not set";
                     throw new ArgumentException(_lastError);
-                }
-                string sSQL = SQLQuery.Replace("[tablename]", GetTableName<TENTITY>());
+                }               
+                string sSQL = SQLQuery.Replace("[tablename]", GetTableName<TENTITY>()).Replace("[TABLENAME]", GetTableName<TENTITY>());
                 _lastQuery = sSQL;
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
@@ -558,8 +558,8 @@ namespace AGenius.UsefulStuff.Helpers
                 {
                     _lastError = "Connection String not set";
                     throw new ArgumentException(_lastError);
-                }
-                string sSQL = SQLQuery.Replace("[tablename]", GetTableName<TENTITY>());
+                }                
+                string sSQL = SQLQuery.Replace("[tablename]", GetTableName<TENTITY>()).Replace("[TABLENAME]", GetTableName<TENTITY>());
                 _lastQuery = sSQL;
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
@@ -612,7 +612,7 @@ namespace AGenius.UsefulStuff.Helpers
                     _lastError = "Connection String not set";
                     throw new ArgumentException(_lastError);
                 }
-                string sSQL = SQLQuery.Replace("[tablename]", GetTableName<TENTITY>());
+                string sSQL = SQLQuery.Replace("[tablename]", GetTableName<TENTITY>()).Replace("[TABLENAME]", GetTableName<TENTITY>());
                 _lastQuery = sSQL;
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
