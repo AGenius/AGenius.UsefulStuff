@@ -588,7 +588,10 @@ namespace AGenius.UsefulStuff.AMS.Profile
 			{
 				try
 				{
-					string file = AppDomain.CurrentDomain.SetupInformation.ConfigurationFile;
+                    var conf = System.Configuration.ConfigurationManager.OpenExeConfiguration(System.Configuration.ConfigurationUserLevel.None);
+                    string file = conf.FilePath;
+
+                    //string file = AppDomain.CurrentDomain.SetupInformation.ConfigurationFile;
 					return file.Substring(0, file.LastIndexOf('.'));
 				}
 				catch
