@@ -16,6 +16,16 @@ namespace AGenius.UsefulStuff.Helpers
     /// </summary>
     public class SQLDatabaseHelper : IDisposable
     {
+        /// <summary>
+        /// Used to hold Table Column information
+        /// </summary>
+        public class TableColumn
+        {
+            public string COLUMN_NAME { get; set; }
+            public string DATA_TYPE { get; set; }
+            public int? CHARACTER_MAXIMUM_LENGTH { get; set; }
+            public int ORDINAL_POSITION { get; set; }
+        }
         /// <summary>Provides access to the  Connection string in use</summary>
         public string DBConnectionString
         {
@@ -287,14 +297,19 @@ namespace AGenius.UsefulStuff.Helpers
         /// <summary>Return a single objects that matches the selection criteria </summary>
         /// <typeparam name="TENTITY">Entity Object type</typeparam>
         /// <param name="Where">criteria</param>
+        /// <param name="OverrideTableName">Override the Entity Table Name</param>
         /// <returns>The Entity record requested or null</returns>
-        public TENTITY ReadRecordWithWhere<TENTITY>(string Where = "") where TENTITY : class
+        public TENTITY ReadRecordWithWhere<TENTITY>(string Where = "", string OverrideTableName = "") where TENTITY : class
         {
             try
             {
                 _lastError = "";
                 _lastQuery = "";
                 string TableName = GetTableName<TENTITY>();
+                if (!string.IsNullOrEmpty(OverrideTableName))
+                {
+                    TableName = OverrideTableName;
+                }
                 if (string.IsNullOrEmpty(TableName))
                 {
                     _lastError = "Invalid Table Name";
@@ -722,7 +737,8 @@ namespace AGenius.UsefulStuff.Helpers
 
         /// <summary>Execute an SQL Statement </summary>
         /// <param name="sqlCmd">String holding the SQL Command</param>
-        public void ExecuteSQL(string sqlCmd)
+        /// <param name="Params">Provide Parameters for the query</param>
+        public void ExecuteSQL(string sqlCmd, DynamicParameters Params = null)
         {
             try
             {
@@ -736,7 +752,7 @@ namespace AGenius.UsefulStuff.Helpers
 
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
-                    db.Execute(sqlCmd, null, null, 0); // Excute with no timeout
+                    db.Execute(sqlCmd, Params, null, 0); // Excute with no timeout
                 }
 
             }
@@ -1208,6 +1224,90 @@ namespace AGenius.UsefulStuff.Helpers
         /// <summary>Returns the last query string if any of the specified action</summary>
         /// <returns><see cref="string"/> value containing the query string.</returns>
         public string LastQuery { get { return _lastQuery; } }
+        public IList<TableColumn> GetTableColumns(string tableName, string schemaName = "dbo")
+        {
+            if (TableExists(tableName))
+            {
+                IList<TableColumn> columns = ReadRecordsSQL<TableColumn>($"SELECT COLUMN_NAME,DATA_TYPE,CHARACTER_MAXIMUM_LENGTH ,ORDINAL_POSITION FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '{tableName}' AND TABLE_SCHEMA='{schemaName}'");
 
+                return columns;
+            }
+            return null;
+        }
+        public void CreateColumn(string tableName, string columnName, string dataType = "varchar", int colSize = 50, bool allowNull = true, string schemaName = "dbo")
+        {
+            string colDataTypeSQL = dataType;
+            string allowNullSQL = allowNull ? "NULL" : "NOT NULL";
+
+            if (dataType.ToLower() == "varchar")
+            {
+                colDataTypeSQL = $"{dataType}({colSize})";
+            }
+            if (dataType.ToLower() == "bit")
+            {
+                allowNullSQL = "NOT NULL";
+            }
+
+            string createSQL = @"BEGIN TRANSACTION
+                    SET QUOTED_IDENTIFIER ON
+                    SET ARITHABORT ON
+                    SET NUMERIC_ROUNDABORT OFF
+                    SET CONCAT_NULL_YIELDS_NULL ON
+                    SET ANSI_NULLS ON
+                    SET ANSI_PADDING ON
+                    SET ANSI_WARNINGS ON
+                    COMMIT
+                    BEGIN TRANSACTION                    
+                    ";
+            createSQL += $@"ALTER TABLE {schemaName}.{tableName} ADD {columnName} {colDataTypeSQL} {allowNullSQL}";
+
+            if (dataType.ToLower() == "bit")
+            {
+                createSQL += $@" CONSTRAINT DF_{tableName}_{columnName} DEFAULT((0))
+                ";
+            }
+            createSQL += $@"
+                    ALTER TABLE {schemaName}.{tableName} SET(LOCK_ESCALATION = TABLE)                
+                    COMMIT";
+
+            ExecuteScalar(createSQL);
+
+        }
+        public bool TableExists(string tableName)
+        {
+            bool exists;
+            var rslt = ExecuteScalar($"SELECT CASE WHEN OBJECT_ID('dbo.{tableName}', 'U') IS NOT NULL THEN 1 ELSE 0 END");
+            exists = (int)rslt == 1;
+            return exists;
+        }
+        public void CreateTable(string tableName, string idColName = "ID", string idColType = "int", string schemaName = "dbo")
+        {
+            string createSQL = @"BEGIN TRANSACTION
+                SET QUOTED_IDENTIFIER ON
+                SET ARITHABORT ON
+                SET NUMERIC_ROUNDABORT OFF
+                SET CONCAT_NULL_YIELDS_NULL ON
+                SET ANSI_NULLS ON
+                SET ANSI_PADDING ON
+                SET ANSI_WARNINGS ON
+                COMMIT
+                BEGIN TRANSACTION
+                ";
+
+            createSQL += $@"CREATE TABLE [{schemaName}].[{tableName}]
+	                (
+	                {idColName} {idColType} NOT NULL IDENTITY (1, 1)
+	                )  ON [PRIMARY]                
+                ALTER TABLE [{schemaName}].[{tableName}] ADD CONSTRAINT
+	                PK_{tableName} PRIMARY KEY CLUSTERED 
+	                (
+	                {idColName}
+	                ) WITH( STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]                
+                ALTER TABLE [{schemaName}].[{tableName}] SET (LOCK_ESCALATION = TABLE)                
+                COMMIT
+                ";
+
+            ExecuteScalar(createSQL);
+        }
     }
 }

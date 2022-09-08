@@ -87,7 +87,17 @@ namespace AGenius.UsefulStuff
         }
 
         /// <summary>
-        /// Calculates number of business days, taking into account:
+        /// Checks whether the day of given DateTime is a holiday according to the configuration.
+        /// Please refer the app.config for more information. 
+        /// </summary>
+        /// <param name="date">DateTime to be checked.</param>
+        /// <returns>True if the given day is a holiday, false otherwise.</returns>
+        public static bool IsAHoliday(this DateTime date)
+        {
+            return _holidaysList.Contains(date.DayOfWeek);
+        }
+
+ /// Calculates number of business days, taking into account:
         ///  - weekends (Saturdays and Sundays)
         ///  - bank holidays in the middle of the week
         /// </summary>

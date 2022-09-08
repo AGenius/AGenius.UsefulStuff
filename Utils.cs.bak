@@ -1308,49 +1308,5 @@ namespace AGenius.UsefulStuff
             return SendEmailMessage(isHTML, MailFrom, EmailTo, MessageBody, Subject, SMTPHost, SMTPUser, SMTPPass, SMTPPort, false, false, null, null, null, null, LogErrors, LogPath, priority);
         }
         #endregion
-        #region UK Bank Holiday fetch 
-        /// <summary>
-        /// Return a list of Holidays from the UK 
-        /// </summary>
-        /// <param name="region">The region set of holidays, northern-ireland, scotland and england-and-wales</param>
-        /// <returns>List of dates</returns>
-        public static List<DateTime> UKHolidayDates(string region = "england-and-wales")
-        {
-            var client = new WebClient();
-            var json = client.DownloadString("https://www.gov.uk/bank-holidays.json");
-            var js = new JavaScriptSerializer();
-            var holidays = js.Deserialize<Dictionary<string, UKHolidays>>(json.Replace("’", "'"));
-            return holidays[region].events.Select(d => d.date).ToList();
-        }
-        public static UKHolidays UKHolidayRecords(string region = "england-and-wales")
-        {
-            var client = new WebClient();
-            var json = client.DownloadString("https://www.gov.uk/bank-holidays.json");
-            var js = new JavaScriptSerializer();
-            var holidays = js.Deserialize<Dictionary<string, UKHolidays>>(json.Replace("â€™", "'"));
-            return holidays[region];
-        }
-        /// <summary>
-        /// Object to hold the holidays
-        /// </summary>
-        public class UKHolidays
-        {
-            public string division { get; set; }
-            public List<Event> events { get; set; }
-        }
-        /// <summary>
-        /// Object to hold the events (dates)
-        /// </summary>
-        public class Event
-        {
-            public DateTime date { get; set; }
-            public string notes { get; set; }
-            public string title { get; set; }
-        }
-        #endregion
-        #region Authenticate with AD
-        //public static bool ADHelp() { }
-
-        #endregion
     }
 }

@@ -71,6 +71,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Extensions\FormExtensions.cs" />
+    <Compile Include="Extensions\ImageExstensions.cs" />
     <Compile Include="Helpers\ODBCDatabaseHelper.cs" />
     <Compile Include="Helpers\MimeTypesList.cs" />
     <Compile Include="GlobalSuppressions.cs" />

@@ -51,6 +51,13 @@ namespace AGenius.UsefulStuff
         {
             return Path.GetInvalidFileNameChars().Aggregate(StringValue, (current, c) => current.Replace(c.ToString(), string.Empty));
         }
+        /// <summary>Return a clean alphanumeric string </summary>
+        /// <param name="StringValue">The String to process</param>
+        /// <remarks>This will remove any special characters from a string</remarks>
+        public static string CleanString(this string stringValue)
+        {
+            return Regex.Replace(stringValue, "[^a-zA-Z0-9]", string.Empty);
+        }
         /// <summary>Decode the Base36 Encoded string into a number</summary>
         internal static Int64 DecodeBase36(this string input)
         {
@@ -75,22 +82,33 @@ namespace AGenius.UsefulStuff
         /// <returns>The compressed string</returns>
         public static string CompressString(this string StringValue)
         {
-            byte[] buffer = Encoding.UTF8.GetBytes(StringValue);
-            var memoryStream = new MemoryStream();
-            using (var gZipStream = new GZipStream(memoryStream, CompressionMode.Compress, true))
+            if (string.IsNullOrEmpty(StringValue))
             {
-                gZipStream.Write(buffer, 0, buffer.Length);
+                return "";
             }
+            try
+            {
+                byte[] buffer = Encoding.UTF8.GetBytes(StringValue);
+                var memoryStream = new MemoryStream();
+                using (var gZipStream = new GZipStream(memoryStream, CompressionMode.Compress, true))
+                {
+                    gZipStream.Write(buffer, 0, buffer.Length);
+                }
 
-            memoryStream.Position = 0;
+                memoryStream.Position = 0;
 
-            var compressedData = new byte[memoryStream.Length];
-            memoryStream.Read(compressedData, 0, compressedData.Length);
+                var compressedData = new byte[memoryStream.Length];
+                memoryStream.Read(compressedData, 0, compressedData.Length);
 
-            var gZipBuffer = new byte[compressedData.Length + 4];
-            Buffer.BlockCopy(compressedData, 0, gZipBuffer, 4, compressedData.Length);
-            Buffer.BlockCopy(BitConverter.GetBytes(buffer.Length), 0, gZipBuffer, 0, 4);
-            return Convert.ToBase64String(gZipBuffer);
+                var gZipBuffer = new byte[compressedData.Length + 4];
+                Buffer.BlockCopy(compressedData, 0, gZipBuffer, 4, compressedData.Length);
+                Buffer.BlockCopy(BitConverter.GetBytes(buffer.Length), 0, gZipBuffer, 0, 4);
+                return Convert.ToBase64String(gZipBuffer);
+            }
+            catch (Exception)
+            {
+                return "";
+            }
         }
 
         /// <summary>Decompresses a string using GZip</summary>
@@ -98,22 +116,34 @@ namespace AGenius.UsefulStuff
         /// <returns>The uncompressed string</returns>
         public static string DecompressString(this string CompressedStringValue)
         {
-            byte[] gZipBuffer = Convert.FromBase64String(CompressedStringValue);
-            using (var memoryStream = new MemoryStream())
+            if (string.IsNullOrEmpty(CompressedStringValue))
             {
-                int dataLength = BitConverter.ToInt32(gZipBuffer, 0);
-                memoryStream.Write(gZipBuffer, 4, gZipBuffer.Length - 4);
-
-                var buffer = new byte[dataLength];
-
-                memoryStream.Position = 0;
-                using (var gZipStream = new GZipStream(memoryStream, CompressionMode.Decompress))
-                {
-                    gZipStream.Read(buffer, 0, buffer.Length);
-                }
-
-                return Encoding.UTF8.GetString(buffer);
+                return "";
             }
+            try
+            {
+                byte[] gZipBuffer = Convert.FromBase64String(CompressedStringValue);
+                using (var memoryStream = new MemoryStream())
+                {
+                    int dataLength = BitConverter.ToInt32(gZipBuffer, 0);
+                    memoryStream.Write(gZipBuffer, 4, gZipBuffer.Length - 4);
+
+                    var buffer = new byte[dataLength];
+
+                    memoryStream.Position = 0;
+                    using (var gZipStream = new GZipStream(memoryStream, CompressionMode.Decompress))
+                    {
+                        gZipStream.Read(buffer, 0, buffer.Length);
+                    }
+
+                    return Encoding.UTF8.GetString(buffer);
+                }
+            }
+            catch (Exception)
+            {
+                return "";                
+            }
+           
         }
 
         /// <summary>Encrypt a string into a web safe string.</summary>
