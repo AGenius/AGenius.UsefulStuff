@@ -399,7 +399,7 @@ namespace AGenius.UsefulStuff.Helpers
                 {
                     _lastError = "Connection String not set";
                     throw new ArgumentException(_lastError);
-                }               
+                }
                 string sSQL = SQLQuery.Replace("[tablename]", GetTableName<TENTITY>()).Replace("[TABLENAME]", GetTableName<TENTITY>());
                 _lastQuery = sSQL;
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
@@ -423,8 +423,7 @@ namespace AGenius.UsefulStuff.Helpers
         /// <typeparam name="TENTITY">Entity Object type</typeparam>
         /// <param name="Where">criteria</param>
         /// <returns><see cref="IList{T}"/> containing the Entity records</returns>
-        public IList<TENTITY> ReadRecords<TENTITY>(string Where = "")
-            where TENTITY : class
+        public IList<TENTITY> ReadRecords<TENTITY>(string Where = "") where TENTITY : class
         {
             try
             {
@@ -459,7 +458,51 @@ namespace AGenius.UsefulStuff.Helpers
                     return ReadRecords<TENTITY>(Where);
                 }
                 _lastError = ex.Message;
-                throw new DatabaseAccessHelperException(ex.Message);
+                //       throw new DatabaseAccessHelperException(ex.Message);
+                return null;
+            }
+        }
+        /// <summary>Return a list of objects that match the selection criteria </summary>
+        /// <typeparam name="TENTITY">Entity Object type</typeparam>
+        /// <param name="Where">criteria</param>
+        /// <returns><see cref="IList{T}"/> containing the Entity records</returns>
+        public IList<TENTITY> ReadRecords<TENTITY>(string Where = "", bool noTimeout = false) where TENTITY : class
+        {
+            try
+            {
+                _lastError = "";
+                _lastQuery = "";
+                string TableName = GetTableName<TENTITY>();
+                if (string.IsNullOrEmpty(TableName))
+                {
+                    _lastError = "Invalid Table Name";
+                    throw new ArgumentException(_lastError);
+                }
+                if (string.IsNullOrEmpty(DBConnectionString))
+                {
+                    _lastError = "Connection String not set";
+                    throw new ArgumentException(_lastError);
+                }
+                string sWhere = string.IsNullOrEmpty(Where) ? "" : $"WHERE {Where}";
+                string sSQL = $"SELECT * FROM {TableName} {sWhere}";
+                _lastQuery = sSQL;
+                // var Results = null;
+                using (IDbConnection db = new SqlConnection(DBConnectionString))
+                {
+                    return db.Query<TENTITY>(sSQL, null, null, noTimeout ? 0 : 120).ToList();
+                }
+            }
+            catch (DbException ex)
+            {
+                if (ex.Message.Contains("deadlocked"))
+                {
+                    // Retry
+                    Utils.WriteLogFile(ex.Message, null, "Error", "Logs", true);
+                    return ReadRecords<TENTITY>(Where);
+                }
+                _lastError = ex.Message;
+                //       throw new DatabaseAccessHelperException(ex.Message);
+                return null;
             }
         }
         /// <summary>Return a list of objects that match the selection criteria </summary>
@@ -573,7 +616,7 @@ namespace AGenius.UsefulStuff.Helpers
                 {
                     _lastError = "Connection String not set";
                     throw new ArgumentException(_lastError);
-                }                
+                }
                 string sSQL = SQLQuery.Replace("[tablename]", GetTableName<TENTITY>()).Replace("[TABLENAME]", GetTableName<TENTITY>());
                 _lastQuery = sSQL;
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
@@ -737,8 +780,7 @@ namespace AGenius.UsefulStuff.Helpers
 
         /// <summary>Execute an SQL Statement </summary>
         /// <param name="sqlCmd">String holding the SQL Command</param>
-        /// <param name="Params">Provide Parameters for the query</param>
-        public void ExecuteSQL(string sqlCmd, DynamicParameters Params = null)
+        public object ExecuteSQL(string sqlCmd, DynamicParameters Params = null)
         {
             try
             {
@@ -752,9 +794,8 @@ namespace AGenius.UsefulStuff.Helpers
 
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
-                    db.Execute(sqlCmd, Params, null, 0); // Excute with no timeout
+                    return db.Execute(sqlCmd, Params, null, 0); // Excute with no timeout
                 }
-
             }
             catch (DbException ex)
             {
@@ -780,6 +821,32 @@ namespace AGenius.UsefulStuff.Helpers
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
                     return db.ExecuteScalar(sqlCmd);
+                }
+
+            }
+            catch (DbException ex)
+            {
+                _lastError = ex.Message;
+                throw new DatabaseAccessHelperException(ex.Message);
+            }
+        }
+        /// <summary>Execute an SQL Statement </summary>
+        /// <param name="sqlCmd">String holding the SQL Command</param>
+        public dynamic ExecuteQuery(string sqlCmd)
+        {
+            try
+            {
+                _lastError = "";
+                _lastQuery = "";
+                if (string.IsNullOrEmpty(DBConnectionString))
+                {
+                    _lastError = "Connection String not set";
+                    throw new ArgumentException(_lastError);
+                }
+
+                using (IDbConnection db = new SqlConnection(DBConnectionString))
+                {
+                    return db.Query(sqlCmd);
                 }
 
             }
@@ -961,7 +1028,7 @@ namespace AGenius.UsefulStuff.Helpers
         /// <param name="Record">The Record to Update</param>
         /// <param name="originalEntity">A Copy of the original Record before changes made</param>
         /// <returns><see cref="bool"/> true/false for success/failure</returns>
-        public bool UpdateRecord<TENTITY>(TENTITY Record, TENTITY originalEntity) where TENTITY : class
+        public bool UpdateRecord<TENTITY>(TENTITY Record, TENTITY originalEntity, string OverrideTableName = "") where TENTITY : class
         {
             try
             {
@@ -983,6 +1050,10 @@ namespace AGenius.UsefulStuff.Helpers
                     if (diffs != null && diffs.Count > 0)
                     {
                         string TableName = GetTableName<TENTITY>();
+                        if (!string.IsNullOrEmpty(OverrideTableName))
+                        {
+                            TableName = OverrideTableName;
+                        }
                         string update = $"UPDATE {TableName}\r";
                         string fieldsList = string.Empty;
                         string IDField = string.Empty;
@@ -1038,7 +1109,7 @@ namespace AGenius.UsefulStuff.Helpers
         /// <param name="Record">Object holding the entity record</param>
         /// <param name="param">list of fields</param>
         /// <returns>The Id of the updated row. If no row was updated or id was not part of fields, returns null</returns>
-        public int? UpdateFields<TENTITY>(TENTITY Record, List<string> param)
+        public int? UpdateFields<TENTITY>(TENTITY Record, List<string> param, string OverrideTableName = "")
         {
             _lastError = "";
             _lastQuery = "";
@@ -1048,6 +1119,10 @@ namespace AGenius.UsefulStuff.Helpers
 
             int? id = (int)Record.GetType().GetProperty("ID").GetValue(Record);
             string TableName = GetTableName<TENTITY>();
+            if (!string.IsNullOrEmpty(OverrideTableName))
+            {
+                TableName = OverrideTableName;
+            }
             if (string.IsNullOrEmpty(TableName))
             {
                 _lastError = "Invalid Table Name";
@@ -1110,6 +1185,7 @@ namespace AGenius.UsefulStuff.Helpers
             }
             return null;
         }
+
         /// <summary>
         /// Updates table T with the values in param.
         /// The table must have a key named "Id" and the value of id must be included in the "param" anon object. 
