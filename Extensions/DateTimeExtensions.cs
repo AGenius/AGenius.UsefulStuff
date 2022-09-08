@@ -77,14 +77,43 @@ namespace AGenius.UsefulStuff
             // Calculate the final result using all the above calculated values
             return start.AddDays(wholeDays + weekends * 2).Add(remainder);
         }
-        public static DateTime AddWorkDays(this DateTime date, int workingDays)
+        public static DateTime AddWorkDays(this DateTime date, int workingDays, List<DateTime> dates = null)
         {
-            return date.GetDates(workingDays < 0)
-                .Where(newDate =>
-                    (newDate.DayOfWeek != DayOfWeek.Saturday &&
-                     newDate.DayOfWeek != DayOfWeek.Sunday))
-                .Take(Math.Abs(workingDays))
-                .Last();
+            int direction = workingDays < 0 ? -1 : 1;
+            DateTime newDate = date;
+            while (workingDays != 0)
+            {
+                newDate = newDate.AddDays(direction);
+                if (newDate.DayOfWeek != DayOfWeek.Saturday &&
+                    newDate.DayOfWeek != DayOfWeek.Sunday &&
+                    !newDate.IsAHoliday(dates))
+                {
+                    workingDays -= direction;
+                }
+            }
+            return newDate;
+
+            //return date.GetDates(workingDays < 0)
+            //    .Where(newDate =>
+            //        (newDate.DayOfWeek != DayOfWeek.Saturday &&
+            //         newDate.DayOfWeek != DayOfWeek.Sunday))
+            //    .Take(Math.Abs(workingDays))
+            //    .Last();
+        }
+
+        /// <summary>
+        /// Checks whether the day of given DateTime is a holiday according to the configuration.
+        /// Please refer the app.config for more information. 
+        /// </summary>
+        /// <param name="date">DateTime to be checked.</param>
+        /// <returns>True if the given day is a holiday, false otherwise.</returns>
+        public static bool IsAHoliday(this DateTime date, List<DateTime> dates = null)
+        {
+            if (dates != null && dates.Count > 0)
+            {
+                return dates.Contains(date.Date);
+            }
+            return false;
         }
         public static DateTime StartOfWeek(this DateTime dt)
         {
