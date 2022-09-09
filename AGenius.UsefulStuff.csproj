@@ -79,6 +79,7 @@
     <Compile Include="Extensions\ImageExstensions.cs" />
     <Compile Include="Helpers\ActiveDirectory\ADHelper.cs" />
     <Compile Include="Helpers\ActiveDirectory\Model\ADUser.cs" />
+    <Compile Include="Helpers\ImageBuildProperties.cs" />
     <Compile Include="Helpers\ODBCDatabaseHelper.cs" />
     <Compile Include="Helpers\MimeTypesList.cs" />
     <Compile Include="GlobalSuppressions.cs" />

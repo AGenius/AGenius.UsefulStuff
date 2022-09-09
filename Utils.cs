@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing.Drawing2D;
+using System.Drawing;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -1351,6 +1353,78 @@ namespace AGenius.UsefulStuff
         #region Authenticate with AD
         //public static bool ADHelp() { }
 
+        #endregion
+        #region Image Creation
+
+        public static string BuildWatermarkImage(string ImagePath, ImageBuildProperties iProps)
+        {
+            if (iProps == null)
+            {
+                throw new ArgumentNullException("Image Build Properties Missing");
+            }
+            string imageFilePath = Path.Combine(ImagePath, iProps.ImageFileName);
+
+            if (!iProps.ImageFileName.EndsWith(iProps.OutputImageFormat.ToString()))
+            {
+                imageFilePath += $".{iProps.OutputImageFormat.ToString()}";
+            }
+
+            System.IO.File.Delete(imageFilePath);
+            int w = iProps.Width;
+            int h = iProps.Height;
+            Bitmap bitmap;
+            if (iProps.StartingImage != null)
+            {
+                if (iProps.isTransparent)
+                {
+                    bitmap = new Bitmap(iProps.StartingImage, w, h).MakeTransparent(iProps.TransparentColour, 10);
+                }
+                else
+                {
+                    bitmap = new Bitmap(iProps.StartingImage, w, h);
+                }
+            }
+            else
+            {
+                if (iProps.isTransparent)
+                {
+                    bitmap = new Bitmap(w, h).MakeTransparent(iProps.TransparentColour, 10);
+                }
+                else
+                {
+                    bitmap = new Bitmap(w, h);
+                }
+            }
+            int top = iProps.boxProperties.Top;
+            int left = iProps.boxProperties.Left;
+
+            using (Graphics g = Graphics.FromImage(bitmap))
+            {
+                // Create pen.
+                Pen blackPen = new Pen(iProps.boxProperties.Colour, iProps.boxProperties.Thickness);
+
+                // Create rectangle.
+                Rectangle rect = new Rectangle(left, top, iProps.boxProperties.Width, iProps.boxProperties.Height);
+
+                // Draw rectangle .
+                g.DrawRectangle(blackPen, rect);
+
+                // Text
+                g.SmoothingMode = SmoothingMode.AntiAlias;
+                g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+                StringFormat sf = new StringFormat();
+                sf.Alignment = iProps.textProperties.Halignment;
+                sf.LineAlignment = iProps.textProperties.Valignment;
+                var rectf = new RectangleF(left + 10, top + 10, iProps.boxProperties.Width - iProps.textProperties.Padding, iProps.boxProperties.Height - iProps.textProperties.Padding); //rectf for My Text
+                g.DrawString(iProps.textProperties.TextString, new System.Drawing.Font(iProps.textProperties.FontName, iProps.textProperties.FontSize, iProps.textProperties.FontStyle), Brushes.Red, rectf, sf);
+
+            }
+
+            bitmap.Save(imageFilePath, iProps.OutputImageFormat);
+            bitmap.Dispose();
+            return imageFilePath;
+        }
         #endregion
     }
 }
