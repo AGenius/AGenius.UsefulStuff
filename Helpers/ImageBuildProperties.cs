@@ -36,13 +36,17 @@ namespace AGenius.UsefulStuff
         }
         public class ImageTextProperties
         {
+            public int Height { get; set; }
+            public int Width { get; set; }
+            public int Top { get; set; }
+            public int Left { get; set; }
             public string TextString { get; set; }
             public string FontName { get; set; } = "Tahoma";
             public int FontSize { get; set; } = 23;
             public FontStyle FontStyle { get; set; } = FontStyle.Bold;
             public StringAlignment Halignment { get; set; } = StringAlignment.Center;
             public StringAlignment Valignment { get; set; } = StringAlignment.Center;
-            public Color Colour { get; set; }
+            public Brush Colour { get; set; }
             public int Padding { get; set; } = 20;
         }
         public class ImageBoxProperties

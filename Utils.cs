@@ -1356,6 +1356,16 @@ namespace AGenius.UsefulStuff
         #endregion
         #region Image Creation
 
+        /// <summary>
+        /// Build an Image from code using dimension and adding a box if required
+        /// </summary>
+        /// <param name="ImagePath">File Path to save image to</param>
+        /// <param name="iProps">ImageBuildProperties object to control the build</param>
+        /// <returns>Full path with Image file name</returns>
+        /// <remarks> Setting boxProperties to null will stop a box being drawn</remarks>
+        /// 
+        /// <exception cref="ArgumentNullException"></exception>
+
         public static string BuildWatermarkImage(string ImagePath, ImageBuildProperties iProps)
         {
             if (iProps == null)
@@ -1395,20 +1405,23 @@ namespace AGenius.UsefulStuff
                     bitmap = new Bitmap(w, h);
                 }
             }
-            int top = iProps.boxProperties.Top;
-            int left = iProps.boxProperties.Left;
 
             using (Graphics g = Graphics.FromImage(bitmap))
             {
-                // Create pen.
-                Pen blackPen = new Pen(iProps.boxProperties.Colour, iProps.boxProperties.Thickness);
+                if (iProps.boxProperties != null)
+                {
+                    int top = iProps.boxProperties.Top;
+                    int left = iProps.boxProperties.Left;
 
-                // Create rectangle.
-                Rectangle rect = new Rectangle(left, top, iProps.boxProperties.Width, iProps.boxProperties.Height);
+                    // Create pen.
+                    Pen pen = new Pen(iProps.boxProperties.Colour, iProps.boxProperties.Thickness);
 
-                // Draw rectangle .
-                g.DrawRectangle(blackPen, rect);
+                    // Create rectangle.
+                    Rectangle rect = new Rectangle(left, top, iProps.boxProperties.Width, iProps.boxProperties.Height);
 
+                    // Draw rectangle .
+                    g.DrawRectangle(pen, rect);
+                }
                 // Text
                 g.SmoothingMode = SmoothingMode.AntiAlias;
                 g.InterpolationMode = InterpolationMode.HighQualityBicubic;
@@ -1416,8 +1429,8 @@ namespace AGenius.UsefulStuff
                 StringFormat sf = new StringFormat();
                 sf.Alignment = iProps.textProperties.Halignment;
                 sf.LineAlignment = iProps.textProperties.Valignment;
-                var rectf = new RectangleF(left + 10, top + 10, iProps.boxProperties.Width - iProps.textProperties.Padding, iProps.boxProperties.Height - iProps.textProperties.Padding); //rectf for My Text
-                g.DrawString(iProps.textProperties.TextString, new System.Drawing.Font(iProps.textProperties.FontName, iProps.textProperties.FontSize, iProps.textProperties.FontStyle), Brushes.Red, rectf, sf);
+                var rectf = new RectangleF(iProps.textProperties.Left + 10, iProps.textProperties.Top + 10, iProps.textProperties.Width - iProps.textProperties.Padding, iProps.textProperties.Height - iProps.textProperties.Padding); //rectf for My Text
+                g.DrawString(iProps.textProperties.TextString, new System.Drawing.Font(iProps.textProperties.FontName, iProps.textProperties.FontSize, iProps.textProperties.FontStyle), iProps.textProperties.Colour, rectf, sf);
 
             }
 
