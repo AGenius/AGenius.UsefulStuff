@@ -14,6 +14,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Web.Script.Serialization;
 using System.Windows.Forms;
+using AGenius.UsefulStuff.Helpers.ActiveDirectory;
 using Newtonsoft.Json;
 
 using static AGenius.UsefulStuff.ObjectExtensions;
@@ -23,7 +24,7 @@ namespace AGenius.UsefulStuff
     /// <summary>
     /// Some Common usefull methods
     /// </summary>
-    public static class Utils
+    public static partial class Utils
     {
         /// <summary>Determine if an executable is running</summary>
         /// <param name="FullPath">The full path to the EXE file</param>
@@ -100,15 +101,20 @@ namespace AGenius.UsefulStuff
         #region Scramble Methods       
 
         /// <summary>The path to the assembly</summary>
+        private static string _ApplicationPath;
         public static string ApplicationPath
         {
             get
             {
-                if (System.Reflection.Assembly.GetEntryAssembly() != null)
+                if (string.IsNullOrEmpty(_ApplicationPath) && System.Reflection.Assembly.GetEntryAssembly() != null)
                 {
-                    return Directory.GetParent(System.Reflection.Assembly.GetEntryAssembly().Location).FullName;
+                    _ApplicationPath = Directory.GetParent(System.Reflection.Assembly.GetEntryAssembly().Location).FullName;
                 }
-                return null;
+                return _ApplicationPath;
+            }
+            set
+            {
+                _ApplicationPath = value;
             }
         }
 
@@ -1349,13 +1355,9 @@ namespace AGenius.UsefulStuff
             public string notes { get; set; }
             public string title { get; set; }
         }
-        #endregion
-        #region Authenticate with AD
-        //public static bool ADHelp() { }
 
         #endregion
         #region Image Creation
-
         /// <summary>
         /// Build an Image from code using dimension and adding a box if required
         /// </summary>
@@ -1366,14 +1368,15 @@ namespace AGenius.UsefulStuff
         /// 
         /// <exception cref="ArgumentNullException"></exception>
 
-        public static string BuildWatermarkImage(string ImagePath, ImageBuildProperties iProps)
+        public static string BuildWatermarkImage(ImageBuildProperties iProps)
         {
             if (iProps == null)
             {
                 throw new ArgumentNullException("Image Build Properties Missing");
             }
-            string imageFilePath = Path.Combine(ImagePath, iProps.ImageFileName);
+            string imageFilePath = iProps.ImageFileName;
 
+            // Ensure the correct file extention is applied
             if (!iProps.ImageFileName.EndsWith(iProps.OutputImageFormat.ToString()))
             {
                 imageFilePath += $".{iProps.OutputImageFormat.ToString()}";
@@ -1421,6 +1424,24 @@ namespace AGenius.UsefulStuff
 
                     // Draw rectangle .
                     g.DrawRectangle(pen, rect);
+
+                    // Insure the text location is set, otherwise use the box location
+                    if (!iProps.textProperties.Width.HasValue)
+                    {
+                        iProps.textProperties.Width = iProps.boxProperties.Width;
+                    }
+                    if (!iProps.textProperties.Height.HasValue)
+                    {
+                        iProps.textProperties.Height = iProps.boxProperties.Height;
+                    }
+                    if (!iProps.textProperties.Top.HasValue)
+                    {
+                        iProps.textProperties.Top = iProps.boxProperties.Top;
+                    }
+                    if (!iProps.textProperties.Left.HasValue)
+                    {
+                        iProps.textProperties.Left = iProps.boxProperties.Left;
+                    }
                 }
                 // Text
                 g.SmoothingMode = SmoothingMode.AntiAlias;
@@ -1429,8 +1450,13 @@ namespace AGenius.UsefulStuff
                 StringFormat sf = new StringFormat();
                 sf.Alignment = iProps.textProperties.Halignment;
                 sf.LineAlignment = iProps.textProperties.Valignment;
-                var rectf = new RectangleF(iProps.textProperties.Left + 10, iProps.textProperties.Top + 10, iProps.textProperties.Width - iProps.textProperties.Padding, iProps.textProperties.Height - iProps.textProperties.Padding); //rectf for My Text
-                g.DrawString(iProps.textProperties.TextString, new System.Drawing.Font(iProps.textProperties.FontName, iProps.textProperties.FontSize, iProps.textProperties.FontStyle), iProps.textProperties.Colour, rectf, sf);
+                var rectf = new RectangleF(iProps.textProperties.Left.Value + 10,
+                    iProps.textProperties.Top.Value + 10,
+                    iProps.textProperties.Width.Value - iProps.textProperties.Padding,
+                    iProps.textProperties.Height.Value - iProps.textProperties.Padding); //rectf for My Text
+
+                g.DrawString(iProps.textProperties.TextString, iProps.textProperties.Font,
+                    new SolidBrush(iProps.textProperties.Colour), rectf, sf);
 
             }
 
@@ -1439,5 +1465,6 @@ namespace AGenius.UsefulStuff
             return imageFilePath;
         }
         #endregion
+
     }
 }
