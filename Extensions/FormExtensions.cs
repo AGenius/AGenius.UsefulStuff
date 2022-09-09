@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace AGenius.UsefulStuff.Extensions
+namespace AGenius.UsefulStuff
 {
     /// <summary>
     /// Form Extension methods

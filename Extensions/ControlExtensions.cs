@@ -2,7 +2,7 @@
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace AGenius.UsefulStuff.Extensions
+namespace AGenius.UsefulStuff
 {
     public static class ControlExtensions
     {
