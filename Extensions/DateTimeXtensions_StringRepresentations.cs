@@ -38,9 +38,16 @@ namespace AGenius.UsefulStuff
         /// <param name="date">The given DateTime.</param>
         /// <returns>The string representation according to the format.</returns>
         /// <example>Returns "01/01/12" for the date 1.1.2012.</example>
-        public static string ToDdMmYySlash(this DateTime date)
+        public static string ToDdMmYySlash(this DateTime date, string timeformat = "")
         {
-            return date.ToString("dd/MM/yy");
+            if (!string.IsNullOrEmpty(timeformat))
+            {
+                return date.ToString($"dd/MM/yy {timeformat}");
+            }
+            else
+            {
+                return date.ToString("dd/MM/yy");
+            }
         }
 
         /// <summary>
@@ -49,9 +56,16 @@ namespace AGenius.UsefulStuff
         /// <param name="date">The given DateTime.</param>
         /// <returns>The string representation according to the format.</returns>
         /// <example>Returns "01.01.12" for the date 1.1.2012.</example>
-        public static string ToDdMmYyDot(this DateTime date)
+        public static string ToDdMmYyDot(this DateTime date, string timeformat = "")
         {
-            return date.ToString("dd.MM.yy");
+            if (!string.IsNullOrEmpty(timeformat))
+            {
+                return date.ToString($"dd.MM.yy {timeformat}");
+            }
+            else
+            {
+                return date.ToString("dd.MM.yy");
+            }
         }
 
         /// <summary>
@@ -60,9 +74,16 @@ namespace AGenius.UsefulStuff
         /// <param name="date">The given DateTime.</param>
         /// <returns>The string representation according to the format.</returns>
         /// <example>Returns "01-01-12" for the date 1.1.2012.</example>
-        public static string ToDdMmYyHyphen(this DateTime date)
+        public static string ToDdMmYyHyphen(this DateTime date, string timeformat = "")
         {
-            return date.ToString("dd-MM-yy");
+            if (!string.IsNullOrEmpty(timeformat))
+            {
+                return date.ToString($"dd-MM-yy {timeformat}");
+            }
+            else
+            {
+                return date.ToString("dd-MM-yy");
+            }
         }
 
         /// <summary>
@@ -72,9 +93,16 @@ namespace AGenius.UsefulStuff
         /// <param name="separator">The given separator.</param>
         /// <returns>The string representation according to the format.</returns>
         /// <example>Returns "01,01,12" for the date 1.1.2012 and separator ,.</example>
-        public static string ToDdMmYyWithSep(this DateTime date, string separator)
+        public static string ToDdMmYyWithSep(this DateTime date, string separator, string timeformat = "")
         {
-            return date.ToString(string.Format("dd{0}MM{0}yy", separator));
+            if (!string.IsNullOrEmpty(timeformat))
+            {
+                return date.ToString($"dd{separator}MM{separator}yy {timeformat}");
+            }
+            else
+            {
+                return date.ToString($"dd{separator}MM{separator}yy");
+            }
         }
 
         #endregion
@@ -87,9 +115,16 @@ namespace AGenius.UsefulStuff
         /// <param name="date">The given DateTime.</param>
         /// <returns>The string representation according to the format.</returns>
         /// <example>Returns "01/01/2012" for the date 1.1.2012.</example>
-        public static string ToDdMmYyyySlash(this DateTime date)
+        public static string ToDdMmYyyySlash(this DateTime date, string timeformat = "")
         {
-            return date.ToString("dd/MM/yyyy");
+            if (!string.IsNullOrEmpty(timeformat))
+            {
+                return date.ToString($"dd/MM/yyyy {timeformat}");
+            }
+            else
+            {
+                return date.ToString("dd/MM/yyyy");
+            }
         }
 
         /// <summary>
@@ -98,9 +133,16 @@ namespace AGenius.UsefulStuff
         /// <param name="date">The given DateTime.</param>
         /// <returns>The string representation according to the format.</returns>
         /// <example>Returns "01.01.2012" for the date 1.1.2012.</example>
-        public static string ToDdMmYyyyDot(this DateTime date)
+        public static string ToDdMmYyyyDot(this DateTime date, string timeformat = "")
         {
-            return date.ToString("dd.MM.yyyy");
+            if (!string.IsNullOrEmpty(timeformat))
+            {
+                return date.ToString($"dd.MM.yyyy {timeformat}");
+            }
+            else
+            {
+                return date.ToString("dd.MM.yyyy");
+            }
         }
 
         /// <summary>
@@ -109,9 +151,16 @@ namespace AGenius.UsefulStuff
         /// <param name="date">The given DateTime.</param>
         /// <returns>The string representation according to the format.</returns>
         /// <example>Returns "01-01-2012" for the date 1.1.2012.</example>
-        public static string ToDdMmYyyyHyphen(this DateTime date)
+        public static string ToDdMmYyyyHyphen(this DateTime date, string timeformat = "")
         {
-            return date.ToString("dd-MM-yyyy");
+            if (!string.IsNullOrEmpty(timeformat))
+            {
+                return date.ToString($"dd-MM-yyyy {timeformat}");
+            }
+            else
+            {
+                return date.ToString("dd-MM-yyyy");
+            }
         }
 
         /// <summary>
@@ -121,9 +170,16 @@ namespace AGenius.UsefulStuff
         /// <param name="separator">The given separator.</param>
         /// <returns>The string representation according to the format.</returns>
         /// <example>Returns "01,01,2012" for the given DateTime 1.1.2012 and separator ,.</example>
-        public static string ToDdMmYyyyWithSep(this DateTime date, string separator)
+        public static string ToDdMmYyyyWithSep(this DateTime date, string separator, string timeformat = "")
         {
-            return date.ToString(string.Format("dd{0}MM{0}yyyy", separator));
+            if (!string.IsNullOrEmpty(timeformat))
+            {
+                return date.ToString($"dd{separator}MM{separator}yyyy {timeformat}");
+            }
+            else
+            {
+                return date.ToString($"dd{separator}MM{separator}yyyy");
+            }
         }
 
         #endregion
@@ -136,9 +192,16 @@ namespace AGenius.UsefulStuff
         /// <param name="date">The given DateTime.</param>
         /// <returns>The string representation according to the format.</returns>
         /// <example>Returns "12/01/12" for the date 1.12.2012.</example>
-        public static string ToMmDdYySlash(this DateTime date)
+        public static string ToMmDdYySlash(this DateTime date, string timeformat = "")
         {
-            return date.ToString("MM/dd/yy");
+            if (!string.IsNullOrEmpty(timeformat))
+            {
+                return date.ToString($"MM/dd/yy {timeformat}");
+            }
+            else
+            {
+                return date.ToString("MM/dd/yy");
+            }
         }
 
         /// <summary>
@@ -147,9 +210,16 @@ namespace AGenius.UsefulStuff
         /// <param name="date">The given DateTime.</param>
         /// <returns>The string representation according to the format.</returns>
         /// <example>Returns "12.01.12" for the date 1.12.2012.</example>
-        public static string ToMmDdYyDot(this DateTime date)
+        public static string ToMmDdYyDot(this DateTime date, string timeformat = "")
         {
-            return date.ToString("MM.dd.yy");
+            if (!string.IsNullOrEmpty(timeformat))
+            {
+                return date.ToString($"MM.dd.yy {timeformat}");
+            }
+            else
+            {
+                return date.ToString("MM.dd.yy");
+            }
         }
 
         /// <summary>
@@ -158,9 +228,16 @@ namespace AGenius.UsefulStuff
         /// <param name="date">The given DateTime.</param>
         /// <returns>The string representation according to the format.</returns>
         /// <example>Returns "12-01-12" for the date 1.12.2012.</example>
-        public static string ToMmDdYyHyphen(this DateTime date)
+        public static string ToMmDdYyHyphen(this DateTime date, string timeformat = "")
         {
-            return date.ToString("MM-dd-yy");
+            if (!string.IsNullOrEmpty(timeformat))
+            {
+                return date.ToString($"MM-dd-yy {timeformat}");
+            }
+            else
+            {
+                return date.ToString("MM-dd-yy");
+            }
         }
 
         /// <summary>
@@ -170,9 +247,16 @@ namespace AGenius.UsefulStuff
         /// <param name="separator">The given separator.</param>
         /// <returns>The string representation according to the format.</returns>
         /// <example>Returns "12,01,12" for the given DateTime1.12.2012 and separator ,.</example>
-        public static string ToMmDdYyWithSep(this DateTime date, string separator)
+        public static string ToMmDdYyWithSep(this DateTime date, string separator, string timeformat = "")
         {
-            return date.ToString(string.Format("MM{0}dd{0}yy", separator));
+            if (!string.IsNullOrEmpty(timeformat))
+            {
+                return date.ToString($"dd.MM.yyyy {timeformat}");
+            }
+            else
+            {
+                return date.ToString($"MM{separator}dd{separator}yy");
+            }
         }
 
         #endregion
@@ -185,9 +269,16 @@ namespace AGenius.UsefulStuff
         /// <param name="date">The given DateTime.</param>
         /// <returns>The string representation according to the format.</returns>
         /// <example>Returns "12/01/2012" for the date 1.12.2012.</example>
-        public static string ToMmDdYyyySlash(this DateTime date)
+        public static string ToMmDdYyyySlash(this DateTime date, string timeformat = "")
         {
-            return date.ToString("MM/dd/yyyy");
+            if (!string.IsNullOrEmpty(timeformat))
+            {
+                return date.ToString($"MM/dd/yyyy {timeformat}");
+            }
+            else
+            {
+                return date.ToString("MM/dd/yyyy");
+            }
         }
 
         /// <summary>
@@ -196,9 +287,16 @@ namespace AGenius.UsefulStuff
         /// <param name="date">The given DateTime.</param>
         /// <returns>The string representation according to the format.</returns>
         /// <example>Returns "12.01.2012" for the date 1.12.2012.</example>
-        public static string ToMmDdYyyyDot(this DateTime date)
+        public static string ToMmDdYyyyDot(this DateTime date, string timeformat = "")
         {
-            return date.ToString("MM.dd.yyyy");
+            if (!string.IsNullOrEmpty(timeformat))
+            {
+                return date.ToString($"MM.dd.yyyy {timeformat}");
+            }
+            else
+            {
+                return date.ToString("MM.dd.yyyy");
+            }
         }
 
         /// <summary>
@@ -207,9 +305,16 @@ namespace AGenius.UsefulStuff
         /// <param name="date">The given DateTime.</param>
         /// <returns>The string representation according to the format.</returns>
         /// <example>Returns "12-01-2012" for the date 1.12.2012.</example>
-        public static string ToMmDdYyyyHyphen(this DateTime date)
+        public static string ToMmDdYyyyHyphen(this DateTime date, string timeformat = "")
         {
-            return date.ToString("MM-dd-yyyy");
+            if (!string.IsNullOrEmpty(timeformat))
+            {
+                return date.ToString($"MM-dd-yyyy {timeformat}");
+            }
+            else
+            {
+                return date.ToString("MM-dd-yyyy");
+            }
         }
 
         /// <summary>
@@ -219,9 +324,16 @@ namespace AGenius.UsefulStuff
         /// <param name="separator">The given separator.</param>
         /// <returns>The string representation according to the format.</returns>
         /// <example>Returns "12,01,2012" for the given DateTime1.12.2012 and separator ,.</example>
-        public static string ToMmDdYyyyWithSep(this DateTime date, string separator)
+        public static string ToMmDdYyyyWithSep(this DateTime date, string separator, string timeformat = "")
         {
-            return date.ToString(string.Format("MM{0}dd{0}yyyy", separator));
+            if (!string.IsNullOrEmpty(timeformat))
+            {
+                return date.ToString($"dd.MM.yyyy {timeformat}");
+            }
+            else
+            {
+                return date.ToString($"MM{separator}dd{separator}yyyy");
+            }
         }
 
         #endregion
@@ -234,9 +346,16 @@ namespace AGenius.UsefulStuff
         /// <param name="date">The given DateTime.</param>
         /// <returns>The string representation according to the format.</returns>
         /// <example>Returns "12/11/30" for the date 30.11.2012.</example>
-        public static string ToYyMmDdSlash(this DateTime date)
+        public static string ToYyMmDdSlash(this DateTime date, string timeformat = "")
         {
-            return date.ToString("yy/MM/dd");
+            if (!string.IsNullOrEmpty(timeformat))
+            {
+                return date.ToString($"yy/MM/dd {timeformat}");
+            }
+            else
+            {
+                return date.ToString("yy/MM/dd");
+            }
         }
 
         /// <summary>
@@ -245,9 +364,16 @@ namespace AGenius.UsefulStuff
         /// <param name="date">The given DateTime.</param>
         /// <returns>The string representation according to the format.</returns>
         /// <example>Returns "12.11.30" for the date 30.11.2012.</example>
-        public static string ToYyMmDdDot(this DateTime date)
+        public static string ToYyMmDdDot(this DateTime date, string timeformat = "")
         {
-            return date.ToString("yy.MM.dd");
+            if (!string.IsNullOrEmpty(timeformat))
+            {
+                return date.ToString($"yy.MM.dd {timeformat}");
+            }
+            else
+            {
+                return date.ToString("yy.MM.dd");
+            }
         }
 
         /// <summary>
@@ -256,9 +382,16 @@ namespace AGenius.UsefulStuff
         /// <param name="date">The given DateTime.</param>
         /// <returns>The string representation according to the format.</returns>
         /// <example>Returns "12-11-30" for the date 30.11.2012.</example>
-        public static string ToYyMmDdHyphen(this DateTime date)
+        public static string ToYyMmDdHyphen(this DateTime date, string timeformat = "")
         {
-            return date.ToString("yy-MM-dd");
+            if (!string.IsNullOrEmpty(timeformat))
+            {
+                return date.ToString($"yy-MM-dd {timeformat}");
+            }
+            else
+            {
+                return date.ToString("yy-MM-dd");
+            }
         }
 
         /// <summary>
@@ -268,9 +401,16 @@ namespace AGenius.UsefulStuff
         /// <param name="separator">The given separator.</param>
         /// <returns>The string representation according to the format.</returns>
         /// <example>Returns "12,11,30" for the given DateTime30.11.2012 and separator ,.</example>
-        public static string ToYyMmDdWithSep(this DateTime date, string separator)
+        public static string ToYyMmDdWithSep(this DateTime date, string separator, string timeformat = "")
         {
-            return date.ToString(string.Format("yy{0}MM{0}dd", separator));
+            if (!string.IsNullOrEmpty(timeformat))
+            {
+                return date.ToString($"yy{separator}MM{separator}dd {timeformat}");
+            }
+            else
+            {
+                return date.ToString($"yy{separator}MM{separator}dd");
+            }
         }
 
         #endregion
@@ -283,9 +423,16 @@ namespace AGenius.UsefulStuff
         /// <param name="date">The given DateTime.</param>
         /// <returns>The string representation according to the format.</returns>
         /// <example>Returns "2012/11/30" for the date 30.11.2012.</example>          
-        public static string ToYyyyMmDdSlash(this DateTime date)
+        public static string ToYyyyMmDdSlash(this DateTime date, string timeformat = "")
         {
-            return date.ToString("yyyy/MM/dd");
+            if (!string.IsNullOrEmpty(timeformat))
+            {
+                return date.ToString($"yyyy/MM/dd {timeformat}");
+            }
+            else
+            {
+                return date.ToString("yyyy/MM/dd");
+            }
         }
 
         /// <summary>
@@ -294,9 +441,16 @@ namespace AGenius.UsefulStuff
         /// <param name="date">The given DateTime.</param>
         /// <returns>The string representation according to the format.</returns>
         /// <example>Returns "2012.11.30" for the date 30.11.2012.</example>           
-        public static string ToYyyyMmDdDot(this DateTime date)
+        public static string ToYyyyMmDdDot(this DateTime date, string timeformat = "")
         {
-            return date.ToString("yyyy.MM.dd");
+            if (!string.IsNullOrEmpty(timeformat))
+            {
+                return date.ToString($"yyyy.MM.dd {timeformat}");
+            }
+            else
+            {
+                return date.ToString("yyyy.MM.dd");
+            }
         }
 
         /// <summary>
@@ -305,9 +459,16 @@ namespace AGenius.UsefulStuff
         /// <param name="date">The given DateTime.</param>
         /// <returns>The string representation according to the format.</returns>
         /// <example>Returns "2012-11-30" for the date 30.11.2012.</example>           
-        public static string ToYyyyMmDdHyphen(this DateTime date)
+        public static string ToYyyyMmDdHyphen(this DateTime date, string timeformat = "")
         {
-            return date.ToString("yyyy-MM-dd");
+            if (!string.IsNullOrEmpty(timeformat))
+            {
+                return date.ToString($"yyyy-MM-dd {timeformat}");
+            }
+            else
+            {
+                return date.ToString("yyyy-MM-dd");
+            }
         }
 
         /// <summary>
@@ -317,9 +478,16 @@ namespace AGenius.UsefulStuff
         /// <param name="separator">The given separator.</param>
         /// <returns>The string representation according to the format.</returns>
         /// <example>Returns "2012,11,30" for the given DateTime30.11.2012 and separator ,.</example>           
-        public static string ToYyyyMmDdWithSep(this DateTime date, string separator)
+        public static string ToYyyyMmDdWithSep(this DateTime date, string separator, string timeformat = "")
         {
-            return date.ToString(string.Format("yyyy{0}MM{0}dd", separator));
+            if (!string.IsNullOrEmpty(timeformat))
+            {
+                return date.ToString($"yyyy{separator}MM{separator}dd {timeformat}");
+            }
+            else
+            {
+                return date.ToString($"yyyy{separator}MM{separator}dd");
+            }
         }
 
         #endregion

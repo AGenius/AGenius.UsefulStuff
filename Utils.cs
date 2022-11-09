@@ -714,11 +714,11 @@ namespace AGenius.UsefulStuff
         /// <typeparam name="TENTITY">Entity type</typeparam>
         /// <param name="objectRecord">The object record</param>
         /// <returns>JSON String</returns>
-        public static string SerializeObject<TENTITY>(TENTITY objectRecord)
+        public static string SerializeObject<TENTITY>(TENTITY objectRecord, ReferenceLoopHandling loopHandling = ReferenceLoopHandling.Error)
         {
             string serialVersion = JsonConvert.SerializeObject(objectRecord, Formatting.Indented, new JsonSerializerSettings()
             {
-                ReferenceLoopHandling = ReferenceLoopHandling.Error
+                ReferenceLoopHandling = loopHandling
             });
             return serialVersion;
         }
