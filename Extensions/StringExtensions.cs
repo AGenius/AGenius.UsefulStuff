@@ -20,11 +20,11 @@ namespace AGenius.UsefulStuff
     public static class StringExtensions
     {
         /// <summary>Convert a Serialized Font string to a real font</summary>
-        /// <param name="StringValue">The serialized font string , e.g. Font,Microsoft Sans Serif,10,Regular,Point,1,False</param>
+        /// <param name="str">The serialized font string , e.g. Font, Microsoft Sans Serif, 10, Regular, Point, 1, False</param>
         /// <returns>Font object</returns>
-        static public Font ToFont(this string StringValue)
+        static public Font ToFont(this string str)
         {
-            var parts = StringValue.Split(',');
+            var parts = str.Split(',');
             return new Font(
                 parts[1],                                                   // FontFamily.Name
                 float.Parse(parts[2]),                                      // Size
@@ -37,27 +37,27 @@ namespace AGenius.UsefulStuff
         /// <summary>
         /// Use the current thread's culture info for conversion
         /// </summary>
-        public static string ToTitleCase(this string StringValue)
+        public static string ToTitleCase(this string str)
         {
             var cultureInfo = System.Threading.Thread.CurrentThread.CurrentCulture;
-            return cultureInfo.TextInfo.ToTitleCase(StringValue.ToLower());
+            return cultureInfo.TextInfo.ToTitleCase(str.ToLower());
         }
 
         /// <summary>
         /// Overload which uses the culture info with the specified name
         /// </summary>
-        public static string ToTitleCase(this string StringValue, string cultureInfoName)
+        public static string ToTitleCase(this string str, string cultureInfoName)
         {
             var cultureInfo = new CultureInfo(cultureInfoName);
-            return cultureInfo.TextInfo.ToTitleCase(StringValue.ToLower());
+            return cultureInfo.TextInfo.ToTitleCase(str.ToLower());
         }
 
         /// <summary>
         /// Overload which uses the specified culture info
         /// </summary>
-        public static string ToTitleCase(this string StringValue, CultureInfo cultureInfo)
+        public static string ToTitleCase(this string str, CultureInfo cultureInfo)
         {
-            return cultureInfo.TextInfo.ToTitleCase(StringValue.ToLower());
+            return cultureInfo.TextInfo.ToTitleCase(str.ToLower());
         }
         /// <summary>Return a clean string usable as a filename </summary>
         /// <param name="StringValue">The String to process</param>
@@ -75,10 +75,10 @@ namespace AGenius.UsefulStuff
             return Regex.Replace(stringValue, "[^a-zA-Z0-9]", string.Empty);
         }
         /// <summary>Decode the Base36 Encoded string into a number</summary>
-        internal static Int64 DecodeBase36(this string StringValue)
+        internal static Int64 DecodeBase36(this string input)
         {
             string CharList = "0123456789abcdefghijklmnopqrstuvwxyz";
-            var reversed = StringValue.ToLower().Reverse();
+            var reversed = input.ToLower().Reverse();
             long result = 0;
             int pos = 0;
 
@@ -157,9 +157,9 @@ namespace AGenius.UsefulStuff
             }
             catch (Exception)
             {
-                return "";                
+                return "";
             }
-           
+
         }
 
         /// <summary>Encrypt a string into a web safe string.</summary>
