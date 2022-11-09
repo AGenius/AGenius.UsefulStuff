@@ -75,6 +75,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Extensions\ControlExtensions.cs" />
+    <Compile Include="Extensions\FontExtensions.cs" />
     <Compile Include="Extensions\FormExtensions.cs" />
     <Compile Include="Extensions\ImageExstensions.cs" />
     <Compile Include="Helpers\ActiveDirectory\ADHelper.cs" />

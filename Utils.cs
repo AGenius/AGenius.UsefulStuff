@@ -466,11 +466,11 @@ namespace AGenius.UsefulStuff
         /// <returns></returns>
         public static List<string> GetFilesList(string rootPath, string fileExt, SearchOption searchOption, List<string> ignoreThese = null)
         {
-            if (!Directory.Exists(rootPath.Replace(@"\\", @"\").ToLower()))
+            if (!Directory.Exists(rootPath.ToLower()))
             {
                 return null;
             }
-            string[] filePaths = Directory.GetFiles($"{rootPath.Replace(@"\\", @"\").ToLower()}", fileExt, searchOption);
+            string[] filePaths = Directory.GetFiles($"{rootPath.ToLower()}", fileExt, searchOption);
             List<string> filenames = new List<string>();
 
             if (filePaths.Length > 0)
@@ -714,11 +714,11 @@ namespace AGenius.UsefulStuff
         /// <typeparam name="TENTITY">Entity type</typeparam>
         /// <param name="objectRecord">The object record</param>
         /// <returns>JSON String</returns>
-        public static string SerializeObject<TENTITY>(TENTITY objectRecord, ReferenceLoopHandling loopHandling = ReferenceLoopHandling.Error)
+        public static string SerializeObject<TENTITY>(TENTITY objectRecord)
         {
             string serialVersion = JsonConvert.SerializeObject(objectRecord, Formatting.Indented, new JsonSerializerSettings()
             {
-                ReferenceLoopHandling = loopHandling
+                ReferenceLoopHandling = ReferenceLoopHandling.Error
             });
             return serialVersion;
         }
@@ -1377,12 +1377,15 @@ namespace AGenius.UsefulStuff
             string imageFilePath = iProps.ImageFileName;
 
             // Ensure the correct file extention is applied
-            if (!iProps.ImageFileName.EndsWith(iProps.OutputImageFormat.ToString()))
+            if (!iProps.ImageFileName.ToLower().EndsWith(iProps.OutputImageFormat.ToString().ToLower()))
             {
                 imageFilePath += $".{iProps.OutputImageFormat.ToString()}";
             }
+            if (File.Exists(imageFilePath))
+            {
+                System.IO.File.Delete(imageFilePath);
+            }
 
-            System.IO.File.Delete(imageFilePath);
             int w = iProps.Width;
             int h = iProps.Height;
             Bitmap bitmap;
