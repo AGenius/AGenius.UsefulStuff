@@ -1317,45 +1317,52 @@ namespace AGenius.UsefulStuff
         }
         #endregion
         #region UK Bank Holiday fetch 
-        /// <summary>
-        /// Return a list of Holidays from the UK 
-        /// </summary>
+        #region Objects
+        /// <summary>Object to hold the holidays</summary>
+        public class UKHolidays
+        {
+            /// <summary>The region for the set of holidays, northern-ireland, scotland and england-and-wales</summary>
+            public string division { get; set; }
+            /// <summary>Collection of Dates for this entry</summary>
+            public List<Event> events { get; set; }
+        }
+        /// <summary>Object to hold the events (dates)</summary>
+        public class Event
+        {
+            /// <summary>Date this holiday is describing</summary>
+            public DateTime date { get; set; }
+            /// <summary>Notes related to this entry</summary>
+            public string notes { get; set; }
+            /// <summary>The Holiday Title</summary>
+            public string title { get; set; }
+            /// <summary>Usless</summary>
+            public bool? bunting { get; set; }
+        }
+        #endregion
+        /// <summary>Return a list of Holiday dates for a given region</summary>
         /// <param name="region">The region set of holidays, northern-ireland, scotland and england-and-wales</param>
         /// <returns>List of dates</returns>
         public static List<DateTime> UKHolidayDates(string region = "england-and-wales")
         {
+            // https://www.api.gov.uk/gds/bank-holidays/#bank-holidays
             var client = new WebClient();
             var json = client.DownloadString("https://www.gov.uk/bank-holidays.json");
             var js = new JavaScriptSerializer();
             var holidays = js.Deserialize<Dictionary<string, UKHolidays>>(json.Replace("’", "'"));
             return holidays[region].events.Select(d => d.date).ToList();
         }
+        /// <summary>Return a list of Holiday records for a given region</summary>
+        /// <param name="region">The region set of holidays, northern-ireland, scotland and england-and-wales</param>
+        /// <returns>List of <see cref="Event"/> records</returns>
         public static UKHolidays UKHolidayRecords(string region = "england-and-wales")
         {
+            // https://www.api.gov.uk/gds/bank-holidays/#bank-holidays
             var client = new WebClient();
             var json = client.DownloadString("https://www.gov.uk/bank-holidays.json");
             var js = new JavaScriptSerializer();
             var holidays = js.Deserialize<Dictionary<string, UKHolidays>>(json.Replace("â€™", "'"));
             return holidays[region];
         }
-        /// <summary>
-        /// Object to hold the holidays
-        /// </summary>
-        public class UKHolidays
-        {
-            public string division { get; set; }
-            public List<Event> events { get; set; }
-        }
-        /// <summary>
-        /// Object to hold the events (dates)
-        /// </summary>
-        public class Event
-        {
-            public DateTime date { get; set; }
-            public string notes { get; set; }
-            public string title { get; set; }
-        }
-
         #endregion
         #region Image Creation
         /// <summary>
