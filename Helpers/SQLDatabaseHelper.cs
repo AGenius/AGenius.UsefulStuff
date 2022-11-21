@@ -31,7 +31,7 @@ namespace AGenius.UsefulStuff.Helpers
         {
             get; set;
         }
-
+        public int defaultTimeOut { get; set; } = 120;
         /// <summary>Initializes a new instance of the <see cref="SQLDatabaseHelper"/> class </summary>
         public SQLDatabaseHelper()
         {
@@ -489,7 +489,7 @@ namespace AGenius.UsefulStuff.Helpers
                 // var Results = null;
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
-                    return db.Query<TENTITY>(sSQL, null, null, noTimeout ? 0 : 120).ToList();
+                    return db.Query<TENTITY>(sSQL, commandTimeout: noTimeout ? 0 : defaultTimeOut).ToList();
                 }
             }
             catch (DbException ex)
@@ -720,7 +720,7 @@ namespace AGenius.UsefulStuff.Helpers
 
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
-                    return db.Insert(Record);
+                    return db.Insert(Record, null, defaultTimeOut);
                 }
 
             }
@@ -749,7 +749,7 @@ namespace AGenius.UsefulStuff.Helpers
 
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
-                    db.Insert(Records);
+                    db.Insert(Records, null, defaultTimeOut);
                     return true;
 
 
@@ -794,7 +794,7 @@ namespace AGenius.UsefulStuff.Helpers
 
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
-                    return db.Execute(sqlCmd, Params, null, 0); // Excute with no timeout
+                    return db.Execute(sqlCmd, Params, null, defaultTimeOut);
                 }
             }
             catch (DbException ex)
@@ -820,7 +820,7 @@ namespace AGenius.UsefulStuff.Helpers
 
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
-                    return db.ExecuteScalar(sqlCmd);
+                    return db.ExecuteScalar(sqlCmd, null, null, defaultTimeOut);
                 }
 
             }
