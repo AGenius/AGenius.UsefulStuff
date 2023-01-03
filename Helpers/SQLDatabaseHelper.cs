@@ -230,7 +230,7 @@ namespace AGenius.UsefulStuff.Helpers
                 // var Results = null;
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
-                    return db.Query<TENTITY>(sSQL).SingleOrDefault();
+                    return db.Query<TENTITY>(sSQL, commandTimeout: defaultTimeOut).SingleOrDefault();
                 }
             }
             catch (DbException ex)
@@ -279,7 +279,7 @@ namespace AGenius.UsefulStuff.Helpers
                 // var Results = null;
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
-                    return db.Query<TENTITY>(sSQL).SingleOrDefault();
+                    return db.Query<TENTITY>(sSQL, commandTimeout: defaultTimeOut).SingleOrDefault();
                 }
             }
             catch (DbException ex)
@@ -329,7 +329,7 @@ namespace AGenius.UsefulStuff.Helpers
                 // var Results = null;
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
-                    return db.Query<TENTITY>(sSQL).SingleOrDefault();
+                    return db.Query<TENTITY>(sSQL, commandTimeout: defaultTimeOut).SingleOrDefault();
                 }
             }
             catch (DbException ex)
@@ -368,8 +368,7 @@ namespace AGenius.UsefulStuff.Helpers
 
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
-                    return db.Query<TENTITY>(SprocName, Params, commandType:
-                    CommandType.StoredProcedure).ToList();
+                    return db.Query<TENTITY>(SprocName, Params, commandType: CommandType.StoredProcedure, commandTimeout: defaultTimeOut).ToList();
                 }
             }
             catch (DbException ex)
@@ -404,7 +403,7 @@ namespace AGenius.UsefulStuff.Helpers
                 _lastQuery = sSQL;
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
-                    return db.Query<TENTITY>(sSQL, null, null, true, defaultTimeOut).ToList();
+                    return db.Query<TENTITY>(sSQL, commandTimeout: defaultTimeOut).ToList();
                 }
             }
             catch (DbException ex)
@@ -446,7 +445,7 @@ namespace AGenius.UsefulStuff.Helpers
                 // var Results = null;
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
-                    return db.Query<TENTITY>(sSQL).ToList();
+                    return db.Query<TENTITY>(sSQL, commandTimeout: defaultTimeOut).ToList();
                 }
             }
             catch (DbException ex)
@@ -534,7 +533,7 @@ namespace AGenius.UsefulStuff.Helpers
                 // var Results = null;
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
-                    return db.Query<TENTITY>(sSQL).ToList();
+                    return db.Query<TENTITY>(sSQL, commandTimeout: defaultTimeOut).ToList();
                 }
             }
             catch (DbException ex)
@@ -582,7 +581,7 @@ namespace AGenius.UsefulStuff.Helpers
                 // var Results = null;
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
-                    return db.Query<TENTITY>(sSQL).ToList();
+                    return db.Query<TENTITY>(sSQL, commandTimeout: defaultTimeOut).ToList();
                 }
             }
             catch (DbException ex)
@@ -846,7 +845,7 @@ namespace AGenius.UsefulStuff.Helpers
 
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
-                    return db.Query(sqlCmd);
+                    return db.Query(sqlCmd, commandTimeout: defaultTimeOut);
                 }
 
             }
@@ -985,7 +984,7 @@ namespace AGenius.UsefulStuff.Helpers
                 _lastQuery = sSQL;
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
-                    return db.Query<int>(sSQL).FirstOrDefault();
+                    return db.Query<int>(sSQL, commandTimeout: defaultTimeOut).FirstOrDefault();
                 }
             }
             catch (DbException ex)
