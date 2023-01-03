@@ -10,9 +10,14 @@ namespace AGenius.UsefulStuff.Helpers
     {
         private const string UserFilesListFilenamePrefix = ".used-temporary-files.txt";
         static private readonly object UsedFilesListLock = new object();
+        /// <summary>
+        /// Exposed property to allow the override of the location the temp file list file is stored.
+        /// </summary>
+        /// <remarks>The default will be the same location as the EXE but this might be a read only location So overide this value to specify the alternate.</remarks>
+        public static string filesListPath { get; set; } = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
         private static string GetUsedFilesListFilename()
         {
-            return Assembly.GetEntryAssembly().Location + UserFilesListFilenamePrefix;
+            return $"{filesListPath}\\{Assembly.GetEntryAssembly().GetName().Name}{UserFilesListFilenamePrefix}";        
         }
         /// <summary>Add a manually created file name to the list</summary>
         /// <param name="filename">The file name (full path)</param>
@@ -39,7 +44,7 @@ namespace AGenius.UsefulStuff.Helpers
                 fileName = Path.Combine(Path.GetTempPath(), subFolder, fileName);
                 if (!string.IsNullOrEmpty(subFolder))
                 {
-                	Directory.CreateDirectory($"{Path.GetTempPath()}\\{subFolder}");
+                    Directory.CreateDirectory($"{Path.GetTempPath()}\\{subFolder}");
                 }
                 try
                 {
@@ -54,7 +59,7 @@ namespace AGenius.UsefulStuff.Helpers
                     if (++attempt == 20)
                         throw new IOException("No unique temporary file name is available.", ex);
                 }
-            }           
+            }
 
             AddToUsedFilesList(fileName);
             return fileName;
