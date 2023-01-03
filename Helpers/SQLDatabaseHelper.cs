@@ -404,7 +404,7 @@ namespace AGenius.UsefulStuff.Helpers
                 _lastQuery = sSQL;
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
-                    return db.Query<TENTITY>(sSQL).ToList();
+                    return db.Query<TENTITY>(sSQL, null, null, true, defaultTimeOut).ToList();
                 }
             }
             catch (DbException ex)
