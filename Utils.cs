@@ -932,7 +932,7 @@ namespace AGenius.UsefulStuff
                         tempcontent = tempcontent.GetAfter("src=\"");
                         strTemp = tempcontent.GetBefore("\"");
 
-                        if (!String.IsNullOrEmpty(strTemp))
+                        if (!String.IsNullOrEmpty(strTemp) && !strTemp.StartsWith("data:image"))
                         {
                             images.Add(strTemp.Replace("%20", " "));
                         }
