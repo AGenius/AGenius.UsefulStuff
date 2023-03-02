@@ -1134,9 +1134,11 @@ namespace AGenius.UsefulStuff
         /// <param name="ReplaceIfNullWith">If the field is null then replace the field place holder with this value</param>
         /// <param name="StartField">The expected string for the start of a field place holder</param>
         /// <param name="EndField">The expected string for the end of a field place holder</param>
+        /// <param name="FormatForDateTimeFields">DateTime fields formatted to include Time formatted as supplied mask e.g. dd/MM/yyyy HH:mm </param>
         /// <returns>The new string content with the new content</returns>
         /// <remarks>Will detect DATETIME and replace with the current date and time as ToLongDateString <see cref="DateTime.Now"/> </remarks>
-        public static string ReplaceObjectFields<T>(string ContentString, T TheEntity, string ReplaceIfNullWith = null, string StartField = "[[", string EndField = "]]")
+        public static string ReplaceObjectFields<T>(string ContentString, T TheEntity, string ReplaceIfNullWith = null,
+            string StartField = "[[", string EndField = "]]", string FormatForDateTimeFields = "dd/MM/yyyy")
         {
             string NewContentString = ContentString;
             List<string> FieldsList = GetTokensFromString(ContentString, StartField, EndField);
@@ -1165,13 +1167,13 @@ namespace AGenius.UsefulStuff
 
                             if (TheEntity.GetPropertyValue(fieldName) != null)
                             {
-                                NewContentString = FormatFieldValue(NewContentString, TheEntity.GetPropertyValue(fieldName), fieldName, objectName, StartField, EndField);
+                                NewContentString = FormatFieldValue(NewContentString, TheEntity.GetPropertyValue(fieldName), fieldName, objectName, StartField, EndField, FormatForDateTimeFields);
                             }
                             else
                             {
                                 if (ReplaceIfNullWith != null)
                                 {
-                                    NewContentString = FormatFieldValue(NewContentString, ReplaceIfNullWith, fieldName, objectName, StartField, EndField);
+                                    NewContentString = FormatFieldValue(NewContentString, ReplaceIfNullWith, fieldName, objectName, StartField, EndField, FormatForDateTimeFields);
                                 }
                             }
 
@@ -1188,13 +1190,13 @@ namespace AGenius.UsefulStuff
                     {
                         if (TheEntity.GetPropertyValue(fieldName) != null)
                         {
-                            NewContentString = FormatFieldValue(NewContentString, TheEntity.GetPropertyValue(fieldName), fieldName, "", StartField, EndField);
+                            NewContentString = FormatFieldValue(NewContentString, TheEntity.GetPropertyValue(fieldName), fieldName, "", StartField, EndField, FormatForDateTimeFields);
                         }
                         else
                         {
                             if (ReplaceIfNullWith != null)
                             {
-                                NewContentString = FormatFieldValue(NewContentString, ReplaceIfNullWith, fieldName, objectName, StartField, EndField);
+                                NewContentString = FormatFieldValue(NewContentString, ReplaceIfNullWith, fieldName, objectName, StartField, EndField, FormatForDateTimeFields);
                             }
                         }
                     }
@@ -1203,7 +1205,7 @@ namespace AGenius.UsefulStuff
 
             return NewContentString;
         }
-        private static string FormatFieldValue(string newTemplateText, object fieldValue, string fieldName, string objectName = "", string StartField = "[[", string EndField = "]]")
+        private static string FormatFieldValue(string newTemplateText, object fieldValue, string fieldName, string objectName = "", string StartField = "[[", string EndField = "]]", string FormatForDateTimeFields = "dd/MM/yyyy")
         {
             string searchString = $"{StartField}{fieldName}{EndField}";
 
@@ -1218,7 +1220,7 @@ namespace AGenius.UsefulStuff
             }
             if (fieldValue.GetType().Name == "DateTime")
             {
-                return newTemplateText.Replace(searchString, ((DateTime)fieldValue).ToShortDateString());
+                return newTemplateText.Replace(searchString, ((DateTime)fieldValue).ToString(FormatForDateTimeFields));
             }
             else if (fieldValue.GetType().Name == "Double")
             {
@@ -1228,7 +1230,7 @@ namespace AGenius.UsefulStuff
             {
                 return newTemplateText.Replace(searchString, fieldValue.ToString());
             }
-        }
+        }   
         /// <summary>Returns a list of tokens from a supplied string</summary>        
         /// <param name="ContentString">The content to process</param>
         /// <param name="StartField">The expected string for the start of a field place holder</param>
