@@ -416,6 +416,28 @@ namespace AGenius.UsefulStuff
         {
             return new System.Net.NetworkCredential(string.Empty, SecureStringValue).Password;
         }
+        /// <summary>
+        /// Return the Index of a specific occurrence of a string
+        /// </summary>
+        /// <param name="StringValue">The string containing the content</param>
+        /// <param name="SearchString">The String value to search for</param>
+        /// <param name="occurrence">0 based occurrence</param>
+        /// <returns>int holding the offset of the nth searchstring</returns>
+        /// <exception cref="ArgumentException"></exception>
+        public static int IndexOfOccurrence(this string StringValue, string SearchString, int occurrence = 0)
+        {
+            if (occurrence < 0)
+                throw new ArgumentException("Can not find a negative index of substring in string. Must start with 0");
+
+            int offset = StringValue.IndexOf(SearchString);
+            for (int i = 0; i < occurrence; i++)
+            {
+                if (offset == -1) return -1;
+                offset = StringValue.IndexOf(SearchString, offset + 1);
+            }
+
+            return offset;
+        }
         /// <summary>Get the content of the string before the given character or string </summary>
         /// <param name="StringValue">The string containing the content</param>
         /// <param name="SearchString">The String value to search for</param>
@@ -440,7 +462,28 @@ namespace AGenius.UsefulStuff
                 return string.Empty;
             }
         }
+        /// <summary>Get the content of the string before the given occurence of a character or string</summary>
+        /// <param name="StringValue">The string containing the content</param>
+        /// <param name="SearchString">The String value to search for</param>
+        /// <param name="occurrence">0 based occurrence</param>
+        /// <returns>int holding the offset of the nth searchstring</returns>
+        /// <exception cref="ArgumentException"></exception>
+        public static string GetBefore(this string StringValue, string SearchString, int occurrence)
+        {
+            try
+            {
+                if (occurrence < 0)
+                    throw new ArgumentException("Can not find a negative index of substring in string. Must start with 0");
+                int offset = IndexOfOccurrence(StringValue, SearchString, occurrence);
+                string returnValue = StringValue.Substring(0, offset);
 
+                return returnValue;
+            }
+            catch (Exception)
+            {
+                return string.Empty;
+            }
+        }
         /// <summary>Get the string contents after a given character or string </summary>
         /// <param name="StringValue">The string containing the content</param>
         /// <param name="SearchString">The String value to search for</param>
@@ -465,7 +508,26 @@ namespace AGenius.UsefulStuff
                 return string.Empty;
             }
         }
-
+        /// <summary>Get the string contents after a given character or string </summary>
+        /// <param name="StringValue">The string containing the content</param>
+        /// <param name="SearchString">The String value to search for</param>
+        /// <param name="occurrence">0 based occurrence</param>
+        /// <returns>String result <see cref="string"/></returns>
+        public static string GetAfter(this string StringValue, string SearchString, int occurrence)
+        {
+            try
+            {
+                if (occurrence < 0)
+                    throw new ArgumentException("Can not find a negative index of substring in string. Must start with 0");
+                int offset = IndexOfOccurrence(StringValue, SearchString, occurrence);
+                string returnValue = StringValue.Substring(occurrence + SearchString.Length);
+                return returnValue;
+            }
+            catch (Exception)
+            {
+                return string.Empty;
+            }
+        }
         /// <summary>Get the strin contents between two string values</summary>
         /// <param name="StringValue">The string containing the content</param>
         /// <param name="StartValue">The starting string value to search</param>
