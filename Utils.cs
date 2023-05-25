@@ -459,10 +459,11 @@ namespace AGenius.UsefulStuff
             }
             return fullFileName;
         }
-        /// <summary>Return a list of files from a given location</summary>
+        /// <summary>Return a list of files from a given location - Multiple Extensions allowed using a comma seperated list</summary>
         /// <param name="rootPath">Directory location to use</param>
-        /// <param name="fileExt">Only return files of this extension</param>
+        /// <param name="fileExt">Only return files of this extension - Can be comma seperated list</param>
         /// <param name="searchOption">The required search option <see cref="SearchOption"/></param>
+        /// <param name="ignoreThese">List of file names to be ignored</param>
         /// <returns></returns>
         public static List<string> GetFilesList(string rootPath, string fileExt, SearchOption searchOption, List<string> ignoreThese = null)
         {
@@ -470,7 +471,21 @@ namespace AGenius.UsefulStuff
             {
                 return null;
             }
-            string[] filePaths = Directory.GetFiles($"{rootPath.ToLower()}", fileExt, searchOption);
+            string[] filePaths = new string[] { };
+            if (fileExt.Contains(","))
+            {
+                var exts = fileExt.Split(',');
+                foreach (var ex in exts)
+                {
+                    string[] f = Directory.GetFiles($"{rootPath.ToLower()}", ex, searchOption);
+                    filePaths = filePaths.Concat(f).ToArray();
+                }
+            }
+            else
+            {
+                filePaths = Directory.GetFiles($"{rootPath.ToLower()}", fileExt, searchOption);
+            }
+
             List<string> filenames = new List<string>();
 
             if (filePaths.Length > 0)
