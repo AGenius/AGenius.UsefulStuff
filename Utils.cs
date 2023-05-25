@@ -459,7 +459,7 @@ namespace AGenius.UsefulStuff
             }
             return fullFileName;
         }
-        /// <summary>Return a list of files from a given location - Multiple Extensions allowed using a comma seperated list</summary>
+        /// <summary>Return a list of files from a given location - Multiple Extensions allowed using a comma seperated list (e.g. *.txt,*.html)</summary>
         /// <param name="rootPath">Directory location to use</param>
         /// <param name="fileExt">Only return files of this extension - Can be comma seperated list</param>
         /// <param name="searchOption">The required search option <see cref="SearchOption"/></param>
@@ -471,20 +471,7 @@ namespace AGenius.UsefulStuff
             {
                 return null;
             }
-            string[] filePaths = new string[] { };
-            if (fileExt.Contains(","))
-            {
-                var exts = fileExt.Split(',');
-                foreach (var ex in exts)
-                {
-                    string[] f = Directory.GetFiles($"{rootPath.ToLower()}", ex, searchOption);
-                    filePaths = filePaths.Concat(f).ToArray();
-                }
-            }
-            else
-            {
-                filePaths = Directory.GetFiles($"{rootPath.ToLower()}", fileExt, searchOption);
-            }
+            string[] filePaths = GetFiles(rootPath, fileExt, searchOption);           
 
             List<string> filenames = new List<string>();
 
@@ -507,6 +494,34 @@ namespace AGenius.UsefulStuff
                 }
             }
             return filenames;
+        }
+        /// <summary>Return an array of files from a given location - Multiple Extensions allowed using a comma seperated list (e.g. *.txt,*.html)</summary>
+        /// <param name="rootPath">Directory location to use</param>
+        /// <param name="fileExt">Only return files of this extension - Can be comma seperated list</param>
+        /// <param name="searchOption">The required search option <see cref="SearchOption"/></param>        
+        /// <returns></returns>
+        public static string[] GetFiles(string rootPath, string fileExt, SearchOption searchOption)
+        {
+            if (!Directory.Exists(rootPath.ToLower()))
+            {
+                return null;
+            }
+            string[] filePaths = new string[] { };
+            if (fileExt.Contains(","))
+            {
+                var exts = fileExt.Split(',');
+                foreach (var ex in exts)
+                {
+                    string[] f = Directory.GetFiles($"{rootPath.ToLower()}", ex, searchOption);
+                    filePaths = filePaths.Concat(f).ToArray();
+                }
+            }
+            else
+            {
+                filePaths = Directory.GetFiles($"{rootPath.ToLower()}", fileExt, searchOption);
+            }
+
+            return filePaths;
         }
         /// <summary>Return a random number </summary>
         /// <param name="min"></param>
@@ -1245,7 +1260,7 @@ namespace AGenius.UsefulStuff
             {
                 return newTemplateText.Replace(searchString, fieldValue.ToString());
             }
-        }   
+        }
         /// <summary>Returns a list of tokens from a supplied string</summary>        
         /// <param name="ContentString">The content to process</param>
         /// <param name="StartField">The expected string for the start of a field place holder</param>
