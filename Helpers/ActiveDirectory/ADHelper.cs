@@ -43,11 +43,11 @@ namespace AGenius.UsefulStuff.Helpers.ActiveDirectory
         /// <param name="password">Users password to test</param>
         /// <param name="domainName">the domain </param>
         /// <returns></returns>
-        public static bool IsValidAuth(string userName, string password, string domainName, string adUser, string asPassowrd)
+        public static bool IsValidAuth(string userName, string password, string domainName, string adUser, string adPassowrd)
         {
             try
             {
-                using (PrincipalContext pc = new PrincipalContext(ContextType.Domain, domainName, "ou=users,ou=system", $"uid={adUser},ou=system", asPassowrd))
+                using (PrincipalContext pc = new PrincipalContext(ContextType.Domain, domainName, "ou=users,ou=system", $"uid={adUser},ou=system", adPassowrd))
                 {
                     // validate the credentials
                     return pc.ValidateCredentials(userName, password);
@@ -306,6 +306,13 @@ namespace AGenius.UsefulStuff.Helpers.ActiveDirectory
             }
 
             return userNames;
+        }
+        public static PrincipalCollection GetADUsersRecords(string domainName, string adUserName, string adPassword, string GroupName = null)
+        {
+            PrincipalContext principalContext = new PrincipalContext(ContextType.Domain, domainName, adUserName, adPassword);
+            GroupPrincipal group = GroupPrincipal.FindByIdentity(principalContext, GroupName);
+
+            return group.Members;
         }
     }
 }
