@@ -1358,7 +1358,7 @@ namespace AGenius.UsefulStuff
                 do
                 {
                     NewContentString = NewContentString.GetAfter(StartField);
-                    if (NewContentString.Contains(StartField))
+                    if (NewContentString.Contains(EndField))
                     {
                         if (!string.IsNullOrEmpty(NewContentString) && NewContentString.Contains(EndField))
                         {
