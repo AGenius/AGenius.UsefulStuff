@@ -9,7 +9,7 @@ using System.Reflection;
 using System.Runtime.Serialization;
 using System.Data.Common;
 using System.Text;
-using System.Transactions;
+//using System.Transactions;
 
 namespace AGenius.UsefulStuff.Helpers
 {
@@ -763,7 +763,7 @@ namespace AGenius.UsefulStuff.Helpers
                 return HasRows;
             }
 
-            catch (Exception)
+            catch (Exception ex)
             {
                 return false;
             }

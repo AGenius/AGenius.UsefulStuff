@@ -935,6 +935,7 @@ namespace AGenius.UsefulStuff.Helpers
         /// <summary>Execute an SQL Statement </summary>
         /// <param name="SprocName">String holding the SQL Stored Proceedure Name</param>
         /// <param name="dParams">String holding the SQL params</param>
+        /// <returns>Dynamic list</returns>
         public IList<dynamic> ExecuteSprocList(string SprocName, DynamicParameters dParams)
         {
             try
