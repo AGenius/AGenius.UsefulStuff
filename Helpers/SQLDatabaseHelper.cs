@@ -294,6 +294,55 @@ namespace AGenius.UsefulStuff.Helpers
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
+        /// <summary>Return an object that matches the specified key field </summary>
+        /// <typeparam name="TENTITY">Entity Object type</typeparam>
+        /// <param name="keyFieldName"><see cref="string"/> representing the KeyField name in the table</param>
+        /// <param name="fieldValue"><see cref="int"/> representing the ID of the required record</param>
+        /// <param name="operatorType">Comparison Operator - Default is Equals</param>
+        /// <returns>The Entity record requested or null</returns>
+        public TENTITY ReadRecord<TENTITY>(string keyFieldName, Guid fieldValue, string operatorType = "=") where TENTITY : class
+        {
+            try
+            {
+                _lastError = "";
+                _lastQuery = "";
+                string TableName = GetTableName<TENTITY>();
+                if (string.IsNullOrEmpty(TableName))
+                {
+                    _lastError = "Invalid Table Name";
+                    throw new ArgumentException(_lastError);
+                }
+                if (string.IsNullOrEmpty(keyFieldName))
+                {
+                    _lastError = "Missing FieldName or Value for search";
+                    throw new ArgumentException(_lastError);
+                }
+                if (string.IsNullOrEmpty(DBConnectionString))
+                {
+                    _lastError = "Connection String not set";
+                    throw new ArgumentException(_lastError);
+                }
+                string sWhere = $"WHERE {keyFieldName} {operatorType} '{fieldValue}' ";
+                string sSQL = $"SELECT * FROM {TableName} {sWhere}";
+                _lastQuery = sSQL;
+                // var Results = null;
+                using (IDbConnection db = new SqlConnection(DBConnectionString))
+                {
+                    return db.Query<TENTITY>(sSQL, commandTimeout: defaultTimeOut).SingleOrDefault();
+                }
+            }
+            catch (DbException ex)
+            {
+                if (ex.Message.Contains("deadlocked"))
+                {
+                    // Retry
+                    Utils.WriteLogFile(ex.Message, null, "Error", "Logs", true);
+                    return ReadRecord<TENTITY>(keyFieldName, fieldValue);
+                }
+                _lastError = ex.Message;
+                throw new DatabaseAccessHelperException(ex.Message);
+            }
+        }
         /// <summary>Return a single objects that matches the selection criteria </summary>
         /// <typeparam name="TENTITY">Entity Object type</typeparam>
         /// <param name="Where">criteria</param>
@@ -874,6 +923,34 @@ namespace AGenius.UsefulStuff.Helpers
                 {
                     return db.Execute(SprocName, dParams, commandType:
                     CommandType.StoredProcedure);
+                }
+
+            }
+            catch (DbException ex)
+            {
+                _lastError = ex.Message;
+                throw new DatabaseAccessHelperException(ex.Message);
+            }
+        }
+        /// <summary>Execute an SQL Statement </summary>
+        /// <param name="SprocName">String holding the SQL Stored Proceedure Name</param>
+        /// <param name="dParams">String holding the SQL params</param>
+        /// <returns>Dynamic list</returns>
+        public IList<dynamic> ExecuteSprocList(string SprocName, DynamicParameters dParams)
+        {
+            try
+            {
+                _lastError = "";
+                _lastQuery = "";
+                if (string.IsNullOrEmpty(DBConnectionString))
+                {
+                    _lastError = "Connection String not set";
+                    throw new ArgumentException(_lastError);
+                }
+
+                using (IDbConnection db = new SqlConnection(DBConnectionString))
+                {
+                    return db.Query(SprocName, dParams, commandType: CommandType.StoredProcedure).ToList();
                 }
 
             }

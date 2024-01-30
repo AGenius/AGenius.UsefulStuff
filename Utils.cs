@@ -18,6 +18,7 @@ using AGenius.UsefulStuff.Helpers.ActiveDirectory;
 using Newtonsoft.Json;
 
 using static AGenius.UsefulStuff.ObjectExtensions;
+using System.Runtime.InteropServices;
 
 namespace AGenius.UsefulStuff
 {
@@ -26,6 +27,52 @@ namespace AGenius.UsefulStuff
     /// </summary>
     public static partial class Utils
     {
+        #region Get Knownfolder Locations
+        [DllImport("shell32", CharSet = CharSet.Unicode, ExactSpelling = true, PreserveSig = false)]
+        private static extern int SHGetKnownFolderPath(ref Guid id, int flags, IntPtr token, out IntPtr path);
+        /// <summary>Enum for supported KnownFolders</summary>
+        public enum KnownFolder
+        {
+            Contacts,
+            Downloads,
+            Favorites,
+            Links,
+            SavedGames,
+            SavedSearches
+        }
+
+        private static Dictionary<KnownFolder, Guid> _knownFolderGuids = new Dictionary<KnownFolder, Guid>
+            {
+                { KnownFolder.Contacts, new Guid("56784854-C6CB-462B-8169-88E350ACB882") },
+                { KnownFolder.Downloads, new Guid("374DE290-123F-4565-9164-39C4925E467B") },
+                { KnownFolder.Favorites, new Guid("1777F761-68AD-4D8A-87BD-30B759FA33DD") },
+                { KnownFolder.Links, new Guid("BFB9D5E0-C6A9-404C-B2B2-AE6DB6AF4968") },
+                { KnownFolder.SavedGames, new Guid("4C5C32FF-BB9D-43B0-B5B4-2D72E54EAAA4") },
+                { KnownFolder.SavedSearches, new Guid("7D1D3A04-DEBB-4115-95CF-2F29DA2920DA") }
+            };
+        /// <summary>Return the path of a specified KnownFolder</summary>
+        /// <param name="knownFolder">Knownfolder selected</param>
+        /// <returns>String</returns>
+        /// <exception cref="NotSupportedException"></exception>
+        public static string GetKnownFolderPath(KnownFolder knownFolder)
+        {
+            if (Environment.OSVersion.Version.Major < 6) throw new NotSupportedException();
+
+            IntPtr pathPtr = IntPtr.Zero;
+            try
+            {
+                Guid knownFolderGuid = _knownFolderGuids[knownFolder];
+                SHGetKnownFolderPath(ref knownFolderGuid, 0, IntPtr.Zero, out pathPtr);
+                return Marshal.PtrToStringUni(pathPtr);
+            }
+            finally
+            {
+                Marshal.FreeCoTaskMem(pathPtr);
+            }
+        }
+
+        #endregion
+
         /// <summary>Determine if an executable is running</summary>
         /// <param name="FullPath">The full path to the EXE file</param>
         /// <returns>true/false <see cref="bool"/></returns>
@@ -96,6 +143,25 @@ namespace AGenius.UsefulStuff
                     DirectoryCopy(subdir.FullName, temppath, copySubDirs);
                 }
             }
+        }
+
+        /// <summary>Convert an Image to a ByteArray</summary>
+        /// <param name="imageIn">The Image oject to convert</param>
+        /// <returns>ByteArray</returns>
+        public static byte[] imageToByteArray(Image imageIn)
+        {
+            MemoryStream ms = new MemoryStream();
+            imageIn.Save(ms, System.Drawing.Imaging.ImageFormat.Gif);
+            return ms.ToArray();
+        }
+        /// <summary>Convert a ByteArray to an Image object</summary>
+        /// <param name="byteArrayIn">The ByteArray</param>
+        /// <returns>Image Object</returns>
+        public static Image byteArrayToImage(byte[] byteArrayIn)
+        {
+            MemoryStream ms = new MemoryStream(byteArrayIn);
+            Image returnImage = Image.FromStream(ms);
+            return returnImage;
         }
 
         #region Scramble Methods       
@@ -471,7 +537,7 @@ namespace AGenius.UsefulStuff
             {
                 return null;
             }
-            string[] filePaths = GetFiles(rootPath, fileExt, searchOption);           
+            string[] filePaths = GetFiles(rootPath, fileExt, searchOption);
 
             List<string> filenames = new List<string>();
 
@@ -694,7 +760,7 @@ namespace AGenius.UsefulStuff
                 int randomIndex = r.Next(0, StringToScramble.Length);   // Get the next random number from the sequence
                 Debug.Print(randomIndex.ToString());
                 char temp = chars[randomIndex]; // Copy the character value
-                // Swap them around
+                                                // Swap them around
                 chars[randomIndex] = chars[i];
                 chars[i] = temp;
 
@@ -819,6 +885,20 @@ namespace AGenius.UsefulStuff
                 return Newtonsoft.Json.Linq.JToken.Parse(payload).ToString(Newtonsoft.Json.Formatting.Indented);
             }
             return null;
+        }
+        /// <summary>Format a JSON string</summary>
+        /// <param name="json">json String to format</param>
+        /// <returns>Formatted JSON</returns>
+        public static string JsonPrettify(string json)
+        {
+            using (var stringReader = new StringReader(json))
+            using (var stringWriter = new StringWriter())
+            {
+                var jsonReader = new JsonTextReader(stringReader);
+                var jsonWriter = new JsonTextWriter(stringWriter) { Formatting = Formatting.Indented };
+                jsonWriter.WriteToken(jsonReader);
+                return stringWriter.ToString();
+            }
         }
         #endregion
 
@@ -1270,24 +1350,34 @@ namespace AGenius.UsefulStuff
         {
             string NewContentString = ContentString;
             List<string> FieldsList = new List<string>();
-            bool bDone = false;
-
-            // Find all the fields in the content string
-            do
+            if (NewContentString.Contains(StartField))
             {
-                NewContentString = NewContentString.GetAfter(StartField);
-                if (!string.IsNullOrEmpty(NewContentString) && NewContentString.Contains(EndField))
-                {
-                    FieldsList.Add(NewContentString.GetBefore(EndField));
-                    NewContentString = NewContentString.GetAfter(EndField);
-                }
-                else
-                {
-                    bDone = true;
-                }
-            }
-            while (!bDone);
+                bool bDone = false;
 
+                // Find all the fields in the content string
+                do
+                {
+                    NewContentString = NewContentString.GetAfter(StartField);
+                    if (NewContentString.Contains(StartField))
+                    {
+                        if (!string.IsNullOrEmpty(NewContentString) && NewContentString.Contains(EndField))
+                        {
+                            string token = NewContentString.GetBefore(EndField);
+                            FieldsList.Add(token);
+                            NewContentString = NewContentString.GetAfter(token);
+                        }
+                        else
+                        {
+                            bDone = true;
+                        }
+                    }
+                    else
+                    {
+                        bDone = true;
+                    }
+                }
+                while (!bDone);
+            }
             return FieldsList;
         }
         /// <summary>Replace the tokens in a string that are considered empty</summary>

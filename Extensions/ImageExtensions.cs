@@ -8,6 +8,11 @@ namespace AGenius.UsefulStuff
     /// </summary>
     public static class ImageExtensions
     {
+        /// <summary>Make a bitmap image transparent</summary>
+        /// <param name="image">The Image object</param>
+        /// <param name="color">color to convert</param>
+        /// <param name="tolerance">The colour tolerance</param>
+        /// <returns>Converted Bitmap object</returns>
         public static Bitmap MakeTransparent(this Bitmap image, Color color, int tolerance)
         {
             var resultBitmap = new Bitmap(image);

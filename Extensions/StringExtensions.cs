@@ -609,6 +609,52 @@ namespace AGenius.UsefulStuff
         {
             return Utils.ReplaceEmptyTokensInString(StringValue, LenthLimit, StartField, EndField);
         }
+        /// <summary>Replaces all occurences of a specific collection of Tokens</summary>
+        /// <param name="StringValue">The content to process</param>
+        /// <param name="StartField">The expected string for the start of a field place holder</param>
+        /// <param name="EndField">The expected string for the end of a field place holder</param>
+        /// <param name="ReplaceWith">String to replace with (default to empty string value)</param>
+        /// <returns></returns>
+        public static string ReplaceTokens(this string StringValue, string StartField = "[[", string EndField = "]]", string ReplaceWith = "")
+        {
+            bool bDone = false;
+            string content = StringValue;
+
+            try
+            {
+                do
+                {
+                    var findList = content.GetTokensFromString(StartField, EndField);
+                    // Remove Empty Entries
+
+                    foreach (string entry in findList.ToList())
+                    {
+                        if (string.IsNullOrEmpty(entry))
+                        {
+                            findList.Remove(entry);
+                        }
+                    }
+                    if (findList.Count == 0)
+                    {
+                        bDone = true;
+                    }
+                    foreach (string entry in findList)
+                    {
+                        if (!string.IsNullOrEmpty(entry))
+                        {
+                            content = content.Replace(entry, "");
+                        }
+                    }
+
+                } while (!bDone);
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+
+            return content;
+        }
         #endregion
 
         /// <summary>

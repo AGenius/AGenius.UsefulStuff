@@ -42,6 +42,8 @@ namespace AGenius.UsefulStuff.Helpers.ActiveDirectory
         /// <param name="userName">User Name as found in AD</param>
         /// <param name="password">Users password to test</param>
         /// <param name="domainName">the domain </param>
+        /// <param name="adPassowrd">The Active Directory admin UserName</param>
+        /// <param name="adUser">The Active Directory admin Password</param>
         /// <returns></returns>
         public static bool IsValidAuth(string userName, string password, string domainName, string adUser, string adPassowrd)
         {
