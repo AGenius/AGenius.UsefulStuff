@@ -96,7 +96,7 @@
     <Compile Include="Extensions\ControlExtensions.cs" />
     <Compile Include="Extensions\FontExtensions.cs" />
     <Compile Include="Extensions\FormExtensions.cs" />
-    <Compile Include="Extensions\ImageExstensions.cs" />
+    <Compile Include="Extensions\ImageExtensions.cs" />
     <Compile Include="Helpers\ActiveDirectory\ADHelper.cs" />
     <Compile Include="Helpers\ActiveDirectory\Model\ADUser.cs" />
     <Compile Include="Helpers\ImageBuildProperties.cs" />
