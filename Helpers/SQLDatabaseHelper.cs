@@ -778,7 +778,7 @@ namespace AGenius.UsefulStuff.Helpers
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
-
+        
         /// <summary>Insert mew entity records from a supplied list</summary>
         /// <typeparam name="TENTITY">Entity Object type</typeparam>
         /// <param name="Records">a <see cref="List{T}" of records to insert/></param>
