@@ -19,6 +19,7 @@ using Newtonsoft.Json;
 
 using static AGenius.UsefulStuff.ObjectExtensions;
 using System.Runtime.InteropServices;
+using System.Web;
 
 namespace AGenius.UsefulStuff
 {
@@ -1598,5 +1599,14 @@ namespace AGenius.UsefulStuff
         }
         #endregion
 
+        #region Get Mime Type
+        /// <summary>Return a string that represents the mime type for the supplied file name (based on the extension)</summary>
+        /// <param name="fileName">Filename with extension to detect</param>
+        /// <returns>string (example application/pdf)</returns>
+        public static string MimeTypeFromFileName(string fileName)
+        {
+            return MimeMapping.GetMimeMapping(fileName);
+        }
+        #endregion
     }
 }
