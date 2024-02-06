@@ -192,6 +192,17 @@ namespace AGenius.UsefulStuff
             string rst = ((d - od) / 1000).EncodeBase36();
 
             return rst.Substring(0, ResultLength).ToUpper();
-        }     
+        }
+        /// <summary>Return True if date is a weekend (Saturday or Sunday)</summary>
+        /// <param name="dateTime">DateTime to be checked.</param>
+        /// <returns>bool</returns>
+        public static bool isWeekend(this DateTime dateTime)
+        {
+            if (dateTime.DayOfWeek == DayOfWeek.Saturday || dateTime.DayOfWeek == DayOfWeek.Sunday)
+            {
+                return true;
+            }
+            return false;
+        }
     }
 }

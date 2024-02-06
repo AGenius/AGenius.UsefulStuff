@@ -19,6 +19,27 @@ namespace AGenius.UsefulStuff
     /// </summary>
     public static class StringExtensions
     {
+        /// <summary>Chop up string into smaller chunks</summary>
+        /// <param name="str">The String to process</param>
+        /// <param name="charCount">Number of characters per chunk</param>
+        /// <returns></returns>
+        static public List<string> ChopString(this string str, int charCount)
+        {
+            var words = new List<string>();
+
+            for (int i = 0; i < str.Length; i += charCount)
+            {
+                if (str.Length - i >= charCount)
+                {
+                    words.Add(str.Substring(i, charCount));
+                }
+                else
+                {
+                    words.Add(str.Substring(i, str.Length - i));
+                }
+            }
+            return words;
+        }
         /// <summary>Convert a Serialized Font string to a real font</summary>
         /// <param name="str">The serialized font string , e.g. Font, Microsoft Sans Serif, 10, Regular, Point, 1, False</param>
         /// <returns>Font object</returns>
