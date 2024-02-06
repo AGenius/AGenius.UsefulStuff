@@ -778,7 +778,7 @@ namespace AGenius.UsefulStuff.Helpers
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
-        
+
         /// <summary>Insert mew entity records from a supplied list</summary>
         /// <typeparam name="TENTITY">Entity Object type</typeparam>
         /// <param name="Records">a <see cref="List{T}" of records to insert/></param>
@@ -1184,6 +1184,7 @@ namespace AGenius.UsefulStuff.Helpers
         /// <typeparam name="TENTITY">Type to update. Translates to table name</typeparam>     
         /// <param name="Record">Object holding the entity record</param>
         /// <param name="param">list of fields</param>
+        /// <param name="OverrideTableName">Override the table name of the object</param>
         /// <returns>The Id of the updated row. If no row was updated or id was not part of fields, returns null</returns>
         public int? UpdateFields<TENTITY>(TENTITY Record, List<string> param, string OverrideTableName = "")
         {
