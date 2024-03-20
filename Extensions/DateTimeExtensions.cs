@@ -106,6 +106,7 @@ namespace AGenius.UsefulStuff
         /// Please refer the app.config for more information. 
         /// </summary>
         /// <param name="date">DateTime to be checked.</param>
+        /// <param name="dates">List of dates to check</param>
         /// <returns>True if the given day is a holiday, false otherwise.</returns>
         public static bool IsAHoliday(this DateTime date, List<DateTime> dates = null)
         {
@@ -115,6 +116,9 @@ namespace AGenius.UsefulStuff
             }
             return false;
         }
+        /// <summary>Return date for the start of the week for a supplied date</summary>
+        /// <param name="dt">Date to use</param>
+        /// <returns></returns>
         public static DateTime StartOfWeek(this DateTime dt)
         {
             System.Globalization.CultureInfo ci = System.Threading.Thread.CurrentThread.CurrentCulture;

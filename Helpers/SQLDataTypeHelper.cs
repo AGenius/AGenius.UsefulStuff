@@ -85,14 +85,16 @@ namespace AGenius.UsefulStuff.Helpers
             }
             throw new ArgumentException($"{giveType.FullName} is not a supported .NET class");
         }
-        /// Generic version
+        /// <summary>Get the SqlDbType from an type</summary>
+        /// <typeparam name="T">Type</typeparam>
+        /// <returns><see cref="SqlDbType"/></returns>
         public static SqlDbType GetSqlDbType<T>()
         {
             return GetSqlDbType(typeof(T));
         }
         /// <summary>Non-generic argument-based method</summary>
-        /// <param name="giveType"></param>
-        /// <returns></returns>
+        /// <param name="giveType">The Type to convert</param>
+        /// <returns><see cref="DbType"/></returns>
         public static DbType GetDbType(Type giveType)
         {
             // Allow nullable types to be handled        
@@ -104,9 +106,7 @@ namespace AGenius.UsefulStuff.Helpers
             throw new ArgumentException($"{giveType.FullName} is not a supported .NET class");
         }
         /// <summary>Generic version</summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="fieldName"></param>
-        /// <returns></returns>
+        /// <returns><see cref="string"/></returns>
         public static DbType GetDbType<T>()
         {
             return GetDbType(typeof(T));

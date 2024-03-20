@@ -16,14 +16,16 @@ namespace AGenius.UsefulStuff.Helpers
     /// </summary>
     public class SQLDatabaseHelper : IDisposable
     {
-        /// <summary>
-        /// Used to hold Table Column information
-        /// </summary>
+        /// <summary>Used to hold Table Column information</summary>
         public class TableColumn
         {
+            /// <summary>Column Name</summary>
             public string COLUMN_NAME { get; set; }
+            /// <summary>Columns Data type</summary>
             public string DATA_TYPE { get; set; }
+            /// <summary>Columns Max length</summary>
             public int? CHARACTER_MAXIMUM_LENGTH { get; set; }
+            /// <summary>Sort Order</summary>
             public int ORDINAL_POSITION { get; set; }
         }
         /// <summary>Provides access to the  Connection string in use</summary>
@@ -31,7 +33,8 @@ namespace AGenius.UsefulStuff.Helpers
         {
             get; set;
         }
-        public int defaultTimeOut { get; set; } = 120;
+        /// <summary>Command Timeout - default :120 seconds</summary>
+        public int DefaultTimeOut { get; set; } = 120;
         /// <summary>Initializes a new instance of the <see cref="SQLDatabaseHelper"/> class </summary>
         public SQLDatabaseHelper()
         {
@@ -69,7 +72,7 @@ namespace AGenius.UsefulStuff.Helpers
             {
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
-                    return db.GetAll<TENTITY>().ToList();
+                    return db.GetAll<TENTITY>(commandTimeout: DefaultTimeOut).ToList();
                 }
             }
             catch (DbException ex)
@@ -106,7 +109,7 @@ namespace AGenius.UsefulStuff.Helpers
                 }
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
-                    return db.Get<TENTITY>(ID);
+                    return db.Get<TENTITY>(ID, commandTimeout: DefaultTimeOut);
                 }
             }
             catch (DbException ex)
@@ -143,7 +146,7 @@ namespace AGenius.UsefulStuff.Helpers
                 }
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
-                    return db.Get<TENTITY>(ID);
+                    return db.Get<TENTITY>(ID, commandTimeout: DefaultTimeOut);
                 }
             }
             catch (DbException ex)
@@ -180,7 +183,7 @@ namespace AGenius.UsefulStuff.Helpers
                 }
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
-                    return db.Get<TENTITY>(ID.ToString());
+                    return db.Get<TENTITY>(ID.ToString(), commandTimeout: DefaultTimeOut);
                 }
             }
             catch (DbException ex)
@@ -230,7 +233,7 @@ namespace AGenius.UsefulStuff.Helpers
                 // var Results = null;
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
-                    return db.Query<TENTITY>(sSQL, commandTimeout: defaultTimeOut).SingleOrDefault();
+                    return db.Query<TENTITY>(sSQL, commandTimeout: DefaultTimeOut).SingleOrDefault();
                 }
             }
             catch (DbException ex)
@@ -279,7 +282,7 @@ namespace AGenius.UsefulStuff.Helpers
                 // var Results = null;
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
-                    return db.Query<TENTITY>(sSQL, commandTimeout: defaultTimeOut).SingleOrDefault();
+                    return db.Query<TENTITY>(sSQL, commandTimeout: DefaultTimeOut).SingleOrDefault();
                 }
             }
             catch (DbException ex)
@@ -328,7 +331,7 @@ namespace AGenius.UsefulStuff.Helpers
                 // var Results = null;
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
-                    return db.Query<TENTITY>(sSQL, commandTimeout: defaultTimeOut).SingleOrDefault();
+                    return db.Query<TENTITY>(sSQL, commandTimeout: DefaultTimeOut).SingleOrDefault();
                 }
             }
             catch (DbException ex)
@@ -378,7 +381,7 @@ namespace AGenius.UsefulStuff.Helpers
                 // var Results = null;
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
-                    return db.Query<TENTITY>(sSQL, commandTimeout: defaultTimeOut).SingleOrDefault();
+                    return db.Query<TENTITY>(sSQL, commandTimeout: DefaultTimeOut).SingleOrDefault();
                 }
             }
             catch (DbException ex)
@@ -417,7 +420,7 @@ namespace AGenius.UsefulStuff.Helpers
 
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
-                    return db.Query<TENTITY>(SprocName, Params, commandType: CommandType.StoredProcedure, commandTimeout: defaultTimeOut).ToList();
+                    return db.Query<TENTITY>(SprocName, Params, commandType: CommandType.StoredProcedure, commandTimeout: DefaultTimeOut).ToList();
                 }
             }
             catch (DbException ex)
@@ -452,7 +455,7 @@ namespace AGenius.UsefulStuff.Helpers
                 _lastQuery = sSQL;
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
-                    return db.Query<TENTITY>(sSQL, commandTimeout: defaultTimeOut).ToList();
+                    return db.Query<TENTITY>(sSQL, commandTimeout: DefaultTimeOut).ToList();
                 }
             }
             catch (DbException ex)
@@ -494,7 +497,7 @@ namespace AGenius.UsefulStuff.Helpers
                 // var Results = null;
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
-                    return db.Query<TENTITY>(sSQL, commandTimeout: defaultTimeOut).ToList();
+                    return db.Query<TENTITY>(sSQL, commandTimeout: DefaultTimeOut).ToList();
                 }
             }
             catch (DbException ex)
@@ -513,6 +516,7 @@ namespace AGenius.UsefulStuff.Helpers
         /// <summary>Return a list of objects that match the selection criteria </summary>
         /// <typeparam name="TENTITY">Entity Object type</typeparam>
         /// <param name="Where">criteria</param>
+        /// <param name="noTimeout">Set no Timeout and wait indefinitely</param>
         /// <returns><see cref="IList{T}"/> containing the Entity records</returns>
         public IList<TENTITY> ReadRecords<TENTITY>(string Where = "", bool noTimeout = false) where TENTITY : class
         {
@@ -537,7 +541,7 @@ namespace AGenius.UsefulStuff.Helpers
                 // var Results = null;
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
-                    return db.Query<TENTITY>(sSQL, commandTimeout: noTimeout ? 0 : defaultTimeOut).ToList();
+                    return db.Query<TENTITY>(sSQL, commandTimeout: noTimeout ? 0 : DefaultTimeOut).ToList();
                 }
             }
             catch (DbException ex)
@@ -582,7 +586,7 @@ namespace AGenius.UsefulStuff.Helpers
                 // var Results = null;
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
-                    return db.Query<TENTITY>(sSQL, commandTimeout: defaultTimeOut).ToList();
+                    return db.Query<TENTITY>(sSQL, commandTimeout: DefaultTimeOut).ToList();
                 }
             }
             catch (DbException ex)
@@ -630,7 +634,7 @@ namespace AGenius.UsefulStuff.Helpers
                 // var Results = null;
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
-                    return db.Query<TENTITY>(sSQL, commandTimeout: defaultTimeOut).ToList();
+                    return db.Query<TENTITY>(sSQL, commandTimeout: DefaultTimeOut).ToList();
                 }
             }
             catch (DbException ex)
@@ -675,7 +679,7 @@ namespace AGenius.UsefulStuff.Helpers
                                                                        parent.GetType().GetProperty(detailPropertyName).SetValue(parent, detail, null);
                                                                        return parent;
                                                                    },
-                                                                   splitOn: splitOnField, commandTimeout: 360)
+                                                                   splitOn: splitOnField, commandTimeout: DefaultTimeOut)
                         .Distinct()
                         .ToList();
                     return results;
@@ -731,7 +735,7 @@ namespace AGenius.UsefulStuff.Helpers
                                                                        parent.GetType().GetProperty(detailPropertyName2).SetValue(parent, detail2, null);
                                                                        return parent;
                                                                    },
-                                                                   splitOn: splitOnField)
+                                                                   splitOn: splitOnField, commandTimeout: DefaultTimeOut)
                         .Distinct()
                         .ToList();
                     return results;
@@ -768,7 +772,7 @@ namespace AGenius.UsefulStuff.Helpers
 
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
-                    return db.Insert(Record, null, defaultTimeOut);
+                    return db.Insert(Record, commandTimeout: DefaultTimeOut);
                 }
 
             }
@@ -781,7 +785,7 @@ namespace AGenius.UsefulStuff.Helpers
 
         /// <summary>Insert mew entity records from a supplied list</summary>
         /// <typeparam name="TENTITY">Entity Object type</typeparam>
-        /// <param name="Records">a <see cref="List{T}" of records to insert/></param>
+        /// <param name="Records">a <see cref="List{T}"/> of records to insert</param>
         /// <returns><see cref="bool"/> true/false for success/failure</returns>
         public bool InsertRecords<TENTITY>(List<TENTITY> Records) where TENTITY : class
         {
@@ -797,7 +801,7 @@ namespace AGenius.UsefulStuff.Helpers
 
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
-                    db.Insert(Records, null, defaultTimeOut);
+                    db.Insert(Records, commandTimeout: DefaultTimeOut);
                     return true;
 
 
@@ -828,6 +832,7 @@ namespace AGenius.UsefulStuff.Helpers
 
         /// <summary>Execute an SQL Statement </summary>
         /// <param name="sqlCmd">String holding the SQL Command</param>
+        /// <param name="Params"><see cref="DynamicParameters"/>Collection of parameters</param>
         public object ExecuteSQL(string sqlCmd, DynamicParameters Params = null)
         {
             try
@@ -842,7 +847,7 @@ namespace AGenius.UsefulStuff.Helpers
 
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
-                    return db.Execute(sqlCmd, Params, null, defaultTimeOut);
+                    return db.Execute(sqlCmd, Params, commandTimeout: DefaultTimeOut);
                 }
             }
             catch (DbException ex)
@@ -868,7 +873,7 @@ namespace AGenius.UsefulStuff.Helpers
 
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
-                    return db.ExecuteScalar(sqlCmd, null, null, defaultTimeOut);
+                    return db.ExecuteScalar(sqlCmd, commandTimeout: DefaultTimeOut);
                 }
 
             }
@@ -894,7 +899,7 @@ namespace AGenius.UsefulStuff.Helpers
 
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
-                    return db.Query(sqlCmd, commandTimeout: defaultTimeOut);
+                    return db.Query(sqlCmd, commandTimeout: DefaultTimeOut);
                 }
 
             }
@@ -921,8 +926,7 @@ namespace AGenius.UsefulStuff.Helpers
 
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
-                    return db.Execute(SprocName, dParams, commandType:
-                    CommandType.StoredProcedure);
+                    return db.Execute(SprocName, dParams, commandType: CommandType.StoredProcedure, commandTimeout: DefaultTimeOut);
                 }
 
             }
@@ -950,7 +954,7 @@ namespace AGenius.UsefulStuff.Helpers
 
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
-                    return db.Query(SprocName, dParams, commandType: CommandType.StoredProcedure).ToList();
+                    return db.Query(SprocName, dParams, commandType: CommandType.StoredProcedure, commandTimeout: DefaultTimeOut).ToList();
                 }
 
             }
@@ -976,7 +980,7 @@ namespace AGenius.UsefulStuff.Helpers
                 }
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
-                    return db.Execute(sqlCmd);
+                    return db.Execute(sqlCmd, commandTimeout: DefaultTimeOut);
                 }
             }
             catch (DbException ex)
@@ -1021,7 +1025,7 @@ namespace AGenius.UsefulStuff.Helpers
                 _lastQuery = sSQL;
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
-                    return db.ExecuteScalar(sSQL);
+                    return db.ExecuteScalar(sSQL, commandTimeout: DefaultTimeOut);
                 }
             }
             catch (DbException ex)
@@ -1061,7 +1065,7 @@ namespace AGenius.UsefulStuff.Helpers
                 _lastQuery = sSQL;
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
-                    return db.Query<int>(sSQL, commandTimeout: defaultTimeOut).FirstOrDefault();
+                    return db.Query<int>(sSQL, commandTimeout: DefaultTimeOut).FirstOrDefault();
                 }
             }
             catch (DbException ex)
@@ -1089,7 +1093,7 @@ namespace AGenius.UsefulStuff.Helpers
 
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
-                    return db.Update(Record);
+                    return db.Update(Record, commandTimeout: DefaultTimeOut);
                 }
             }
             catch (DbException ex)
@@ -1103,6 +1107,7 @@ namespace AGenius.UsefulStuff.Helpers
         /// <typeparam name="TENTITY">Entity Object type</typeparam>
         /// <param name="Record">The Record to Update</param>
         /// <param name="originalEntity">A Copy of the original Record before changes made</param>
+        /// <param name="OverrideTableName">Override the tablename of the entity</param>
         /// <returns><see cref="bool"/> true/false for success/failure</returns>
         public bool UpdateRecord<TENTITY>(TENTITY Record, TENTITY originalEntity, string OverrideTableName = "") where TENTITY : class
         {
@@ -1156,7 +1161,7 @@ namespace AGenius.UsefulStuff.Helpers
                         _lastQuery = update;
                         using (IDbConnection db = new SqlConnection(DBConnectionString))
                         {
-                            int rows = db.Execute(update, Record);
+                            int rows = db.Execute(update, Record, commandTimeout: DefaultTimeOut);
                             return rows != 0;
                         }
                     }
@@ -1166,7 +1171,7 @@ namespace AGenius.UsefulStuff.Helpers
                 {
                     using (IDbConnection db = new SqlConnection(DBConnectionString))
                     {
-                        return db.Update(Record);
+                        return db.Update(Record, commandTimeout: DefaultTimeOut);
                     }
                 }
             }
@@ -1232,6 +1237,7 @@ namespace AGenius.UsefulStuff.Helpers
                     {
                         cmd.CommandText = sql;
                         cmd.CommandType = CommandType.Text;
+                        cmd.CommandTimeout = DefaultTimeOut;
                         for (int i = 0; i < names.Count; i++)
                         {
                             IDbDataParameter p = cmd.CreateParameter();
@@ -1305,6 +1311,7 @@ namespace AGenius.UsefulStuff.Helpers
                     {
                         cmd.CommandText = sql;
                         cmd.CommandType = CommandType.Text;
+                        cmd.CommandTimeout = DefaultTimeOut;
                         for (int i = 0; i < names.Count; i++)
                         {
                             IDbDataParameter p = cmd.CreateParameter();
@@ -1353,7 +1360,7 @@ namespace AGenius.UsefulStuff.Helpers
 
                 using (IDbConnection db = new SqlConnection(DBConnectionString))
                 {
-                    return db.Delete(Record);
+                    return db.Delete(Record, commandTimeout: DefaultTimeOut);
                 }
             }
             catch (DbException ex)
@@ -1377,6 +1384,10 @@ namespace AGenius.UsefulStuff.Helpers
         /// <summary>Returns the last query string if any of the specified action</summary>
         /// <returns><see cref="string"/> value containing the query string.</returns>
         public string LastQuery { get { return _lastQuery; } }
+        /// <summary>Retrieve Table columns list</summary>
+        /// <param name="tableName">Table to query</param>
+        /// <param name="schemaName">Schema Name : default :dbo </param>
+        /// <returns></returns>
         public IList<TableColumn> GetTableColumns(string tableName, string schemaName = "dbo")
         {
             if (TableExists(tableName))
@@ -1387,6 +1398,13 @@ namespace AGenius.UsefulStuff.Helpers
             }
             return null;
         }
+        /// <summary>Create a Column in the Database</summary>
+        /// <param name="tableName">Table to create the column for</param>
+        /// <param name="columnName">Unique Column Name</param>
+        /// <param name="dataType">Column Data Type : default varchar</param>
+        /// <param name="colSize">Column Size : defaul :50</param>
+        /// <param name="allowNull">Column Null allowed : default :true</param>
+        /// <param name="schemaName">Schema Name : default :dbo </param>
         public void CreateColumn(string tableName, string columnName, string dataType = "varchar", int colSize = 50, bool allowNull = true, string schemaName = "dbo")
         {
             string colDataTypeSQL = dataType;
@@ -1426,6 +1444,9 @@ namespace AGenius.UsefulStuff.Helpers
             ExecuteScalar(createSQL);
 
         }
+        /// <summary>Check if table exists in the database</summary>
+        /// <param name="tableName">The name of the table to check</param>
+        /// <returns><see cref="bool"/> : true if exists</returns>
         public bool TableExists(string tableName)
         {
             bool exists;
@@ -1433,6 +1454,11 @@ namespace AGenius.UsefulStuff.Helpers
             exists = (int)rslt == 1;
             return exists;
         }
+        /// <summary>Create a table in the Database</summary>
+        /// <param name="tableName">The name of the table to create</param>
+        /// <param name="idColName">The Column name for the ID column : default : ID</param>
+        /// <param name="idColType">The Column type for the ID column : default : int</param>
+        /// <param name="schemaName">Schema Name : default :dbo </param>
         public void CreateTable(string tableName, string idColName = "ID", string idColType = "int", string schemaName = "dbo")
         {
             string createSQL = @"BEGIN TRANSACTION
