@@ -89,7 +89,7 @@ namespace AGenius.UsefulStuff
             return Path.GetInvalidFileNameChars().Aggregate(StringValue, (current, c) => current.Replace(c.ToString(), string.Empty));
         }
         /// <summary>Return a clean alphanumeric string </summary>
-        /// <param name="StringValue">The String to process</param>
+        /// <param name="stringValue">The String to process</param>
         /// <remarks>This will remove any special characters from a string</remarks>
         public static string CleanString(this string stringValue)
         {
@@ -663,7 +663,7 @@ namespace AGenius.UsefulStuff
                     {
                         if (!string.IsNullOrEmpty(entry))
                         {
-                            content = content.Replace(entry, "");
+                            content = content.Replace(entry, ReplaceWith);
                         }
                     }
 

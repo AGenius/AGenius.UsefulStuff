@@ -469,9 +469,8 @@ namespace AGenius.UsefulStuff.Helpers
             }
         }
         /// <summary>Insert a number of records</summary>
-        /// <typeparam name="TENTITY">Entity Object type</typeparam>
-        /// <param name="Record">The Record to insert</param>
-        /// <returns><see cref="long"/> ID of the inserted record</returns>
+        /// <param name="tableName">Table Name to insert records into</param>
+        /// <param name="recordsCollection">The list of records to insert</param>
         public void InsertRecords(string tableName, List<Dictionary<string, object>> recordsCollection)
         {
             StringBuilder sbInsert = new StringBuilder();
@@ -534,8 +533,8 @@ namespace AGenius.UsefulStuff.Helpers
             }
         }
         /// <summary>Read ALL records for an entity </summary>
-        /// <typeparam name="TENTITY">Entity Object type</typeparam>
-        /// <returns><see cref="IList{T}"/> containing the Entity records</returns>
+        /// <param name="tableName">Table name to query</param>
+        /// <returns><see cref="DataTable"/> containing the Entity records</returns>
         public DataTable ReadDataTable(string tableName)
         {
             if (string.IsNullOrEmpty(DBConnectionString))
@@ -662,6 +661,7 @@ namespace AGenius.UsefulStuff.Helpers
         }
         /// <summary>Create a table if it does not exist</summary>
         /// <param name="TableName">The Table Name to create</param>
+        /// <param name="primaryKeyName">Primary Key Name : default id</param>
         /// <returns><see cref="bool"/> true/false for success/failure</returns>
         public bool CreateTable(string TableName, string primaryKeyName = "id")
         {

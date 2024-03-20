@@ -760,11 +760,13 @@ namespace AGenius.UsefulStuff
             {
                 int randomIndex = r.Next(0, StringToScramble.Length);   // Get the next random number from the sequence
                 Debug.Print(randomIndex.ToString());
-                char temp = chars[randomIndex]; // Copy the character value
-                                                // Swap them around
-                chars[randomIndex] = chars[i];
-                chars[i] = temp;
+                //char temp = chars[randomIndex]; // Copy the character value
+                //                                // Swap them around
+                //chars[randomIndex] = chars[i];
+                //chars[i] = temp;
 
+                // Use tuple to swap values now
+                (chars[i], chars[randomIndex]) = (chars[randomIndex], chars[i]); // Copy the character value
             }
             // Add the seed            
             return new string(chars) + seed.ToString("X").PadLeft(2, '0');
@@ -788,9 +790,12 @@ namespace AGenius.UsefulStuff
                 }
                 for (int i = scramChars.Length - 1; i >= 0; i--)
                 {
-                    char temp = scramChars[swaps[i]];
-                    scramChars[swaps[i]] = scramChars[i];
-                    scramChars[i] = temp;
+                    //char temp = scramChars[swaps[i]];
+                    //scramChars[swaps[i]] = scramChars[i];
+                    //scramChars[i] = temp;
+
+                    // Use tuple to swap values now
+                    (scramChars[i], scramChars[swaps[i]]) = (scramChars[swaps[i]], scramChars[i]);
                 }
 
                 return new string(scramChars);
@@ -1108,7 +1113,7 @@ namespace AGenius.UsefulStuff
                             if (LogErrors)
                             {
                                 WriteLogFile("Possible invalid Image - " + strItem, "SMTPErrors", LogPath, null, true, true);
-                                WriteLogFile($"Trace- {ex.Message} {Environment.NewLine}{ex.StackTrace}", "SMTPErrors", LogPath, null, true, true);
+                                WriteLogFile($"Trace-To:{EmailTo} - Subject:{Subject} - Message:{ex.Message} {Environment.NewLine}{ex.StackTrace}", "SMTPErrors", LogPath, null, true, true);
                             }
 
                             EmailFailedReason = ex.Message;
@@ -1122,7 +1127,7 @@ namespace AGenius.UsefulStuff
             {
                 if (LogErrors)
                 {
-                    WriteLogFile($"Trace- {ex.Message} {Environment.NewLine}{ex.StackTrace}", "SMTPErrors", LogPath, null, true, true);
+                    WriteLogFile($"Trace-Message:{ex.Message} {Environment.NewLine}{ex.StackTrace}", "SMTPErrors", LogPath, null, true, true);
                 }
 
                 EmailFailedReason = ex.Message;
@@ -1232,7 +1237,7 @@ namespace AGenius.UsefulStuff
                 if (LogErrors)
                 {
                     WriteLogFile("Error Sending Email", "SMTPErrors", LogPath, null, true, true);
-                    WriteLogFile($"Trace- {ex.Message} {Environment.NewLine}{ex.StackTrace}", "SMTPErrors", LogPath, null, true, true);
+                    WriteLogFile($"Trace-To:{EmailTo} - Subject:{Subject} - Message:{ex.Message} {Environment.NewLine}{ex.StackTrace}", "SMTPErrors", LogPath, null, true, true);
                 }
 
                 return false;
@@ -1488,16 +1493,11 @@ namespace AGenius.UsefulStuff
         }
         #endregion
         #region Image Creation
-        /// <summary>
-        /// Build an Image from code using dimension and adding a box if required
-        /// </summary>
-        /// <param name="ImagePath">File Path to save image to</param>
+        /// <summary>Build an Image from code using dimension and adding a box if required</summary>       
         /// <param name="iProps">ImageBuildProperties object to control the build</param>
         /// <returns>Full path with Image file name</returns>
         /// <remarks> Setting boxProperties to null will stop a box being drawn</remarks>
-        /// 
         /// <exception cref="ArgumentNullException"></exception>
-
         public static string BuildWatermarkImage(ImageBuildProperties iProps)
         {
             if (iProps == null)
@@ -1580,9 +1580,11 @@ namespace AGenius.UsefulStuff
                 g.SmoothingMode = SmoothingMode.AntiAlias;
                 g.InterpolationMode = InterpolationMode.HighQualityBicubic;
                 g.PixelOffsetMode = PixelOffsetMode.HighQuality;
-                StringFormat sf = new StringFormat();
-                sf.Alignment = iProps.textProperties.Halignment;
-                sf.LineAlignment = iProps.textProperties.Valignment;
+                StringFormat sf = new StringFormat
+                {
+                    Alignment = iProps.textProperties.Halignment,
+                    LineAlignment = iProps.textProperties.Valignment
+                };
                 var rectf = new RectangleF(iProps.textProperties.Left.Value + 10,
                     iProps.textProperties.Top.Value + 10,
                     iProps.textProperties.Width.Value - iProps.textProperties.Padding,
