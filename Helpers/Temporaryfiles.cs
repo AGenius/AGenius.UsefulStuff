@@ -17,7 +17,7 @@ namespace AGenius.UsefulStuff.Helpers
         public static string filesListPath { get; set; } = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
         private static string GetUsedFilesListFilename()
         {
-            return $"{filesListPath}\\{Assembly.GetEntryAssembly().GetName().Name}{UserFilesListFilenamePrefix}";        
+            return $"{filesListPath}\\{Assembly.GetEntryAssembly().GetName().Name}{UserFilesListFilenamePrefix}";
         }
         /// <summary>Add a manually created file name to the list</summary>
         /// <param name="filename">The file name (full path)</param>
@@ -51,7 +51,42 @@ namespace AGenius.UsefulStuff.Helpers
                     using (new FileStream(fileName, FileMode.CreateNew))
                     {
                     }
+                    File.Delete(fileName);
+                    break;
+                }
+                catch (IOException ex)
+                {
+                    if (++attempt == 20)
+                        throw new IOException("No unique temporary file name is available.", ex);
+                }
+            }
 
+            AddToUsedFilesList(fileName);
+            return fileName;
+        }
+        /// <summary>Return a path to a temporary file using the name supplied in the temporary folder and record it </summary>
+        /// <param name="requiredFileName">The FileName required</param>
+        /// <param name="extension">The Extension of the new file</param>
+        /// <param name="subFolder">Place new temp files in this sub folder in the Temp directory</param>
+        /// <returns>New string file name and extension</returns>
+        public static string GetNewAlt(string requiredFileName, string extension = ".tmp", string subFolder = "")
+        {
+            string fileName = requiredFileName;
+            int attempt = 0;
+            while (true)
+            {
+                fileName = Path.ChangeExtension(fileName, extension);
+                fileName = Path.Combine(Path.GetTempPath(), subFolder, fileName);
+                if (!string.IsNullOrEmpty(subFolder))
+                {
+                    Directory.CreateDirectory($"{Path.GetTempPath()}\\{subFolder}");
+                }
+                try
+                {
+                    using (new FileStream(fileName, FileMode.CreateNew))
+                    {
+                    }
+                    File.Delete(fileName);
                     break;
                 }
                 catch (IOException ex)
