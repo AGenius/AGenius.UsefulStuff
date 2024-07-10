@@ -614,10 +614,11 @@ namespace AGenius.UsefulStuff
         /// <param name="StringValue">The content to process</param>
         /// <param name="StartField">The expected string for the start of a field place holder</param>
         /// <param name="EndField">The expected string for the end of a field place holder</param>
+        /// <param name="includeFields">True to return the token with the matching Start and End values included</param>
         /// <returns>List of tokens in a list object></returns>
-        public static List<string> GetTokensFromString(this string StringValue, string StartField = "[[", string EndField = "]]")
+        public static List<string> GetTokensFromString(this string StringValue, string StartField = "[[", string EndField = "]]", bool includeFields = false)
         {
-            return Utils.GetTokensFromString(StringValue, StartField, EndField);
+            return Utils.GetTokensFromString(StringValue, StartField, EndField, includeFields);
         }
         /// <summary>Replace the tokens in a string that are considered empty</summary>
         /// <param name="StringValue">The content to process</param>      
@@ -635,39 +636,23 @@ namespace AGenius.UsefulStuff
         /// <param name="StartField">The expected string for the start of a field place holder</param>
         /// <param name="EndField">The expected string for the end of a field place holder</param>
         /// <param name="ReplaceWith">String to replace with (default to empty string value)</param>
+        /// <param name="includeFields">True to return the token with the matching Start and End values included</param>
         /// <returns></returns>
-        public static string ReplaceTokens(this string StringValue, string StartField = "[[", string EndField = "]]", string ReplaceWith = "")
+        public static string ReplaceTokens(this string StringValue, string StartField = "[[", string EndField = "]]", string ReplaceWith = "", bool includeFields = false)
         {
-            bool bDone = false;
             string content = StringValue;
 
             try
             {
-                do
+                var findList = content.GetTokensFromString(StartField, EndField, includeFields);
+
+                foreach (string entry in findList)
                 {
-                    var findList = content.GetTokensFromString(StartField, EndField);
-                    // Remove Empty Entries
-
-                    foreach (string entry in findList.ToList())
+                    if (!string.IsNullOrEmpty(entry))
                     {
-                        if (string.IsNullOrEmpty(entry))
-                        {
-                            findList.Remove(entry);
-                        }
+                        content = content.Replace(entry, ReplaceWith);
                     }
-                    if (findList.Count == 0)
-                    {
-                        bDone = true;
-                    }
-                    foreach (string entry in findList)
-                    {
-                        if (!string.IsNullOrEmpty(entry))
-                        {
-                            content = content.Replace(entry, ReplaceWith);
-                        }
-                    }
-
-                } while (!bDone);
+                }
             }
             catch (Exception ex)
             {
@@ -1128,5 +1113,29 @@ namespace AGenius.UsefulStuff
             return (plservice.IsPlural(word) ? word : plservice.Pluralize(word));
         }
         #endregion
+        /// <summary>Convert CSV string to List of strings</summary>
+        /// <param name="src">The input string</param>
+        /// <returns> <see cref="List{T}"/></returns>
+        public static List<string> CSVtoList(this string src)
+        {
+            List<string> results = new List<string>();
+            var split = src.Split(',');
+            foreach (var s in split)
+            {
+                results.Add(s);
+            }
+            return results;
+        }
+        /// <summary>Returns a List of strings where the source does not contain from compare</summary>
+        /// <param name="src">The input string</param>
+        /// <param name="compare">The comparison string</param>
+        /// <returns> <see cref="List{T}"/></returns>
+        public static List<string> StringsNotIn(this string src, string compare)
+        {
+            var s = CSVtoList(src);
+            var t = CSVtoList(compare);
+            var result = s.Where(f1 => t.All(f2 => f2 != f1));
+            return result.ToList();
+        }
     }
 }

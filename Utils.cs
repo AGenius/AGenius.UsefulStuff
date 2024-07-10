@@ -14,9 +14,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Web.Script.Serialization;
 using System.Windows.Forms;
-using AGenius.UsefulStuff.Helpers.ActiveDirectory;
 using Newtonsoft.Json;
-
 using static AGenius.UsefulStuff.ObjectExtensions;
 using System.Runtime.InteropServices;
 using System.Web;
@@ -31,7 +29,7 @@ namespace AGenius.UsefulStuff
         #region Get Knownfolder Locations
         [DllImport("shell32", CharSet = CharSet.Unicode, ExactSpelling = true, PreserveSig = false)]
         private static extern int SHGetKnownFolderPath(ref Guid id, int flags, IntPtr token, out IntPtr path);
-        /// <summary>Enum for supported KnownFolders</summary>
+        /// <summary>Enum for supported KnownFolders</summary>        
         public enum KnownFolder
         {
             Contacts,
@@ -42,7 +40,7 @@ namespace AGenius.UsefulStuff
             SavedSearches
         }
 
-        private static Dictionary<KnownFolder, Guid> _knownFolderGuids = new Dictionary<KnownFolder, Guid>
+        private static readonly Dictionary<KnownFolder, Guid> _knownFolderGuids = new Dictionary<KnownFolder, Guid>
             {
                 { KnownFolder.Contacts, new Guid("56784854-C6CB-462B-8169-88E350ACB882") },
                 { KnownFolder.Downloads, new Guid("374DE290-123F-4565-9164-39C4925E467B") },
@@ -264,10 +262,13 @@ namespace AGenius.UsefulStuff
 
                 if (File.Exists(filepath).Equals(true))
                 {
-                    using (StreamReader reader = new StreamReader(filepath))
+                    using (var fs = new FileStream(filepath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                     {
-                        string contents = reader.ReadToEnd();
-                        return contents;
+                        using (var sr = new StreamReader(fs, Encoding.Default))
+                        {
+                            string contents = sr.ReadToEnd();
+                            return contents;
+                        }
                     }
                 }
             }
@@ -351,6 +352,7 @@ namespace AGenius.UsefulStuff
         /// <param name="SubFolder">Override the sub folder (logs) name</param>
         /// <param name="AddTimeStamp">Add a time stamp to the begining of the message</param>
         /// <param name="appendNewLine">Automatically add a new line after the message</param>
+        /// <param name="maxLogSize">Maximum size of the log file</param>
         public static void WriteLogFile(string MessageText, string LogFileName, string LogPath = null, string SubFolder = "Logs", bool AddTimeStamp = false, bool appendNewLine = true, int maxLogSize = 1024000)
         {
             try
@@ -475,7 +477,7 @@ namespace AGenius.UsefulStuff
         /// <param name="FileName">Base Filename to start</param>
         /// <param name="addBrackets">Add () around the new file number if applicable</param>
         /// <returns>FileName</returns>
-        public static string GetNewfileName(string FileName, bool addBrackets)
+        public static string GetNewFileName(string FileName, bool addBrackets)
         {
             string fileExt = Path.GetExtension(FileName).Replace(".", "");
             string FolderPath = Path.GetDirectoryName(FileName);
@@ -502,7 +504,7 @@ namespace AGenius.UsefulStuff
         /// <param name="addBrackets">Add () around the new file number if applicable</param>
         /// <param name="filesList">Compare files using the provided list</param>
         /// <returns>FileName</returns>
-        public static string GetNewfileName(string FileName, bool addBrackets, List<string> filesList)
+        public static string GetNewFileName(string FileName, bool addBrackets, List<string> filesList)
         {
             string fileExt = Path.GetExtension(FileName).Replace(".", "");
             string FolderPath = Path.GetDirectoryName(FileName);
@@ -802,7 +804,7 @@ namespace AGenius.UsefulStuff
 
             }
 
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 return "";
             }
@@ -968,7 +970,7 @@ namespace AGenius.UsefulStuff
         /// <param name="EntityObject">The Object Reference</param>
         /// <param name="PropertyName">Name of the Property to find</param>
         /// <returns></returns>
-        public static object GetValueForPropertyBystringName<TEntity>(TEntity EntityObject, string PropertyName)
+        public static object GetValueForPropertyByStringName<TEntity>(TEntity EntityObject, string PropertyName)
         {
             // Build the Properties list so it can be accessed via the name string
             foreach (PropertyInfo p in EntityObject.GetType().GetProperties())
@@ -1351,8 +1353,9 @@ namespace AGenius.UsefulStuff
         /// <param name="ContentString">The content to process</param>
         /// <param name="StartField">The expected string for the start of a field place holder</param>
         /// <param name="EndField">The expected string for the end of a field place holder</param>
+        /// <param name="includeFields">True to return the token with the matching Start and End values included</param>
         /// <returns>List of tokens in a list object></returns>     
-        public static List<string> GetTokensFromString(string ContentString, string StartField = "[[", string EndField = "]]")
+        public static List<string> GetTokensFromString(string ContentString, string StartField = "[[", string EndField = "]]", bool includeFields = false)
         {
             string NewContentString = ContentString;
             List<string> FieldsList = new List<string>();
@@ -1363,14 +1366,21 @@ namespace AGenius.UsefulStuff
                 // Find all the fields in the content string
                 do
                 {
-                    NewContentString = NewContentString.GetAfter(StartField);
+                    NewContentString = NewContentString.GetAfter(StartField, true);
                     if (NewContentString.Contains(EndField))
                     {
                         if (!string.IsNullOrEmpty(NewContentString) && NewContentString.Contains(EndField))
                         {
-                            string token = NewContentString.GetBefore(EndField);
-                            FieldsList.Add(token);
-                            NewContentString = NewContentString.GetAfter(token);
+                            string token = NewContentString.GetBetween(StartField, EndField, includeFields);
+                            if (!string.IsNullOrEmpty(token))
+                            {
+                                FieldsList.Add(token);
+                                NewContentString = NewContentString.GetAfter(token);
+                            }
+                            else
+                            {
+                                NewContentString = NewContentString.GetAfter(EndField);
+                            }
                         }
                         else
                         {

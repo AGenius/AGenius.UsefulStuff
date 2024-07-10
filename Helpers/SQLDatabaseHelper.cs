@@ -2,12 +2,15 @@
 using Dapper.Contrib.Extensions;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
+using System.Security.Principal;
+using System.Text;
 
 namespace AGenius.UsefulStuff.Helpers
 {
@@ -27,6 +30,18 @@ namespace AGenius.UsefulStuff.Helpers
             public int? CHARACTER_MAXIMUM_LENGTH { get; set; }
             /// <summary>Sort Order</summary>
             public int ORDINAL_POSITION { get; set; }
+            public bool ALLOW_NULL { get; set; }
+            public bool IS_ID { get; set; }
+            public bool IDENTITY { get; set; }
+        }
+        public class TableRecord
+        {
+            /// <summary>Scheme - usually dbo</summary>
+            public string TABLE_SCHEME { get; set; }
+            /// <summary>Table Name</summary>
+            public string TABLE_NAME { get; set; }
+            /// <summary>Type - Base Table or View</summary>
+            public string TABLE_TYPE { get; set; }
         }
         /// <summary>Provides access to the  Connection string in use</summary>
         public string DBConnectionString
@@ -1342,6 +1357,79 @@ namespace AGenius.UsefulStuff.Helpers
             }
             return null;
         }
+        /// <summary>
+        /// Updates table with the values in param.
+        /// The table must have a key field (default is "ID")
+        /// The Id value is used as the "where" clause in the generated SQL
+        /// </summary>
+        /// <param name="id">The Record ID to update</param>
+        /// <param name="TableName">Table to update</param>
+        /// <param name="fieldName">The single field name</param>      
+        /// <param name="fieldValue">The new field value</param>    
+        /// <param name="IDFieldName">The Field Name of the ID (default is "ID")</param>
+        /// <returns>The Id of the updated row. If no row was updated or id was not part of fields, returns null</returns>
+        public int? UpdateField(string TableName, int id, string fieldName, object fieldValue, string IDFieldName = "ID")
+        {
+            _lastError = "";
+            _lastQuery = "";
+            List<string> names = new List<string>();
+            List<object> values = new List<object>();
+            List<DbType> types = new List<DbType>();
+
+
+            if (string.IsNullOrEmpty(TableName))
+            {
+                _lastError = "Invalid Table Name";
+                throw new ArgumentException(_lastError);
+            }
+
+            if (fieldName.ToLower() != "id")
+            {
+                names.Add(fieldName);
+                values.Add(fieldValue);
+                types.Add(SQLDataTypeHelper.GetDbType(fieldValue.GetType()));
+            }
+
+            if (values.Count > 0)
+            {
+                string sql = $"UPDATE {TableName} SET {string.Join(",", names.Select(t => { t = $"{t} = @{t}"; return t; }))} WHERE {IDFieldName}=@id";
+                using (IDbConnection db = new SqlConnection(DBConnectionString))
+                {
+                    using (IDbCommand cmd = db.CreateCommand())
+                    {
+                        cmd.CommandText = sql;
+                        cmd.CommandType = CommandType.Text;
+                        cmd.CommandTimeout = DefaultTimeOut;
+                        for (int i = 0; i < names.Count; i++)
+                        {
+                            IDbDataParameter p = cmd.CreateParameter();
+                            p.ParameterName = $"@{names[i]}";
+                            if (values[i] == null)
+                            {
+                                p.Value = DBNull.Value;
+                            }
+                            else
+                            {
+                                p.Value = values[i];
+                            }
+
+                            p.DbType = types[i];
+                            cmd.Parameters.Add(p);
+                        }
+                        // Add the id parameter
+                        IDbDataParameter pID = cmd.CreateParameter();
+                        pID.ParameterName = $"@id";
+                        pID.Value = id;
+                        pID.DbType = DbType.Int32;
+                        cmd.Parameters.Add(pID);
+                        //return db.Execute(sql,cmd) > 0 ? id : null;
+                        db.Open();
+                        return cmd.ExecuteNonQuery();
+                    }
+                }
+            }
+            return null;
+        }
         /// <summary>Delete an Entity record</summary>
         /// <typeparam name="TENTITY">Entity Object type</typeparam>
         /// <param name="Record">The Record to Delete</param>
@@ -1387,7 +1475,7 @@ namespace AGenius.UsefulStuff.Helpers
         /// <summary>Retrieve Table columns list</summary>
         /// <param name="tableName">Table to query</param>
         /// <param name="schemaName">Schema Name : default :dbo </param>
-        /// <returns></returns>
+        /// <returns>IList of TableColumns</returns>
         public IList<TableColumn> GetTableColumns(string tableName, string schemaName = "dbo")
         {
             if (TableExists(tableName))
@@ -1397,6 +1485,15 @@ namespace AGenius.UsefulStuff.Helpers
                 return columns;
             }
             return null;
+        }
+        /// <summary>Retrieve Tables list or Views List</summary> 
+        /// <param name="schemaName">Schema Name : default :dbo </param>
+        /// <param name="TableType">Table Type (BASE TABLE or VIEW)  : default :BASE TABLE </param>
+        /// <returns>IList of RableRecords</returns>
+        public IList<TableRecord> GetTables(string schemaName = "dbo", string TableType = "BASE TABLE")
+        {
+            IList<TableRecord> tables = ReadRecordsSQL<TableRecord>($"SELECT TABLE_SCHEMA, TABLE_NAME, TABLE_TYPE FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA='{schemaName}' AND TABLE_TYPE = '{TableType}' ORDER BY TABLE_NAME");
+            return tables;
         }
         /// <summary>Create a Column in the Database</summary>
         /// <param name="tableName">Table to create the column for</param>
@@ -1449,17 +1546,45 @@ namespace AGenius.UsefulStuff.Helpers
         /// <returns><see cref="bool"/> : true if exists</returns>
         public bool TableExists(string tableName)
         {
-            bool exists;
             var rslt = ExecuteScalar($"SELECT CASE WHEN OBJECT_ID('dbo.{tableName}', 'U') IS NOT NULL THEN 1 ELSE 0 END");
-            exists = (int)rslt == 1;
+            bool exists = (int)rslt == 1;
             return exists;
         }
+        /// <summary>Check if table exists in the database</summary>
+        /// <param name="tableName">The name of the table to check</param>
+        /// <param name="ColumnName">The name of the column to check</param>
+        /// <returns><see cref="bool"/> : true if exists</returns>        
+        public bool ColumnExists(string tableName, string ColumnName)
+        {
+            var rslt = ExecuteScalar($"SELECT CASE WHEN EXISTS(SELECT 1 FROM sys.columns WHERE Name = N'{ColumnName}' AND Object_ID = Object_ID(N'dbo.{tableName}')) THEN 1 ELSE 0 END");
+            bool exists = (int)rslt == 1;
+            return exists;
+        }
+        /// <summary>Get a Fields MaxLength value</summary>
+        /// <param name="tableName">The name of the table to check</param>
+        /// <param name="ColumnName">The name of the column to check</param>
+        /// <returns><see cref="int"/> -1 if not found or no limit (max)</returns>
+        public int ColumnMaxLength(string tableName, string ColumnName)
+        {
+            var rslt = ExecuteScalar($"SELECT max_length FROM sys.columns WHERE object_id =Object_ID(N'dbo.{tableName}') AND name = '{ColumnName}'");
+            if (rslt == null)
+            {
+                return -1;
+            }
+            int length = int.Parse(rslt.ToString());
+            return length;
+        }
+
         /// <summary>Create a table in the Database</summary>
         /// <param name="tableName">The name of the table to create</param>
         /// <param name="idColName">The Column name for the ID column : default : ID</param>
         /// <param name="idColType">The Column type for the ID column : default : int</param>
         /// <param name="schemaName">Schema Name : default :dbo </param>
-        public void CreateTable(string tableName, string idColName = "ID", string idColType = "int", string schemaName = "dbo")
+        public void CreateTable(string tableName,
+            string idColName = "ID",
+            string idColType = "int",
+            string schemaName = "dbo"
+            )
         {
             string createSQL = @"BEGIN TRANSACTION
                 SET QUOTED_IDENTIFIER ON
@@ -1487,6 +1612,331 @@ namespace AGenius.UsefulStuff.Helpers
                 ";
 
             ExecuteScalar(createSQL);
+        }
+        /// <summary>
+        /// Create a table in SQL using a list of columns
+        /// </summary>
+        /// <param name="tableName">The tables name</param>
+        /// <param name="columns">list collection holding the column data</param>
+        /// <param name="schemaName">the schema name ,default is dbo</param>
+        /// <param name="collation">The collation to use, set blank to use database collation</param>
+        /// <param name="prettyFormat">Build SQL Create string with formatting </param>
+        /// <returns></returns>
+        public void CreateTable(string tableName,
+            List<TableColumn> columns,
+            string schemaName = "dbo",
+            string collation = "SQL_Latin1_General_CP1_CI_AS",
+            bool prettyFormat = true)
+        {
+            StringBuilder createSQL = new StringBuilder();
+
+            createSQL.AppendLine("BEGIN TRANSACTION");
+            createSQL.AppendLine("SET QUOTED_IDENTIFIER ON");
+            createSQL.AppendLine("SET ARITHABORT ON");
+            createSQL.AppendLine("SET NUMERIC_ROUNDABORT OFF");
+            createSQL.AppendLine("SET CONCAT_NULL_YIELDS_NULL ON");
+            createSQL.AppendLine("SET ANSI_NULLS ON");
+            createSQL.AppendLine("SET ANSI_PADDING ON");
+            createSQL.AppendLine("SET ANSI_WARNINGS ON");
+            createSQL.AppendLine("COMMIT");
+            createSQL.AppendLine("BEGIN TRANSACTION");
+
+            // Find index col if any
+            string idColName = "";
+            string idColType = "";
+            bool isIdentity = false;
+            string colDetail = "";
+            // Determine the max field name length
+            int maxNameWidth = 0;
+            int maxTypeWidth = 0;
+            // If pretty is set, find out some sizes so some padding can be applied
+            if (prettyFormat)
+            {
+                foreach (var col in columns)
+                {
+                    if (col.COLUMN_NAME.Length > maxNameWidth)
+                    {
+                        maxNameWidth = col.COLUMN_NAME.Length;
+                    }
+
+                    int lenCheck = col.DATA_TYPE.Length;
+                    switch (col.DATA_TYPE.ToUpper())
+                    {
+                        case "VARCHAR":
+                        case "NVARCHAR":
+                        case "CHAR":
+                        case "TEXT":
+                        case "NCHAR":
+                        case "NTEXT":
+                            if (col.CHARACTER_MAXIMUM_LENGTH == 0)
+                            {
+                                lenCheck += 5; // (max)
+                            }
+                            else
+                            {
+                                lenCheck += 2 + col.CHARACTER_MAXIMUM_LENGTH.ToString().Length;
+                            }
+                            break;
+                    }
+                    if (lenCheck > maxTypeWidth)
+                    {
+                        maxTypeWidth = lenCheck;
+                    }
+                }
+            }
+            foreach (var col in columns)
+            {
+                if (col.IS_ID)
+                {
+                    idColName = col.COLUMN_NAME;
+                    idColType = col.DATA_TYPE;
+                    isIdentity = true;
+                }
+                else
+                {
+                    colDetail += GetColString(col, 8, collation, maxNameWidth, maxTypeWidth) + Environment.NewLine;
+                }
+            }
+            createSQL.AppendLine($"CREATE TABLE [{schemaName}].[{tableName}] ");
+            createSQL.AppendLine($"    ( ");
+            createSQL.Append($"        [{idColName}]");
+            if (maxNameWidth > 0)
+            {
+                // pad spaces
+                int diff = maxNameWidth - idColName.Length + 2;
+                createSQL.Append(' ', diff);
+            }
+            else
+            {
+                createSQL.Append(' ');
+            }
+            createSQL.Append($"[{idColType.ToUpper()}] ");
+            if (maxTypeWidth > 0)
+            {
+                // pad spaces
+                int diff = maxTypeWidth - idColType.Length;
+                createSQL.Append(' ', diff);
+            }
+            else
+            {
+                createSQL.Append(' ');
+            }
+            createSQL.Append($" {(isIdentity ? "NOT NULL IDENTITY" : "NULL")} (1, 1), ");
+            createSQL.AppendLine();
+            createSQL.AppendLine($"{colDetail} ");
+            createSQL.AppendLine($"    )  ON [PRIMARY]");
+            createSQL.AppendLine($"ALTER TABLE [{schemaName}].[{tableName}]");
+            createSQL.AppendLine($"ADD  ");
+            createSQL.AppendLine($"    CONSTRAINT PK_{tableName}");
+            createSQL.AppendLine($"    PRIMARY KEY CLUSTERED ([{idColName}])");
+            createSQL.AppendLine($"    WITH( STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY];");
+            createSQL.AppendLine($"ALTER TABLE [{schemaName}].[{tableName}] SET (LOCK_ESCALATION = TABLE); ");
+            createSQL.AppendLine($"COMMIT; ");
+            try
+            {
+                var rslt = ExecuteScalar(createSQL.ToString());
+            }
+            catch (Exception ex)
+            {
+                _lastError = ex.Message;
+            }
+
+            _lastQuery = createSQL.ToString();
+        }
+        /// <summary>
+        /// Return a formatted string for the required column
+        /// </summary>
+        /// <param name="colItem">The TableColumn entry</param>
+        /// <param name="indent">default indent</param>
+        /// <param name="collation">collation (will override the default set for the database)</param>
+        /// <param name="maxNameWidth">Max width of the column names for pretty formatting</param>
+        /// <param name="maxTypeWidth">The max with of the column type for pretty formatting</param>
+        /// <returns></returns>
+        string GetColString(TableColumn colItem, int indent = 10, string collation = "", int maxNameWidth = 0, int maxTypeWidth = 0)
+        {
+            string collationSQL = "";
+            bool canHaveCollation = false;
+            switch (colItem.DATA_TYPE.ToUpper())
+            {
+                case "VARCHAR":
+                case "NVARCHAR":
+                case "CHAR":
+                case "TEXT":
+                case "NCHAR":
+                case "NTEXT":
+                    canHaveCollation = true;
+                    if (!string.IsNullOrEmpty(collation))
+                        collationSQL = $"COLLATE {collation} ";
+                    break;
+                default:
+                    break;
+            }
+            StringBuilder colData = new StringBuilder();
+            colData.Append(' ', indent);
+
+            colData.Append($"[{colItem.COLUMN_NAME}]");
+            if (maxNameWidth > 0)
+            {
+                // pad spaces
+                int diff = maxNameWidth - colItem.COLUMN_NAME.Length;
+                colData.Append(' ', diff + 1);
+            }
+            else
+            {
+                colData.Append(' ');
+            }
+            StringBuilder sbType = new StringBuilder();
+            sbType.Append($"[{colItem.DATA_TYPE.ToLower()}]");
+
+            if (canHaveCollation)
+            {
+                if (colItem.CHARACTER_MAXIMUM_LENGTH == 0)
+                {
+                    sbType.Append($"(max)");
+                }
+                else
+                {
+                    sbType.Append($"({colItem.CHARACTER_MAXIMUM_LENGTH})");
+                }
+
+                if (maxTypeWidth > 0)
+                {
+                    // pad spaces
+                    int diff = (maxTypeWidth + 2) - sbType.ToString().Length;
+                    sbType.Append(' ', diff + 1);
+                }
+                sbType.Append(collationSQL);
+            }
+            else
+            {
+                if (maxTypeWidth > 0)
+                {
+                    // pad spaces
+                    int diff = (maxTypeWidth + 2) - sbType.Length;
+                    sbType.Append(' ', diff + 1);
+                }
+                else
+                {
+                    sbType.Append(' ');
+                }
+            }
+
+            colData.Append(sbType.ToString());
+
+            // Null Check
+            colData.Append($"{(colItem.ALLOW_NULL ? "NULL" : "NOT NULL")}, ");
+
+            return colData.ToString();
+        }
+        /// <summary>
+        /// Create a table in SQL from a class object
+        /// </summary>
+        /// <param name="type">The class type</param>
+        /// <param name="unincode">use unincode string (nvarchar) over (varchar)</param>        
+        /// <param name="collation">The collation to use, set blank to use database collation</param>
+        /// <remarks>e.g. SQL_Latin1_General_CP1_CI_AS </remarks>
+        /// <returns>true/false</returns>
+        public bool CreateTable(Type type, bool unincode = true, string collation = "")
+        {
+            _lastError = "";
+
+            var properties = type.GetPropertiesWithAnnotations();            
+            string tableName = type.Name;
+            List<TableColumn> columns = new List<TableColumn>();
+
+            foreach (var prop in properties)
+            {
+                // Get TableName
+                if (prop.PropertyCategory == "CLASS" && prop.Attributes.Count > 0)
+                {
+                    foreach (var att in prop.Attributes)
+                    {
+                        if (att.GetType().Name == "TableAttribute")
+                        {
+                            tableName = ((Dapper.Contrib.Extensions.TableAttribute)att).Name;
+                        }
+                    }
+                }
+                else
+                {
+                    bool NotMappedAttribute = false;
+                    bool isID = false;
+                    ColumnAttribute columnAttribute = null;
+                    DatabaseGeneratedAttribute databaseGeneratedAttribute = null;
+                    foreach (var att in prop.Attributes)
+                    {
+                        switch (att.GetType().Name)
+                        {
+                            case "NotMappedAttribute":
+                            case "ComputedAttribute":
+                                NotMappedAttribute = true;
+                                break;
+                            case "ColumnAttribute":
+                                columnAttribute = att as ColumnAttribute;
+                                break;
+                            case "DatabaseGeneratedAttribute":
+                                databaseGeneratedAttribute = att as DatabaseGeneratedAttribute;
+                                break;
+                            case "KeyAttribute":
+                                isID = true;
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                    if (!NotMappedAttribute)
+                    {
+                        TableColumn col = new TableColumn()
+                        {
+                            COLUMN_NAME = prop.PropertyName,
+                            DATA_TYPE = SQLDataTypeHelper.GetSqlDbType(prop.PropertyType, unincode).ToString(),
+                            ALLOW_NULL = prop.PropertyType.Name.Contains("Nullable"),
+                            IDENTITY = (databaseGeneratedAttribute != null && databaseGeneratedAttribute.DatabaseGeneratedOption == DatabaseGeneratedOption.Identity),
+                            CHARACTER_MAXIMUM_LENGTH = 0,
+                            ORDINAL_POSITION = 0,
+                            IS_ID = isID
+                        };
+                        if (columnAttribute != null)
+                        {
+                            if (columnAttribute.TypeName != null)
+                            {
+                                col.DATA_TYPE = columnAttribute.TypeName;
+                            }
+                            if (columnAttribute.TypeName != null && columnAttribute.TypeName.Contains("(") & columnAttribute.TypeName.Contains(")"))
+                            {
+                                col.CHARACTER_MAXIMUM_LENGTH = int.Parse(columnAttribute.TypeName.GetBetween("(", ")"));
+                                col.DATA_TYPE = col.DATA_TYPE.Replace($"({col.CHARACTER_MAXIMUM_LENGTH})", "");
+                            }
+                        }
+                        // hack to change varchar to nvarchar and datetime2 to datetime
+                        if (col.DATA_TYPE == "VarChar")
+                        {
+                            col.DATA_TYPE = "NVarChar";
+                        }
+                        if (col.DATA_TYPE == "DateTime2")
+                        {
+                            col.DATA_TYPE = "DateTime";
+                        }
+                        columns.Add(col);
+                    }
+                }
+            }
+            try
+            {
+                CreateTable(tableName, columns, collation: collation);
+                string lastQuery = _lastQuery; // Preserve Query to be returned after exist test
+                var exists = TableExists(tableName);
+                _lastQuery = lastQuery;
+                if (exists)
+                {
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                _lastError = ex.Message;
+            }
+            return false;
         }
     }
 }

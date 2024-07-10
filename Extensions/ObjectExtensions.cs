@@ -1,6 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Reflection;
+using System.Text;
 
 namespace AGenius.UsefulStuff
 {
@@ -8,6 +11,60 @@ namespace AGenius.UsefulStuff
     /// <summary>Object Extensions</summary>
     public static class ObjectExtensions
     {
+        /// <summary>
+        /// This will return the properties of a class with any annotations decorating it
+        /// </summary>
+        /// <param name="type">The Class entity</param>
+        /// <returns>List of properties</returns>
+        public static List<ObjectPropertyInfo> GetPropertiesWithAnnotations(this Type type)
+        {
+            var properties = type.GetProperties();
+            var classAnnotations = type.GetCustomAttributes(false);
+            var result = new List<ObjectPropertyInfo>();
+
+            // Add top level annotations as first entry
+            var topitem = new ObjectPropertyInfo
+            {
+                PropertyName = type.Name,
+                PropertyType = type,
+                PropertyCategory = "CLASS",
+                Attributes = new List<object>()
+            };
+
+            foreach (var attribute in classAnnotations)
+            {
+                topitem.Attributes.Add(attribute);
+            }
+            result.Add(topitem);
+
+            foreach (var property in properties)
+            {
+                var attributes = property.GetCustomAttributes(false);
+                System.ComponentModel.AttributeCollection otherAttributes = System.ComponentModel.TypeDescriptor.GetProperties(type)[property.Name].Attributes;
+                System.ComponentModel.CategoryAttribute propertyCategory = (System.ComponentModel.CategoryAttribute)otherAttributes[typeof(System.ComponentModel.CategoryAttribute)];
+                System.ComponentModel.DisplayNameAttribute propertyDisplayName = (System.ComponentModel.DisplayNameAttribute)otherAttributes[typeof(System.ComponentModel.DisplayNameAttribute)];
+                System.ComponentModel.DescriptionAttribute propertyDescription = (System.ComponentModel.DescriptionAttribute)otherAttributes[typeof(System.ComponentModel.DescriptionAttribute)];
+
+                var item = new ObjectPropertyInfo
+                {
+                    PropertyName = property.Name,
+                    PropertyType = property.PropertyType,
+                    PropertyCategory = propertyCategory.Category,
+                    PropertyDescription = propertyDescription.Description,
+                    PropertyDisplayName = (!string.IsNullOrEmpty(propertyDisplayName.DisplayName) ? propertyDisplayName.DisplayName : property.Name),
+                    Attributes = new List<object>(),
+                    isKeyField = property.GetCustomAttribute(typeof(Dapper.Contrib.Extensions.KeyAttribute)) != null,
+                };
+
+                foreach (var attribute in attributes)
+                {
+                    item.Attributes.Add(attribute);
+                }
+                result.Add(item);
+            }
+
+            return result;
+        }
         /// <summary>
         /// Return a List of Variance records representing the differences between two entity objects
         /// </summary>
@@ -99,7 +156,14 @@ namespace AGenius.UsefulStuff
         /// <summary>
         /// Variance Record holding details of the fields that have been changed on an object
         /// </summary>
-        public class Variance
+        public class Variance : ObjectPropertyInfo
+        {
+            /// <summary>The Old Value of the property</summary>
+            public object OldValue { get; set; }
+            /// <summary>The New Value of the property</summary>
+            public object NewValue { get; set; }
+        }
+        public class ObjectPropertyInfo
         {
             /// <summary>Name of the Property</summary>
             public string PropertyName { get; set; }
@@ -108,15 +172,12 @@ namespace AGenius.UsefulStuff
             /// <summary>True if the field is the Key field (Used by Dapper) <see cref="Dapper.Contrib.Extensions.KeyAttribute"/></summary>
             public bool isKeyField { get; set; }
             /// <summary>The Properties Category. Defaults to Misc <see cref="System.ComponentModel.CategoryAttribute"/></summary>
-            public string PropertyCategory { get; set; }  
+            public string PropertyCategory { get; set; }
             /// <summary>The Display name of the Property <see cref="System.ComponentModel.DisplayNameAttribute"/></summary>
             public string PropertyDisplayName { get; set; }
             /// <summary>The Properties Description <see cref="System.ComponentModel.DescriptionAttribute"/></summary>
-            public string PropertyDescription { get; set; } 
-            /// <summary>The Old Value of the property</summary>
-            public object OldValue { get; set; }
-            /// <summary>The New Value of the property</summary>
-            public object NewValue { get; set; }
+            public string PropertyDescription { get; set; }
+            public List<object> Attributes { get; set; }
         }
     }
     #endregion

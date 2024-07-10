@@ -14,13 +14,13 @@ namespace AGenius.UsefulStuff.Helpers
         {
             sqlTypeMap = new Dictionary<Type, SqlDbType>
             {
-                [typeof(string)] = SqlDbType.VarChar,
+                //[typeof(string)] = SqlDbType.VarChar,
+                [typeof(string)] = SqlDbType.NVarChar, // Favour unicode over standard
                 [typeof(char[])] = SqlDbType.NVarChar,
                 [typeof(byte)] = SqlDbType.TinyInt,
                 [typeof(short)] = SqlDbType.SmallInt,
                 [typeof(int)] = SqlDbType.Int,
                 [typeof(short)] = SqlDbType.SmallInt,
-                [typeof(long)] = SqlDbType.BigInt,
                 [typeof(long)] = SqlDbType.BigInt,
                 [typeof(byte[])] = SqlDbType.VarBinary,
                 [typeof(bool)] = SqlDbType.Bit,
@@ -73,24 +73,29 @@ namespace AGenius.UsefulStuff.Helpers
             };
         }
         /// <summary>Non-generic argument-based method</summary>
-        /// <param name="giveType"></param>
+        /// <param name="giveType">The property type to convert</param>
+        /// <param name="unicode">Return Unicode String type when detecting string, default is true</param>        
         /// <returns></returns>
-        public static SqlDbType GetSqlDbType(Type giveType)
+        public static SqlDbType GetSqlDbType(Type giveType, bool unicode = true)
         {
             // Allow nullable types to be handled        
             giveType = Nullable.GetUnderlyingType(giveType) ?? giveType;
             if (sqlTypeMap.ContainsKey(giveType))
             {
+                if (!unicode && sqlTypeMap[giveType] == SqlDbType.NVarChar)
+                    return SqlDbType.VarChar;
+
                 return sqlTypeMap[giveType];
             }
             throw new ArgumentException($"{giveType.FullName} is not a supported .NET class");
         }
         /// <summary>Get the SqlDbType from an type</summary>
         /// <typeparam name="T">Type</typeparam>
+        /// <param name="unicode">Return Unicode String type when detecting string, default is true</param>   
         /// <returns><see cref="SqlDbType"/></returns>
-        public static SqlDbType GetSqlDbType<T>()
+        public static SqlDbType GetSqlDbType<T>(bool unicode = true)
         {
-            return GetSqlDbType(typeof(T));
+            return GetSqlDbType(typeof(T), unicode);
         }
         /// <summary>Non-generic argument-based method</summary>
         /// <param name="giveType">The Type to convert</param>
