@@ -149,24 +149,42 @@ namespace AGenius.UsefulStuff
         /// <returns>ByteArray</returns>
         public static byte[] imageToByteArray(Image imageIn)
         {
-            MemoryStream ms = new MemoryStream();
-            imageIn.Save(ms, System.Drawing.Imaging.ImageFormat.Gif);
-            return ms.ToArray();
+            using (MemoryStream memoryStream = new MemoryStream())
+            {
+                imageIn.Save(memoryStream, System.Drawing.Imaging.ImageFormat.Gif);
+                return memoryStream.ToArray();
+            }
+        }
+        /// <summary>Convert an Image to a ByteArray</summary>
+        /// <param name="imageIn">The Image oject to convert</param>
+        /// <returns>ByteArray</returns>
+        public static byte[] imageToByteArray(string imagePath)
+        {
+            using (Image image = Image.FromFile(imagePath))
+            {
+                using (MemoryStream memoryStream = new MemoryStream())
+                {
+                    image.Save(memoryStream, image.RawFormat);
+                    return memoryStream.ToArray();
+                }
+            }
         }
         /// <summary>Convert a ByteArray to an Image object</summary>
         /// <param name="byteArrayIn">The ByteArray</param>
         /// <returns>Image Object</returns>
         public static Image byteArrayToImage(byte[] byteArrayIn)
         {
-            MemoryStream ms = new MemoryStream(byteArrayIn);
-            Image returnImage = Image.FromStream(ms);
-            return returnImage;
+            using (MemoryStream memoryStream = new MemoryStream(byteArrayIn))
+            {
+                return Image.FromStream(memoryStream);
+            }
         }
 
         #region Scramble Methods       
 
-        /// <summary>The path to the assembly</summary>
+        
         private static string _ApplicationPath;
+        /// <summary>The path to the assembly</summary>
         public static string ApplicationPath
         {
             get
@@ -353,6 +371,7 @@ namespace AGenius.UsefulStuff
         /// <param name="AddTimeStamp">Add a time stamp to the begining of the message</param>
         /// <param name="appendNewLine">Automatically add a new line after the message</param>
         /// <param name="maxLogSize">Maximum size of the log file</param>
+        [Obsolete("This method is deprecated. Use the new AGLogger instead.")]
         public static void WriteLogFile(string MessageText, string LogFileName, string LogPath = null, string SubFolder = "Logs", bool AddTimeStamp = false, bool appendNewLine = true, int maxLogSize = 1024000)
         {
             try
