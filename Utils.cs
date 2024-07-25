@@ -18,6 +18,7 @@ using Newtonsoft.Json;
 using static AGenius.UsefulStuff.ObjectExtensions;
 using System.Runtime.InteropServices;
 using System.Web;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.Menu;
 
 namespace AGenius.UsefulStuff
 {
@@ -149,42 +150,35 @@ namespace AGenius.UsefulStuff
         /// <returns>ByteArray</returns>
         public static byte[] imageToByteArray(Image imageIn)
         {
-            using (MemoryStream memoryStream = new MemoryStream())
-            {
-                imageIn.Save(memoryStream, System.Drawing.Imaging.ImageFormat.Gif);
-                return memoryStream.ToArray();
-            }
+            using MemoryStream memoryStream = new MemoryStream();
+            imageIn.Save(memoryStream, System.Drawing.Imaging.ImageFormat.Gif);
+            return memoryStream.ToArray();
         }
         /// <summary>Convert an Image to a ByteArray</summary>
-        /// <param name="imageIn">The Image oject to convert</param>
+        /// <param name="imagePath">The Image oject to convert</param>
         /// <returns>ByteArray</returns>
         public static byte[] imageToByteArray(string imagePath)
         {
-            using (Image image = Image.FromFile(imagePath))
-            {
-                using (MemoryStream memoryStream = new MemoryStream())
-                {
-                    image.Save(memoryStream, image.RawFormat);
-                    return memoryStream.ToArray();
-                }
-            }
+            using Image image = Image.FromFile(imagePath);
+            using MemoryStream memoryStream = new MemoryStream();
+            image.Save(memoryStream, image.RawFormat);
+            return memoryStream.ToArray();
         }
         /// <summary>Convert a ByteArray to an Image object</summary>
         /// <param name="byteArrayIn">The ByteArray</param>
         /// <returns>Image Object</returns>
         public static Image byteArrayToImage(byte[] byteArrayIn)
         {
-            using (MemoryStream memoryStream = new MemoryStream(byteArrayIn))
-            {
-                return Image.FromStream(memoryStream);
-            }
+            using MemoryStream memoryStream = new MemoryStream(byteArrayIn);
+            return Image.FromStream(memoryStream);
         }
 
         #region Scramble Methods       
 
-        
+
         private static string _ApplicationPath;
         /// <summary>The path to the assembly</summary>
+        /// Can be overriden
         public static string ApplicationPath
         {
             get
@@ -280,14 +274,10 @@ namespace AGenius.UsefulStuff
 
                 if (File.Exists(filepath).Equals(true))
                 {
-                    using (var fs = new FileStream(filepath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-                    {
-                        using (var sr = new StreamReader(fs, Encoding.Default))
-                        {
-                            string contents = sr.ReadToEnd();
-                            return contents;
-                        }
-                    }
+                    using var fs = new FileStream(filepath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                    using var sr = new StreamReader(fs, Encoding.Default);
+                    string contents = sr.ReadToEnd();
+                    return contents;
                 }
             }
             catch (Exception)
@@ -352,10 +342,8 @@ namespace AGenius.UsefulStuff
                         filepath = $"{ApplicationPath}\\{filepath}";
                     }
                 }
-                using (StreamWriter sw = new StreamWriter(filepath))
-                {
-                    sw.WriteLine(contents);
-                }
+                using StreamWriter sw = new StreamWriter(filepath);
+                sw.WriteLine(contents);
             }
             catch (Exception)
             {
@@ -372,14 +360,12 @@ namespace AGenius.UsefulStuff
         /// <param name="appendNewLine">Automatically add a new line after the message</param>
         /// <param name="maxLogSize">Maximum size of the log file</param>
         [Obsolete("This method is deprecated. Use the new AGLogger instead.")]
-        public static void WriteLogFile(string MessageText, string LogFileName, string LogPath = null, string SubFolder = "Logs", bool AddTimeStamp = false, bool appendNewLine = true, int maxLogSize = 1024000)
+        public static void WriteLogFile(string MessageText, string LogFileName, string LogPath = null,
+            string SubFolder = "Logs", bool AddTimeStamp = false, bool appendNewLine = true, int maxLogSize = 1024000)
         {
             try
             {
-                if (LogPath == null)
-                {
-                    LogPath = ApplicationPath;
-                }
+                LogPath ??= ApplicationPath;
                 string sPath = Path.Combine(LogPath, SubFolder ?? "", $"{LogFileName}.log");
 
                 if (System.IO.File.Exists(sPath).Equals(false))
@@ -823,7 +809,7 @@ namespace AGenius.UsefulStuff
 
             }
 
-            catch (Exception ex)
+            catch (Exception)
             {
                 return "";
             }
@@ -918,14 +904,12 @@ namespace AGenius.UsefulStuff
         /// <returns>Formatted JSON</returns>
         public static string JsonPrettify(string json)
         {
-            using (var stringReader = new StringReader(json))
-            using (var stringWriter = new StringWriter())
-            {
-                var jsonReader = new JsonTextReader(stringReader);
-                var jsonWriter = new JsonTextWriter(stringWriter) { Formatting = Formatting.Indented };
-                jsonWriter.WriteToken(jsonReader);
-                return stringWriter.ToString();
-            }
+            using var stringReader = new StringReader(json);
+            using var stringWriter = new StringWriter();
+            var jsonReader = new JsonTextReader(stringReader);
+            var jsonWriter = new JsonTextWriter(stringWriter) { Formatting = Formatting.Indented };
+            jsonWriter.WriteToken(jsonReader);
+            return stringWriter.ToString();
         }
         #endregion
 
@@ -1032,28 +1016,34 @@ namespace AGenius.UsefulStuff
         /// <param name="priority">Override the default mail priority</param>
         /// <returns>True if successful or False if an error occurs. <seealso cref="EmailFailedReason"/></returns>
         public static bool SendEmailMessage(bool isHTML,
-            string MailFrom,
-            string EmailTo,
-            string MessageBody,
-            string Subject,
-            string SMTPHost,
-            string SMTPUser,
-            string SMTPPass,
-            int SMTPPort = 25,
-            bool SMTPSSL = false,
-            bool SMTPAuth = false,
-            string BCCList = null,
-            string CCList = null,
-            string imagespath = null,
-            List<string> AttachmentPaths = null,
-            bool LogErrors = false,
-            string LogPath = null,
-            MailPriority priority = MailPriority.Normal
+                string MailFrom,
+                string EmailTo,
+                string MessageBody,
+                string Subject,
+                string SMTPHost,
+                string SMTPUser,
+                string SMTPPass,
+                int SMTPPort = 25,
+                bool SMTPSSL = false,
+                bool SMTPAuth = false,
+                string BCCList = null,
+                string CCList = null,
+                string imagespath = null,
+                List<string> AttachmentPaths = null,
+                bool LogErrors = false,
+                string LogPath = null,
+                MailPriority priority = MailPriority.Normal
             )
         {
             List<string> images = new List<string>(); // This is to store the images found
             AlternateView avHtml = null;
 
+            Helpers.AGLogger.Logger smtpLogger = null;
+            if (LogErrors)
+            {
+                // Setup the new logger
+                smtpLogger = new Helpers.AGLogger.Logger(LogPath: Path.Combine(LogPath, "SMTPErrors"), AddTimeStamp: true);
+            }
             try
             {
                 // Now deal with images so they can be embedded
@@ -1105,24 +1095,13 @@ namespace AGenius.UsefulStuff
                                 // add to the Alternative view object
                                 string ext = System.IO.Path.GetExtension(item);
                                 strItem = item;
-                                LinkedResource imageitem;
-
-                                switch (ext.ToLower())
+                                LinkedResource imageitem = ext.ToLower() switch
                                 {
-                                    case ".jpg":
-                                    case ".jpeg":
-                                        imageitem = new LinkedResource(imagespath + strItem, MediaTypeNames.Image.Jpeg);
-                                        break;
-                                    case ".gif":
-                                        imageitem = new LinkedResource(imagespath + strItem, MediaTypeNames.Image.Gif);
-                                        break;
-                                    case ".png":
-                                        imageitem = new LinkedResource(imagespath + strItem, "image/png");
-                                        break;
-                                    default:
-                                        imageitem = null;
-                                        break;
-                                }
+                                    ".jpg" or ".jpeg" => new LinkedResource(imagespath + strItem, MediaTypeNames.Image.Jpeg),
+                                    ".gif" => new LinkedResource(imagespath + strItem, MediaTypeNames.Image.Gif),
+                                    ".png" => new LinkedResource(imagespath + strItem, "image/png"),
+                                    _ => null,
+                                };
                                 imageitem.ContentId = "image" + counter++;
                                 avHtml.LinkedResources.Add(imageitem);
                                 //
@@ -1133,8 +1112,8 @@ namespace AGenius.UsefulStuff
                         {
                             if (LogErrors)
                             {
-                                WriteLogFile("Possible invalid Image - " + strItem, "SMTPErrors", LogPath, null, true, true);
-                                WriteLogFile($"Trace-To:{EmailTo} - Subject:{Subject} - Message:{ex.Message} {Environment.NewLine}{ex.StackTrace}", "SMTPErrors", LogPath, null, true, true);
+                                smtpLogger?.LogError("Possible invalid Image - " + strItem);
+                                smtpLogger?.LogError($"Trace-To:{EmailTo} - Subject:{Subject} - Message:{ex.Message} {Environment.NewLine}{ex.StackTrace}");
                             }
 
                             EmailFailedReason = ex.Message;
@@ -1148,7 +1127,7 @@ namespace AGenius.UsefulStuff
             {
                 if (LogErrors)
                 {
-                    WriteLogFile($"Trace-Message:{ex.Message} {Environment.NewLine}{ex.StackTrace}", "SMTPErrors", LogPath, null, true, true);
+                    smtpLogger?.LogError($"Trace-Message:{ex.Message} {Environment.NewLine}{ex.StackTrace}");
                 }
 
                 EmailFailedReason = ex.Message;
@@ -1257,8 +1236,8 @@ namespace AGenius.UsefulStuff
                 EmailFailedReason = ex.Message;
                 if (LogErrors)
                 {
-                    WriteLogFile("Error Sending Email", "SMTPErrors", LogPath, null, true, true);
-                    WriteLogFile($"Trace-To:{EmailTo} - Subject:{Subject} - Message:{ex.Message} {Environment.NewLine}{ex.StackTrace}", "SMTPErrors", LogPath, null, true, true);
+                    smtpLogger?.LogError("Error Sending Email");
+                    smtpLogger?.LogError($"Trace-To:{EmailTo} - Subject:{Subject} - Message:{ex.Message} {Environment.NewLine}{ex.StackTrace}");
                 }
 
                 return false;
@@ -1538,7 +1517,7 @@ namespace AGenius.UsefulStuff
             // Ensure the correct file extention is applied
             if (!iProps.ImageFileName.ToLower().EndsWith(iProps.OutputImageFormat.ToString().ToLower()))
             {
-                imageFilePath += $".{iProps.OutputImageFormat.ToString()}";
+                imageFilePath += $".{iProps.OutputImageFormat}";
             }
             if (File.Exists(imageFilePath))
             {

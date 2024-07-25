@@ -11,12 +11,16 @@ namespace AGenius.UsefulStuff.Helpers
     {
         private const string UserFilesListFilenamePrefix = ".used-temporary-files.txt";
         private static readonly object UsedFilesListLock = new object();
+            private static string _filesListPath = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
         /// <summary>
         /// Exposed property to allow the override of the location the temp file list file is stored.
         /// </summary>
-        /// <remarks>The default will be the same location as the EXE but this might be a read only location So overide this value to specify the alternate.</remarks>
-        private static readonly string FilesListPath = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
-
+        /// <remarks>The default will be the same location as the EXE but this might be a read only location So overide this value to specify the alternate.</remarks>        
+        public static string FilesListPath
+        {
+            get => _filesListPath;
+            set => _filesListPath = value ?? throw new ArgumentNullException(nameof(value));
+        }
         private static string GetUsedFilesListFilename()
         {
             return Path.Combine(FilesListPath, $"{Assembly.GetEntryAssembly().GetName().Name}{UserFilesListFilenamePrefix}");
@@ -32,7 +36,7 @@ namespace AGenius.UsefulStuff.Helpers
                     writer.WriteLine(filename);
                 }
             }
-        }    
+        }
         /// <summary>Return a new Temporary file and record it </summary>
         /// <param name="extension">The Extension of the new file</param>
         /// <param name="subFolder">Place new temp files in this sub folder in the Temp directory</param>
