@@ -12,10 +12,14 @@ namespace AGenius.UsefulStuff.Helpers.AGLogger;
 /// <summary>
 /// Provides a more usefull logger ability
 /// </summary>
-public class AGLogger
+public class Logger
 {
     internal string _logPath { get; set; }
     internal string _logFileName { get; set; }
+    Dictionary<string, string> _appliedSettings = new Dictionary<string, string>();
+    public Dictionary<string, string> AppliedSettings { get { return _appliedSettings; } }
+    bool _loggerCreated;
+    string _settingPrefix;
     #region Properties
     /// <summary>
     /// The File Path to the log file location (optional - will use assembly path if excluded or null)
@@ -70,108 +74,173 @@ public class AGLogger
     /// <param name="LogLevelChars">The length of the level tag in the log file (3 = [INF], 4 = [INFO] etc) : default:3</param>
     /// <param name="TimeStampFormat">Format of the timestamp - default:dd/MM/yyyy HH:mm:ss zzz/></param>
     /// <param name="AddNewLogHeader">Include a header on new log file created - default:true</param>   
-    /// <param name="Interval">Sepcify the interval the file should rollover <see cref="RollingInterval"/></param>
+    /// <param name="RolloverInterval">Sepcify the interval the file should rollover <see cref="RollingInterval"/></param>
     /// <param name="RolloverSubFolder">Move rolled over log files to the sub folder specified</param>
-    public AGLogger(string LogPath = null,
+    public Logger(string LogPath = null,
         bool AddTimeStamp = true,
         int MaxLogFileSize = 1024000,
+        LogEventLevel logEventLevel = LogEventLevel.Information,
         int LogLevelChars = 3,
         string TimeStampFormat = "dd/MM/yyyy HH:mm:ss zzz",
         bool AddNewLogHeader = true,
-        RollingInterval Interval = RollingInterval.Infinite,
+        RollingInterval RolloverInterval = RollingInterval.Infinite,
         string RolloverSubFolder = "")
     {
         this.CurrentLogFilePath = LogPath;
         this.AddTimeStamp = AddTimeStamp;
         this.MaxLogFileSize = MaxLogFileSize;
+        this.LogLevel = logEventLevel;
         this.LogLevelChars = LogLevelChars;
         this.TimeStampFormat = TimeStampFormat;
         this.AddNewLogHeader = AddNewLogHeader;
-        this.LogRolloverInterval = Interval;
-        this.RolloverSubfolderName = RolloverSubfolderName;
+        this.LogRolloverInterval = RolloverInterval;
+        this.RolloverSubfolderName = RolloverSubFolder;
         _nextCheckpoint = GetNextCheckpoint(DateTime.Now);
     }
     /// <summary>
     /// Create an instance of the AGLogger
     /// </summary>
     /// <remarks>Apply settings from app.config</remarks>
-    public AGLogger()
+    public Logger()
     {
-        // Attempt load from App.config
-        string logFileWithPath = ConfigurationManager.AppSettings["AGLog:file.path"];
-        if (string.IsNullOrEmpty(logFileWithPath))
-        {
-            // No log file and path supplied so set defaults
-            logFileWithPath = Path.Combine(Utils.ApplicationPath, "Application_Log.log");
-        }
-        //string logFileName = ConfigurationManager.AppSettings["AGLog:file.name"];// Change this to get name from path
-        _logFileName = Path.GetFileName(logFileWithPath);
-        _logPath = Path.GetDirectoryName(logFileWithPath);
-        if (Environment.ExpandEnvironmentVariables(Path.GetDirectoryName(logFileWithPath)).StartsWith(@"\"))
-        {
-            logFileWithPath = Path.Combine(Utils.ApplicationPath, logFileWithPath.TrimStart(Path.DirectorySeparatorChar));
-        }
-
-        this.CurrentLogFilePath += logFileWithPath;
-
-        string sizeLimit = ConfigurationManager.AppSettings["AGLog:file.sizelimitbytes"];
-        if (!string.IsNullOrEmpty(sizeLimit))
-        {
-            this.MaxLogFileSize = int.Parse(sizeLimit);
-        }
-
-        string logLevel = ConfigurationManager.AppSettings["AGLog:minimum-level"];
-        if (!string.IsNullOrEmpty(logLevel))
-        {
-            this.LogLevel = logLevel.ToEnum<LogEventLevel>();
-        }
-
-        string logLevelLen = ConfigurationManager.AppSettings["AGLog:level.length"];
-        if (!string.IsNullOrEmpty(logLevelLen))
-        {
-            this.LogLevelChars = int.Parse(logLevelLen);
-        }
-
-        string addTimeStamp = ConfigurationManager.AppSettings["AGLog:timestamp.visible"];
-        if (!string.IsNullOrEmpty(addTimeStamp) && addTimeStamp.ToLower() == "false")
-        {
-            this.AddTimeStamp = false;
-        }
-
-        string timeStampFormat = ConfigurationManager.AppSettings["AGLog:timestamp.format"];
-        if (!string.IsNullOrEmpty(timeStampFormat))
-        {
-            this.TimeStampFormat = timeStampFormat;
-        }
-        string Rolloverinterval = ConfigurationManager.AppSettings["AGLog:rollover.interval"];
-        if (!string.IsNullOrEmpty(Rolloverinterval))
-        {
-            this.LogRolloverInterval = Rolloverinterval.ToEnum(RollingInterval.Infinite, true);
-        }
-        string Rolloversubfolder = ConfigurationManager.AppSettings["AGLog:rollover.subfolder"];
-        if (!string.IsNullOrEmpty(Rolloversubfolder))
-        {
-            this.RolloverSubfolderName = Rolloversubfolder;
-        }
         _nextCheckpoint = GetNextCheckpoint(DateTime.Now);
     }
+    /// <summary>
+    /// Create an instance of the AGLogger
+    /// </summary>
+    /// <param name="settingPrefix">override the prefix for the settings - default:"aglog:" </param>
+    /// <remarks>Apply settings from app.config</remarks>
+    public Logger CreateLogger(string settingPrefix = "aglog:")
+    {
+        if (_loggerCreated) throw new InvalidOperationException("CreateAGLogger() was previously called and can only be called once.");
+        _loggerCreated = true;
+        _settingPrefix = settingPrefix is null ? "aglog:" : $"{settingPrefix}:".ToLower();
 
+        // Enumerate all settings found 
+        IEnumerable<KeyValuePair<string, string>> settings = ConfigurationManager.AppSettings.AllKeys.Select(k => new KeyValuePair<string, string>(k, ConfigurationManager.AppSettings[k]!));
+        var pairs = settings
+               .Where(k => k.Key.ToLower().StartsWith(_settingPrefix.ToLower()))
+               .Select(k => new KeyValuePair<string, string>(
+                   k.Key.ToLower().Substring(_settingPrefix.Length),
+                   Environment.ExpandEnvironmentVariables(k.Value)));
+
+        _appliedSettings = new Dictionary<string, string>();
+
+        string _logFileWithPath = null;
+        int _maxLogFileSize = 1024000;
+        LogEventLevel _logLevel = LogEventLevel.Information;
+        int _logLevelChars = 3;
+        bool _addTimeStamp = true;
+        string _timeStampFormat = null;
+        RollingInterval _logRolloverInterval = RollingInterval.Infinite;
+        string _rolloverSubfolderName = null;
+        bool _addheader = true;
+
+        foreach (var kvp in pairs)
+        {
+            _appliedSettings[kvp.Key] = kvp.Value;
+            switch (kvp.Key)
+            {
+                case "file.path":
+                    if (string.IsNullOrEmpty(kvp.Value))
+                    {
+                        string path = Path.Combine(Utils.ApplicationPath, "Application_Log.log");
+
+                        if (Environment.ExpandEnvironmentVariables(Path.GetDirectoryName(path)).StartsWith(@"\"))
+                        {
+                            path = Path.Combine(Utils.ApplicationPath, path.TrimStart(Path.DirectorySeparatorChar));
+                        }
+
+                        _logFileWithPath += path;
+                    }
+                    break;
+
+                case "file.sizelimitbytes":
+                    if (!string.IsNullOrEmpty(kvp.Value))
+                    {
+                        _maxLogFileSize = int.Parse(kvp.Value);
+                    }
+                    break;
+
+                case "file.addheader":
+                    if (!string.IsNullOrEmpty(kvp.Value))
+                    {
+                        _addheader = bool.Parse(kvp.Value);
+                    }
+                    break;
+
+                case "minimum-level":
+                    if (!string.IsNullOrEmpty(kvp.Value))
+                    {
+                        _logLevel = kvp.Value.ToEnum<LogEventLevel>();
+                    }
+                    break;
+
+                case "level.length":
+                    if (!string.IsNullOrEmpty(kvp.Value))
+                    {
+                        _logLevelChars = int.Parse(kvp.Value);
+                    }
+                    break;
+
+                case "timestamp.visible":
+                    if (!string.IsNullOrEmpty(kvp.Value))
+                    {
+                        _addTimeStamp = bool.Parse(kvp.Value);
+                    }
+                    else
+                    {
+                        _addTimeStamp = true;
+                    }
+                    break;
+
+                case "timestamp.format":
+                    if (!string.IsNullOrEmpty(kvp.Value))
+                    {
+                        _timeStampFormat = kvp.Value;
+                    }
+                    break;
+
+                case "rollover.interval":
+                    if (!string.IsNullOrEmpty(kvp.Value))
+                    {
+                        _logRolloverInterval = kvp.Value.ToEnum(RollingInterval.Infinite, true);
+                    }
+                    break;
+
+                case "rollover.subfolder":
+                    if (!string.IsNullOrEmpty(kvp.Value))
+                    {
+                        _rolloverSubfolderName = kvp.Value;
+                    }
+                    break;
+
+            }
+        }
+
+        return new Logger(LogPath: _logFileWithPath,
+            AddTimeStamp: _addTimeStamp,
+            MaxLogFileSize: _maxLogFileSize,
+            logEventLevel: _logLevel,
+            LogLevelChars: _logLevelChars,
+            TimeStampFormat: _timeStampFormat,
+            AddNewLogHeader: _addheader,
+            RolloverInterval: _logRolloverInterval,
+            RolloverSubFolder: _rolloverSubfolderName
+
+            );
+    }
     /// <summary>Write to a text log file.</summary>
     /// <param name="EventText">The string message to write</param>
     /// <param name="logLevel">The event level of the entry</param>        
-    /// <param name="appendNewLine">Automatically add a new line after the message</param>        
-    public void WriteLog(string EventText, LogEventLevel? logLevel = null, bool appendNewLine = true)
+    /// <param name="appendNewLine">Automatically add a new line after the message</param>  
+    /// <param name="appendTimeStamp">Prefix event text with timestamp</param>
+    public void WriteLog(string EventText, LogEventLevel? logLevel = null, bool appendNewLine = true, bool? appendTimeStamp = null)
     {
         try
         {
-            if (logLevel == null)
-            {
-                logLevel = this.LogLevel;
-            }
-            if (CurrentLogFilePath == null)
-            {
-                CurrentLogFilePath = Path.Combine(Utils.ApplicationPath, "Logfile.log"); // Default path and name
-            }
+            logLevel ??= this.LogLevel;
+            CurrentLogFilePath ??= Path.Combine(Utils.ApplicationPath, "Logfile.log"); // Default path and name
             if (!CurrentLogFilePath.ToLower().EndsWith(".log"))
             {
                 CurrentLogFilePath += ".log";
@@ -194,8 +263,13 @@ public class AGLogger
                     File.AppendAllText(CurrentLogFilePath, @"--------------------------------------------------------------------");
                 }
             }
-
-            if (AddTimeStamp)
+            //Allow single event override timestamp entry (usfull for appending text to an already logged event
+            bool _timeStamp = AddTimeStamp;
+            if (appendTimeStamp.HasValue)
+            {
+                _timeStamp = appendTimeStamp.Value;
+            }
+            if (_timeStamp)
             {
                 EventText = $"{DateTime.Now.ToString(TimeStampFormat)} [{logLevelTag}] {EventText}";
             }
@@ -358,6 +432,17 @@ public class AGLogger
     }
     /// <summary>
     /// Write a log event with the <see cref="LogEventLevel.Information"/> level and associated exception.
+    /// Allow Override of appending new line and time stamp
+    /// </summary>
+    /// <param name="EventText">The string message to describe the log entry</param>
+    /// <param name="appendNewLine">Automatically add a new line after the message</param>  
+    /// <param name="appendTimeStamp">Prefix event text with timestamp</param>
+    public void LogInfo(string EventText, bool appendNewLine = true, bool appendTimeStamp = true)
+    {
+        WriteLog(EventText, LogEventLevel.Information, appendNewLine, appendTimeStamp);
+    }
+    /// <summary>
+    /// Write a log event with the <see cref="LogEventLevel.Information"/> level and associated exception.
     /// </summary>
     /// <param name="EventText">The string message to describe the log entry</param>     
     /// <param name="objects">Array of objects to be serialized and embeded in the message template 
@@ -480,7 +565,7 @@ public class AGLogger
         ["E", "ER", "ERR", "EROR", "ERROR"],
         ["F", "FA", "FTL", "FATL", "FATAL"]
     ];
-    internal static string GetLevelMoniker(LogEventLevel value, string? format = null)
+    internal static string GetLevelMoniker(LogEventLevel value, string format = null)
     {
         // handle unknown LogEventLevel
         if (value is < 0 or > LogEventLevel.Fatal)

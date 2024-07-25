@@ -6,6 +6,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
@@ -19,6 +20,7 @@ namespace AGenius.UsefulStuff.Helpers
     /// </summary>
     public class SQLDatabaseHelper : IDisposable
     {
+
         /// <summary>Used to hold Table Column information</summary>
         public class TableColumn
         {
@@ -43,6 +45,8 @@ namespace AGenius.UsefulStuff.Helpers
             /// <summary>Type - Base Table or View</summary>
             public string TABLE_TYPE { get; set; }
         }
+
+        readonly Helpers.AGLogger.Logger _errorLogger = new Helpers.AGLogger.Logger(LogPath: Path.Combine(Utils.ApplicationPath, "Logs", "SQLDatabaseHelper_Errors.log"), AddTimeStamp: true, RolloverSubFolder: "Complete");
         /// <summary>Provides access to the  Connection string in use</summary>
         public string DBConnectionString
         {
@@ -85,17 +89,15 @@ namespace AGenius.UsefulStuff.Helpers
             }
             try
             {
-                using (IDbConnection db = new SqlConnection(DBConnectionString))
-                {
-                    return db.GetAll<TENTITY>(commandTimeout: DefaultTimeOut).ToList();
-                }
+                using IDbConnection db = new SqlConnection(DBConnectionString);
+                return db.GetAll<TENTITY>(commandTimeout: DefaultTimeOut).ToList();
             }
             catch (DbException ex)
             {
                 if (ex.Message.Contains("deadlocked"))
                 {
                     // Retry
-                    Utils.WriteLogFile(ex.Message, null, "Error", "Logs", true);
+                    _errorLogger.LogError(ex.Message);
                     return ReadALL<TENTITY>();
                 }
                 _lastError = ex.Message;
@@ -122,17 +124,15 @@ namespace AGenius.UsefulStuff.Helpers
                     _lastError = "Invalid ID specified";
                     throw new ArgumentException(_lastError);
                 }
-                using (IDbConnection db = new SqlConnection(DBConnectionString))
-                {
-                    return db.Get<TENTITY>(ID, commandTimeout: DefaultTimeOut);
-                }
+                using IDbConnection db = new SqlConnection(DBConnectionString);
+                return db.Get<TENTITY>(ID, commandTimeout: DefaultTimeOut);
             }
             catch (DbException ex)
             {
                 if (ex.Message.Contains("deadlocked"))
                 {
                     // Retry
-                    Utils.WriteLogFile(ex.Message, null, "Error", "Logs", true);
+                    _errorLogger.LogError(ex.Message);
                     return ReadRecord<TENTITY>(ID);
                 }
                 _lastError = ex.Message;
@@ -159,17 +159,15 @@ namespace AGenius.UsefulStuff.Helpers
                     _lastError = "Invalid ID specified";
                     throw new ArgumentException(_lastError);
                 }
-                using (IDbConnection db = new SqlConnection(DBConnectionString))
-                {
-                    return db.Get<TENTITY>(ID, commandTimeout: DefaultTimeOut);
-                }
+                using IDbConnection db = new SqlConnection(DBConnectionString);
+                return db.Get<TENTITY>(ID, commandTimeout: DefaultTimeOut);
             }
             catch (DbException ex)
             {
                 if (ex.Message.Contains("deadlocked"))
                 {
                     // Retry
-                    Utils.WriteLogFile(ex.Message, null, "Error", "Logs", true);
+                    _errorLogger.LogError(ex.Message);
                     return ReadRecord<TENTITY>(ID);
                 }
                 _lastError = ex.Message;
@@ -196,17 +194,15 @@ namespace AGenius.UsefulStuff.Helpers
                     _lastError = "Invalid ID specified";
                     throw new ArgumentException(_lastError);
                 }
-                using (IDbConnection db = new SqlConnection(DBConnectionString))
-                {
-                    return db.Get<TENTITY>(ID.ToString(), commandTimeout: DefaultTimeOut);
-                }
+                using IDbConnection db = new SqlConnection(DBConnectionString);
+                return db.Get<TENTITY>(ID.ToString(), commandTimeout: DefaultTimeOut);
             }
             catch (DbException ex)
             {
                 if (ex.Message.Contains("deadlocked"))
                 {
                     // Retry
-                    Utils.WriteLogFile(ex.Message, null, "Error", "Logs", true);
+                    _errorLogger.LogError(ex.Message);
                     return ReadRecord<TENTITY>(ID);
                 }
                 _lastError = ex.Message;
@@ -246,17 +242,15 @@ namespace AGenius.UsefulStuff.Helpers
                 string sSQL = $"SELECT * FROM {TableName} {sWhere}";
                 _lastQuery = sSQL;
                 // var Results = null;
-                using (IDbConnection db = new SqlConnection(DBConnectionString))
-                {
-                    return db.Query<TENTITY>(sSQL, commandTimeout: DefaultTimeOut).SingleOrDefault();
-                }
+                using IDbConnection db = new SqlConnection(DBConnectionString);
+                return db.Query<TENTITY>(sSQL, commandTimeout: DefaultTimeOut).SingleOrDefault();
             }
             catch (DbException ex)
             {
                 if (ex.Message.Contains("deadlocked"))
                 {
                     // Retry
-                    Utils.WriteLogFile(ex.Message, null, "Error", "Logs", true);
+                    _errorLogger.LogError(ex.Message);
                     return ReadRecord<TENTITY>(keyFieldName, fieldValue, operatorType);
                 }
                 _lastError = ex.Message;
@@ -295,17 +289,15 @@ namespace AGenius.UsefulStuff.Helpers
                 string sSQL = $"SELECT * FROM {TableName} {sWhere}";
                 _lastQuery = sSQL;
                 // var Results = null;
-                using (IDbConnection db = new SqlConnection(DBConnectionString))
-                {
-                    return db.Query<TENTITY>(sSQL, commandTimeout: DefaultTimeOut).SingleOrDefault();
-                }
+                using IDbConnection db = new SqlConnection(DBConnectionString);
+                return db.Query<TENTITY>(sSQL, commandTimeout: DefaultTimeOut).SingleOrDefault();
             }
             catch (DbException ex)
             {
                 if (ex.Message.Contains("deadlocked"))
                 {
                     // Retry
-                    Utils.WriteLogFile(ex.Message, null, "Error", "Logs", true);
+                    _errorLogger.LogError(ex.Message);
                     return ReadRecord<TENTITY>(keyFieldName, fieldValue);
                 }
                 _lastError = ex.Message;
@@ -344,17 +336,15 @@ namespace AGenius.UsefulStuff.Helpers
                 string sSQL = $"SELECT * FROM {TableName} {sWhere}";
                 _lastQuery = sSQL;
                 // var Results = null;
-                using (IDbConnection db = new SqlConnection(DBConnectionString))
-                {
-                    return db.Query<TENTITY>(sSQL, commandTimeout: DefaultTimeOut).SingleOrDefault();
-                }
+                using IDbConnection db = new SqlConnection(DBConnectionString);
+                return db.Query<TENTITY>(sSQL, commandTimeout: DefaultTimeOut).SingleOrDefault();
             }
             catch (DbException ex)
             {
                 if (ex.Message.Contains("deadlocked"))
                 {
                     // Retry
-                    Utils.WriteLogFile(ex.Message, null, "Error", "Logs", true);
+                    _errorLogger.LogError(ex.Message);
                     return ReadRecord<TENTITY>(keyFieldName, fieldValue);
                 }
                 _lastError = ex.Message;
@@ -394,17 +384,15 @@ namespace AGenius.UsefulStuff.Helpers
                 string sSQL = $"SELECT TOP 1 * FROM {TableName} {sWhere}";
                 _lastQuery = sSQL;
                 // var Results = null;
-                using (IDbConnection db = new SqlConnection(DBConnectionString))
-                {
-                    return db.Query<TENTITY>(sSQL, commandTimeout: DefaultTimeOut).SingleOrDefault();
-                }
+                using IDbConnection db = new SqlConnection(DBConnectionString);
+                return db.Query<TENTITY>(sSQL, commandTimeout: DefaultTimeOut).SingleOrDefault();
             }
             catch (DbException ex)
             {
                 if (ex.Message.Contains("deadlocked"))
                 {
                     // Retry
-                    Utils.WriteLogFile(ex.Message, null, "Error", "Logs", true);
+                    _errorLogger.LogError(ex.Message);
                     return ReadRecordWithWhere<TENTITY>(Where);
                 }
                 _lastError = ex.Message;
@@ -433,17 +421,15 @@ namespace AGenius.UsefulStuff.Helpers
                     throw new ArgumentException(_lastError);
                 }
 
-                using (IDbConnection db = new SqlConnection(DBConnectionString))
-                {
-                    return db.Query<TENTITY>(SprocName, Params, commandType: CommandType.StoredProcedure, commandTimeout: DefaultTimeOut).ToList();
-                }
+                using IDbConnection db = new SqlConnection(DBConnectionString);
+                return db.Query<TENTITY>(SprocName, Params, commandType: CommandType.StoredProcedure, commandTimeout: DefaultTimeOut).ToList();
             }
             catch (DbException ex)
             {
                 if (ex.Message.Contains("deadlocked"))
                 {
                     // Retry
-                    Utils.WriteLogFile(ex.Message, null, "Error", "Logs", true);
+                    _errorLogger.LogError(ex.Message);
                     return ReadRecordsSproc<TENTITY>(SprocName, Params);
                 }
                 _lastError = ex.Message;
@@ -468,17 +454,15 @@ namespace AGenius.UsefulStuff.Helpers
                 }
                 string sSQL = SQLQuery.Replace("[tablename]", GetTableName<TENTITY>()).Replace("[TABLENAME]", GetTableName<TENTITY>());
                 _lastQuery = sSQL;
-                using (IDbConnection db = new SqlConnection(DBConnectionString))
-                {
-                    return db.Query<TENTITY>(sSQL, commandTimeout: DefaultTimeOut).ToList();
-                }
+                using IDbConnection db = new SqlConnection(DBConnectionString);
+                return db.Query<TENTITY>(sSQL, commandTimeout: DefaultTimeOut).ToList();
             }
             catch (DbException ex)
             {
                 if (ex.Message.Contains("deadlocked"))
                 {
                     // Retry
-                    Utils.WriteLogFile(ex.Message, null, "Error", "Logs", true);
+                    _errorLogger.LogError(ex.Message);
                     return ReadRecordsSQL<TENTITY>(SQLQuery);
                 }
                 _lastError = ex.Message;
@@ -510,17 +494,15 @@ namespace AGenius.UsefulStuff.Helpers
                 string sSQL = $"SELECT * FROM {TableName} {sWhere}";
                 _lastQuery = sSQL;
                 // var Results = null;
-                using (IDbConnection db = new SqlConnection(DBConnectionString))
-                {
-                    return db.Query<TENTITY>(sSQL, commandTimeout: DefaultTimeOut).ToList();
-                }
+                using IDbConnection db = new SqlConnection(DBConnectionString);
+                return db.Query<TENTITY>(sSQL, commandTimeout: DefaultTimeOut).ToList();
             }
             catch (DbException ex)
             {
                 if (ex.Message.Contains("deadlocked"))
                 {
                     // Retry
-                    Utils.WriteLogFile(ex.Message, null, "Error", "Logs", true);
+                    _errorLogger.LogError(ex.Message);
                     return ReadRecords<TENTITY>(Where);
                 }
                 _lastError = ex.Message;
@@ -554,17 +536,15 @@ namespace AGenius.UsefulStuff.Helpers
                 string sSQL = $"SELECT * FROM {TableName} {sWhere}";
                 _lastQuery = sSQL;
                 // var Results = null;
-                using (IDbConnection db = new SqlConnection(DBConnectionString))
-                {
-                    return db.Query<TENTITY>(sSQL, commandTimeout: noTimeout ? 0 : DefaultTimeOut).ToList();
-                }
+                using IDbConnection db = new SqlConnection(DBConnectionString);
+                return db.Query<TENTITY>(sSQL, commandTimeout: noTimeout ? 0 : DefaultTimeOut).ToList();
             }
             catch (DbException ex)
             {
                 if (ex.Message.Contains("deadlocked"))
                 {
                     // Retry
-                    Utils.WriteLogFile(ex.Message, null, "Error", "Logs", true);
+                    _errorLogger.LogError(ex.Message);
                     return ReadRecords<TENTITY>(Where);
                 }
                 _lastError = ex.Message;
@@ -599,17 +579,15 @@ namespace AGenius.UsefulStuff.Helpers
                 string sSQL = $"SELECT TOP {TopCount} * FROM {TableName} {sWhere}";
                 _lastQuery = sSQL;
                 // var Results = null;
-                using (IDbConnection db = new SqlConnection(DBConnectionString))
-                {
-                    return db.Query<TENTITY>(sSQL, commandTimeout: DefaultTimeOut).ToList();
-                }
+                using IDbConnection db = new SqlConnection(DBConnectionString);
+                return db.Query<TENTITY>(sSQL, commandTimeout: DefaultTimeOut).ToList();
             }
             catch (DbException ex)
             {
                 if (ex.Message.Contains("deadlocked"))
                 {
                     // Retry
-                    Utils.WriteLogFile(ex.Message, null, "Error", "Logs", true);
+                    _errorLogger.LogError(ex.Message);
                     return ReadRecords<TENTITY>(Where, TopCount);
                 }
                 _lastError = ex.Message;
@@ -647,17 +625,15 @@ namespace AGenius.UsefulStuff.Helpers
                 string sSQL = $"SELECT * FROM {TableName} {sWhere}";
                 _lastQuery = sSQL;
                 // var Results = null;
-                using (IDbConnection db = new SqlConnection(DBConnectionString))
-                {
-                    return db.Query<TENTITY>(sSQL, commandTimeout: DefaultTimeOut).ToList();
-                }
+                using IDbConnection db = new SqlConnection(DBConnectionString);
+                return db.Query<TENTITY>(sSQL, commandTimeout: DefaultTimeOut).ToList();
             }
             catch (DbException ex)
             {
                 if (ex.Message.Contains("deadlocked"))
                 {
                     // Retry
-                    Utils.WriteLogFile(ex.Message, null, "Error", "Logs", true);
+                    _errorLogger.LogError(ex.Message);
                     return ReadRecords<TENTITY>(Where, OverrideTableName);
                 }
                 _lastError = ex.Message;
@@ -686,26 +662,24 @@ namespace AGenius.UsefulStuff.Helpers
                 }
                 string sSQL = SQLQuery.Replace("[tablename]", GetTableName<TENTITY>()).Replace("[TABLENAME]", GetTableName<TENTITY>());
                 _lastQuery = sSQL;
-                using (IDbConnection db = new SqlConnection(DBConnectionString))
-                {
-                    var results = db.Query<TENTITY, DETAIL, TENTITY>(sSQL,
-                                                                   (parent, detail) =>
-                                                                   {
-                                                                       parent.GetType().GetProperty(detailPropertyName).SetValue(parent, detail, null);
-                                                                       return parent;
-                                                                   },
-                                                                   splitOn: splitOnField, commandTimeout: DefaultTimeOut)
-                        .Distinct()
-                        .ToList();
-                    return results;
-                }
+                using IDbConnection db = new SqlConnection(DBConnectionString);
+                var results = db.Query<TENTITY, DETAIL, TENTITY>(sSQL,
+                                                               (parent, detail) =>
+                                                               {
+                                                                   parent.GetType().GetProperty(detailPropertyName).SetValue(parent, detail, null);
+                                                                   return parent;
+                                                               },
+                                                               splitOn: splitOnField, commandTimeout: DefaultTimeOut)
+                    .Distinct()
+                    .ToList();
+                return results;
             }
             catch (DbException ex)
             {
                 if (ex.Message.Contains("deadlocked"))
                 {
                     // Retry
-                    Utils.WriteLogFile(ex.Message, null, "Error", "Logs", true);
+                    _errorLogger.LogError(ex.Message);
                 }
                 _lastError = ex.Message;
                 throw new DatabaseAccessHelperException(ex.Message);
@@ -739,29 +713,27 @@ namespace AGenius.UsefulStuff.Helpers
                 }
                 string sSQL = SQLQuery.Replace("[tablename]", GetTableName<TENTITY>()).Replace("[TABLENAME]", GetTableName<TENTITY>());
                 _lastQuery = sSQL;
-                using (IDbConnection db = new SqlConnection(DBConnectionString))
-                {
-                    var results = db.Query<TENTITY, DETAIL1, DETAIL2, TENTITY>(sSQL,
-                                                                   (parent, detail1, detail2) =>
-                                                                   {
-                                                                       // Correct the ID of the parent
-                                                                       parent.GetType().GetProperty("ID").SetValue(parent, detail1.GetType().GetProperty("HeaderID").GetValue(detail1), null);
-                                                                       parent.GetType().GetProperty(detailPropertyName1).SetValue(parent, detail1, null);
-                                                                       parent.GetType().GetProperty(detailPropertyName2).SetValue(parent, detail2, null);
-                                                                       return parent;
-                                                                   },
-                                                                   splitOn: splitOnField, commandTimeout: DefaultTimeOut)
-                        .Distinct()
-                        .ToList();
-                    return results;
-                }
+                using IDbConnection db = new SqlConnection(DBConnectionString);
+                var results = db.Query<TENTITY, DETAIL1, DETAIL2, TENTITY>(sSQL,
+                                                               (parent, detail1, detail2) =>
+                                                               {
+                                                                   // Correct the ID of the parent
+                                                                   parent.GetType().GetProperty("ID").SetValue(parent, detail1.GetType().GetProperty("HeaderID").GetValue(detail1), null);
+                                                                   parent.GetType().GetProperty(detailPropertyName1).SetValue(parent, detail1, null);
+                                                                   parent.GetType().GetProperty(detailPropertyName2).SetValue(parent, detail2, null);
+                                                                   return parent;
+                                                               },
+                                                               splitOn: splitOnField, commandTimeout: DefaultTimeOut)
+                    .Distinct()
+                    .ToList();
+                return results;
             }
             catch (DbException ex)
             {
                 if (ex.Message.Contains("deadlocked"))
                 {
                     // Retry
-                    Utils.WriteLogFile(ex.Message, null, "Error", "Logs", true);
+                    _errorLogger.LogError(ex.Message);
                 }
                 _lastError = ex.Message;
                 throw new DatabaseAccessHelperException(ex.Message);
@@ -785,10 +757,8 @@ namespace AGenius.UsefulStuff.Helpers
                     throw new ArgumentException(_lastError);
                 }
 
-                using (IDbConnection db = new SqlConnection(DBConnectionString))
-                {
-                    return db.Insert(Record, commandTimeout: DefaultTimeOut);
-                }
+                using IDbConnection db = new SqlConnection(DBConnectionString);
+                return db.Insert(Record, commandTimeout: DefaultTimeOut);
 
             }
             catch (DbException ex)
@@ -814,33 +784,32 @@ namespace AGenius.UsefulStuff.Helpers
                     throw new ArgumentException(_lastError);
                 }
 
-                using (IDbConnection db = new SqlConnection(DBConnectionString))
-                {
-                    db.Insert(Records, commandTimeout: DefaultTimeOut);
-                    return true;
+                using IDbConnection db = new SqlConnection(DBConnectionString);
+                db.Insert(Records, commandTimeout: DefaultTimeOut);
+                return true;
 
 
-                    //db.Open();
-                    //var trans = db.BeginTransaction();
-                    //try
-                    //{
-                    //    long rows = db.Insert(Records, trans);
-                    //    trans.Commit();
+                //db.Open();
+                //var trans = db.BeginTransaction();
+                //try
+                //{
+                //    long rows = db.Insert(Records, trans);
+                //    trans.Commit();
 
-                    //    return rows;
-                    //}
-                    //catch (Exception ex)
-                    //{
-                    //    trans.Rollback();
-                    //    return -1;
-                    //}
+                //    return rows;
+                //}
+                //catch (Exception ex)
+                //{
+                //    trans.Rollback();
+                //    return -1;
+                //}
 
-                }
 
             }
             catch (DbException ex)
             {
                 _lastError = ex.Message;
+                _errorLogger.LogError(ex.Message);
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
@@ -860,10 +829,8 @@ namespace AGenius.UsefulStuff.Helpers
                     throw new ArgumentException(_lastError);
                 }
 
-                using (IDbConnection db = new SqlConnection(DBConnectionString))
-                {
-                    return db.Execute(sqlCmd, Params, commandTimeout: DefaultTimeOut);
-                }
+                using IDbConnection db = new SqlConnection(DBConnectionString);
+                return db.Execute(sqlCmd, Params, commandTimeout: DefaultTimeOut);
             }
             catch (DbException ex)
             {
@@ -886,15 +853,14 @@ namespace AGenius.UsefulStuff.Helpers
                     throw new ArgumentException(_lastError);
                 }
 
-                using (IDbConnection db = new SqlConnection(DBConnectionString))
-                {
-                    return db.ExecuteScalar(sqlCmd, commandTimeout: DefaultTimeOut);
-                }
+                using IDbConnection db = new SqlConnection(DBConnectionString);
+                return db.ExecuteScalar(sqlCmd, commandTimeout: DefaultTimeOut);
 
             }
             catch (DbException ex)
             {
                 _lastError = ex.Message;
+                _errorLogger.LogError(ex.Message);
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
@@ -912,15 +878,14 @@ namespace AGenius.UsefulStuff.Helpers
                     throw new ArgumentException(_lastError);
                 }
 
-                using (IDbConnection db = new SqlConnection(DBConnectionString))
-                {
-                    return db.Query(sqlCmd, commandTimeout: DefaultTimeOut);
-                }
+                using IDbConnection db = new SqlConnection(DBConnectionString);
+                return db.Query(sqlCmd, commandTimeout: DefaultTimeOut);
 
             }
             catch (DbException ex)
             {
                 _lastError = ex.Message;
+                _errorLogger.LogError(ex.Message);
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
@@ -939,15 +904,14 @@ namespace AGenius.UsefulStuff.Helpers
                     throw new ArgumentException(_lastError);
                 }
 
-                using (IDbConnection db = new SqlConnection(DBConnectionString))
-                {
-                    return db.Execute(SprocName, dParams, commandType: CommandType.StoredProcedure, commandTimeout: DefaultTimeOut);
-                }
+                using IDbConnection db = new SqlConnection(DBConnectionString);
+                return db.Execute(SprocName, dParams, commandType: CommandType.StoredProcedure, commandTimeout: DefaultTimeOut);
 
             }
             catch (DbException ex)
             {
                 _lastError = ex.Message;
+                _errorLogger.LogError(ex.Message);
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
@@ -967,15 +931,14 @@ namespace AGenius.UsefulStuff.Helpers
                     throw new ArgumentException(_lastError);
                 }
 
-                using (IDbConnection db = new SqlConnection(DBConnectionString))
-                {
-                    return db.Query(SprocName, dParams, commandType: CommandType.StoredProcedure, commandTimeout: DefaultTimeOut).ToList();
-                }
+                using IDbConnection db = new SqlConnection(DBConnectionString);
+                return db.Query(SprocName, dParams, commandType: CommandType.StoredProcedure, commandTimeout: DefaultTimeOut).ToList();
 
             }
             catch (DbException ex)
             {
                 _lastError = ex.Message;
+                _errorLogger.LogError(ex.Message);
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
@@ -993,14 +956,13 @@ namespace AGenius.UsefulStuff.Helpers
                     _lastError = "Connection String not set";
                     throw new ArgumentException(_lastError);
                 }
-                using (IDbConnection db = new SqlConnection(DBConnectionString))
-                {
-                    return db.Execute(sqlCmd, commandTimeout: DefaultTimeOut);
-                }
+                using IDbConnection db = new SqlConnection(DBConnectionString);
+                return db.Execute(sqlCmd, commandTimeout: DefaultTimeOut);
             }
             catch (DbException ex)
             {
                 _lastError = ex.Message;
+                _errorLogger.LogError(ex.Message);
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
@@ -1038,14 +1000,13 @@ namespace AGenius.UsefulStuff.Helpers
 
                 string sSQL = $"SELECT {FieldName} FROM {tableName} {sWhere}";
                 _lastQuery = sSQL;
-                using (IDbConnection db = new SqlConnection(DBConnectionString))
-                {
-                    return db.ExecuteScalar(sSQL, commandTimeout: DefaultTimeOut);
-                }
+                using IDbConnection db = new SqlConnection(DBConnectionString);
+                return db.ExecuteScalar(sSQL, commandTimeout: DefaultTimeOut);
             }
             catch (DbException ex)
             {
                 _lastError = ex.Message;
+                _errorLogger.LogError(ex.Message);
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
@@ -1078,14 +1039,13 @@ namespace AGenius.UsefulStuff.Helpers
 
                 string sSQL = $"SELECT count(*) FROM {tableName} {sWhere}";
                 _lastQuery = sSQL;
-                using (IDbConnection db = new SqlConnection(DBConnectionString))
-                {
-                    return db.Query<int>(sSQL, commandTimeout: DefaultTimeOut).FirstOrDefault();
-                }
+                using IDbConnection db = new SqlConnection(DBConnectionString);
+                return db.Query<int>(sSQL, commandTimeout: DefaultTimeOut).FirstOrDefault();
             }
             catch (DbException ex)
             {
                 _lastError = ex.Message;
+                _errorLogger.LogError(ex.Message);
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
@@ -1106,14 +1066,13 @@ namespace AGenius.UsefulStuff.Helpers
                     throw new ArgumentException(_lastError);
                 }
 
-                using (IDbConnection db = new SqlConnection(DBConnectionString))
-                {
-                    return db.Update(Record, commandTimeout: DefaultTimeOut);
-                }
+                using IDbConnection db = new SqlConnection(DBConnectionString);
+                return db.Update(Record, commandTimeout: DefaultTimeOut);
             }
             catch (DbException ex)
             {
                 _lastError = ex.Message;
+                _errorLogger.LogError(ex.Message);
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
@@ -1174,25 +1133,22 @@ namespace AGenius.UsefulStuff.Helpers
                         }
                         update += $"SET {fieldsList}\r WHERE {IDField} = @{IDField}";
                         _lastQuery = update;
-                        using (IDbConnection db = new SqlConnection(DBConnectionString))
-                        {
-                            int rows = db.Execute(update, Record, commandTimeout: DefaultTimeOut);
-                            return rows != 0;
-                        }
+                        using IDbConnection db = new SqlConnection(DBConnectionString);
+                        int rows = db.Execute(update, Record, commandTimeout: DefaultTimeOut);
+                        return rows != 0;
                     }
                     return false;
                 }
                 else
                 {
-                    using (IDbConnection db = new SqlConnection(DBConnectionString))
-                    {
-                        return db.Update(Record, commandTimeout: DefaultTimeOut);
-                    }
+                    using IDbConnection db = new SqlConnection(DBConnectionString);
+                    return db.Update(Record, commandTimeout: DefaultTimeOut);
                 }
             }
             catch (DbException ex)
             {
                 _lastError = ex.Message;
+                _errorLogger.LogError(ex.Message);
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
@@ -1246,40 +1202,36 @@ namespace AGenius.UsefulStuff.Helpers
             if (id != null && values.Count > 0)
             {
                 string sql = $"UPDATE {TableName} SET {string.Join(",", names.Select(t => { t = $"{t} = @{t}"; return t; }))} WHERE ID=@id";
-                using (IDbConnection db = new SqlConnection(DBConnectionString))
+                using IDbConnection db = new SqlConnection(DBConnectionString);
+                using IDbCommand cmd = db.CreateCommand();
+                cmd.CommandText = sql;
+                cmd.CommandType = CommandType.Text;
+                cmd.CommandTimeout = DefaultTimeOut;
+                for (int i = 0; i < names.Count; i++)
                 {
-                    using (IDbCommand cmd = db.CreateCommand())
+                    IDbDataParameter p = cmd.CreateParameter();
+                    p.ParameterName = $"@{names[i]}";
+                    if (values[i] == null)
                     {
-                        cmd.CommandText = sql;
-                        cmd.CommandType = CommandType.Text;
-                        cmd.CommandTimeout = DefaultTimeOut;
-                        for (int i = 0; i < names.Count; i++)
-                        {
-                            IDbDataParameter p = cmd.CreateParameter();
-                            p.ParameterName = $"@{names[i]}";
-                            if (values[i] == null)
-                            {
-                                p.Value = DBNull.Value;
-                            }
-                            else
-                            {
-                                p.Value = values[i];
-                            }
-
-                            p.DbType = types[i];
-                            cmd.Parameters.Add(p);
-                        }
-                        // Add the id parameter
-                        IDbDataParameter pID = cmd.CreateParameter();
-                        pID.ParameterName = $"@id";
-                        pID.Value = id;
-                        pID.DbType = DbType.Int32;
-                        cmd.Parameters.Add(pID);
-                        //return db.Execute(sql,cmd) > 0 ? id : null;
-                        db.Open();
-                        return cmd.ExecuteNonQuery();
+                        p.Value = DBNull.Value;
                     }
+                    else
+                    {
+                        p.Value = values[i];
+                    }
+
+                    p.DbType = types[i];
+                    cmd.Parameters.Add(p);
                 }
+                // Add the id parameter
+                IDbDataParameter pID = cmd.CreateParameter();
+                pID.ParameterName = $"@id";
+                pID.Value = id;
+                pID.DbType = DbType.Int32;
+                cmd.Parameters.Add(pID);
+                //return db.Execute(sql,cmd) > 0 ? id : null;
+                db.Open();
+                return cmd.ExecuteNonQuery();
             }
             return null;
         }
@@ -1320,40 +1272,36 @@ namespace AGenius.UsefulStuff.Helpers
             if (id != null && values.Count > 0)
             {
                 string sql = $"UPDATE {TableName} SET {string.Join(",", names.Select(t => { t = $"{t} = @{t}"; return t; }))} WHERE ID=@id";
-                using (IDbConnection db = new SqlConnection(DBConnectionString))
+                using IDbConnection db = new SqlConnection(DBConnectionString);
+                using IDbCommand cmd = db.CreateCommand();
+                cmd.CommandText = sql;
+                cmd.CommandType = CommandType.Text;
+                cmd.CommandTimeout = DefaultTimeOut;
+                for (int i = 0; i < names.Count; i++)
                 {
-                    using (IDbCommand cmd = db.CreateCommand())
+                    IDbDataParameter p = cmd.CreateParameter();
+                    p.ParameterName = $"@{names[i]}";
+                    if (values[i] == null)
                     {
-                        cmd.CommandText = sql;
-                        cmd.CommandType = CommandType.Text;
-                        cmd.CommandTimeout = DefaultTimeOut;
-                        for (int i = 0; i < names.Count; i++)
-                        {
-                            IDbDataParameter p = cmd.CreateParameter();
-                            p.ParameterName = $"@{names[i]}";
-                            if (values[i] == null)
-                            {
-                                p.Value = DBNull.Value;
-                            }
-                            else
-                            {
-                                p.Value = values[i];
-                            }
-
-                            p.DbType = types[i];
-                            cmd.Parameters.Add(p);
-                        }
-                        // Add the id parameter
-                        IDbDataParameter pID = cmd.CreateParameter();
-                        pID.ParameterName = $"@id";
-                        pID.Value = id;
-                        pID.DbType = DbType.Int32;
-                        cmd.Parameters.Add(pID);
-                        //return db.Execute(sql,cmd) > 0 ? id : null;
-                        db.Open();
-                        return cmd.ExecuteNonQuery();
+                        p.Value = DBNull.Value;
                     }
+                    else
+                    {
+                        p.Value = values[i];
+                    }
+
+                    p.DbType = types[i];
+                    cmd.Parameters.Add(p);
                 }
+                // Add the id parameter
+                IDbDataParameter pID = cmd.CreateParameter();
+                pID.ParameterName = $"@id";
+                pID.Value = id;
+                pID.DbType = DbType.Int32;
+                cmd.Parameters.Add(pID);
+                //return db.Execute(sql,cmd) > 0 ? id : null;
+                db.Open();
+                return cmd.ExecuteNonQuery();
             }
             return null;
         }
@@ -1393,40 +1341,36 @@ namespace AGenius.UsefulStuff.Helpers
             if (values.Count > 0)
             {
                 string sql = $"UPDATE {TableName} SET {string.Join(",", names.Select(t => { t = $"{t} = @{t}"; return t; }))} WHERE {IDFieldName}=@id";
-                using (IDbConnection db = new SqlConnection(DBConnectionString))
+                using IDbConnection db = new SqlConnection(DBConnectionString);
+                using IDbCommand cmd = db.CreateCommand();
+                cmd.CommandText = sql;
+                cmd.CommandType = CommandType.Text;
+                cmd.CommandTimeout = DefaultTimeOut;
+                for (int i = 0; i < names.Count; i++)
                 {
-                    using (IDbCommand cmd = db.CreateCommand())
+                    IDbDataParameter p = cmd.CreateParameter();
+                    p.ParameterName = $"@{names[i]}";
+                    if (values[i] == null)
                     {
-                        cmd.CommandText = sql;
-                        cmd.CommandType = CommandType.Text;
-                        cmd.CommandTimeout = DefaultTimeOut;
-                        for (int i = 0; i < names.Count; i++)
-                        {
-                            IDbDataParameter p = cmd.CreateParameter();
-                            p.ParameterName = $"@{names[i]}";
-                            if (values[i] == null)
-                            {
-                                p.Value = DBNull.Value;
-                            }
-                            else
-                            {
-                                p.Value = values[i];
-                            }
-
-                            p.DbType = types[i];
-                            cmd.Parameters.Add(p);
-                        }
-                        // Add the id parameter
-                        IDbDataParameter pID = cmd.CreateParameter();
-                        pID.ParameterName = $"@id";
-                        pID.Value = id;
-                        pID.DbType = DbType.Int32;
-                        cmd.Parameters.Add(pID);
-                        //return db.Execute(sql,cmd) > 0 ? id : null;
-                        db.Open();
-                        return cmd.ExecuteNonQuery();
+                        p.Value = DBNull.Value;
                     }
+                    else
+                    {
+                        p.Value = values[i];
+                    }
+
+                    p.DbType = types[i];
+                    cmd.Parameters.Add(p);
                 }
+                // Add the id parameter
+                IDbDataParameter pID = cmd.CreateParameter();
+                pID.ParameterName = $"@id";
+                pID.Value = id;
+                pID.DbType = DbType.Int32;
+                cmd.Parameters.Add(pID);
+                //return db.Execute(sql,cmd) > 0 ? id : null;
+                db.Open();
+                return cmd.ExecuteNonQuery();
             }
             return null;
         }
@@ -1446,14 +1390,13 @@ namespace AGenius.UsefulStuff.Helpers
                     throw new ArgumentException(_lastError);
                 }
 
-                using (IDbConnection db = new SqlConnection(DBConnectionString))
-                {
-                    return db.Delete(Record, commandTimeout: DefaultTimeOut);
-                }
+                using IDbConnection db = new SqlConnection(DBConnectionString);
+                return db.Delete(Record, commandTimeout: DefaultTimeOut);
             }
             catch (DbException ex)
             {
                 _lastError = ex.Message;
+                _errorLogger.LogError(ex.Message);
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
@@ -1840,7 +1783,7 @@ namespace AGenius.UsefulStuff.Helpers
         {
             _lastError = "";
 
-            var properties = type.GetPropertiesWithAnnotations();            
+            var properties = type.GetPropertiesWithAnnotations();
             string tableName = type.Name;
             List<TableColumn> columns = new List<TableColumn>();
 
@@ -1935,6 +1878,7 @@ namespace AGenius.UsefulStuff.Helpers
             catch (Exception ex)
             {
                 _lastError = ex.Message;
+                _errorLogger.LogError(ex.Message);
             }
             return false;
         }

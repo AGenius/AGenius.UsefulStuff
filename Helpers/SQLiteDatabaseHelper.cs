@@ -9,6 +9,7 @@ using System.Reflection;
 using System.Runtime.Serialization;
 using System.Data.Common;
 using System.Text;
+using System.IO;
 //using System.Transactions;
 
 namespace AGenius.UsefulStuff.Helpers
@@ -18,6 +19,7 @@ namespace AGenius.UsefulStuff.Helpers
     /// </summary>
     public class SQLiteDatabaseHelper : IDisposable
     {
+        readonly Helpers.AGLogger.Logger _errorLogger = new Helpers.AGLogger.Logger(LogPath: Path.Combine(Utils.ApplicationPath, "Logs", "SQLIteDatabaseHelper_Errors.log"), AddTimeStamp: true, RolloverSubFolder: "Complete");
         /// <summary>The SQL Lite database file name used</summary>
         public string dbFilePath = "default.db3";
         /// <summary>Holds the db File Name</summary>
@@ -27,7 +29,7 @@ namespace AGenius.UsefulStuff.Helpers
         {
             get; set;
         }
-        /// <summary>Initializes a new instance of the <see cref="SQLiteDatabaseHelper"/> class </summary>
+        /// <summary>Initializes a new instance of the <see cref="SQLiteDatabaseHelper"/> class </summary>        
         public SQLiteDatabaseHelper()
         {
             DBConnectionString = "Data Source=" + dbFilePath;
@@ -63,16 +65,15 @@ namespace AGenius.UsefulStuff.Helpers
             }
             try
             {
-                using (IDbConnection db = new SQLiteConnection(DBConnectionString))
-                {
-                    return db.GetAll<TENTITY>().ToList();
-                }
+                using IDbConnection db = new SQLiteConnection(DBConnectionString);
+                return db.GetAll<TENTITY>().ToList();
             }
             catch (DbException ex)
             {
+                _lastError = ex.Message;
+                _errorLogger.LogError(ex.Message);
                 throw new DatabaseAccessHelperException(ex.Message);
             }
-
         }
 
         /// <summary>Return a single record for the specified ID </summary>
@@ -91,13 +92,13 @@ namespace AGenius.UsefulStuff.Helpers
                 {
                     throw new ArgumentException("Invalid ID specified");
                 }
-                using (IDbConnection db = new SQLiteConnection(DBConnectionString))
-                {
-                    return db.Get<TENTITY>(ID);
-                }
+                using IDbConnection db = new SQLiteConnection(DBConnectionString);
+                return db.Get<TENTITY>(ID);
             }
             catch (DbException ex)
             {
+                _lastError = ex.Message;
+                _errorLogger.LogError(ex.Message);
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
@@ -118,13 +119,13 @@ namespace AGenius.UsefulStuff.Helpers
                 {
                     throw new ArgumentException("Invalid ID specified");
                 }
-                using (IDbConnection db = new SQLiteConnection(DBConnectionString))
-                {
-                    return db.Get<TENTITY>(ID);
-                }
+                using IDbConnection db = new SQLiteConnection(DBConnectionString);
+                return db.Get<TENTITY>(ID);
             }
             catch (DbException ex)
             {
+                _lastError = ex.Message;
+                _errorLogger.LogError(ex.Message);
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
@@ -147,14 +148,13 @@ namespace AGenius.UsefulStuff.Helpers
                     _lastError = "Invalid ID specified";
                     throw new ArgumentException(_lastError);
                 }
-                using (IDbConnection db = new SQLiteConnection(DBConnectionString))
-                {
-                    return db.Get<TENTITY>(ID.ToString());
-                }
+                using IDbConnection db = new SQLiteConnection(DBConnectionString);
+                return db.Get<TENTITY>(ID.ToString());
             }
             catch (DbException ex)
             {
                 _lastError = ex.Message;
+                _errorLogger.LogError(ex.Message);
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
@@ -189,14 +189,13 @@ namespace AGenius.UsefulStuff.Helpers
 
                 string sSQL = $"SELECT * FROM {TableName} {sWhere}";
                 // var Results = null;
-                using (IDbConnection db = new SQLiteConnection(DBConnectionString))
-                {
-                    return db.Query<TENTITY>(sSQL).SingleOrDefault();
-                }
+                using IDbConnection db = new SQLiteConnection(DBConnectionString);
+                return db.Query<TENTITY>(sSQL).SingleOrDefault();
             }
             catch (DbException ex)
             {
                 _lastError = ex.Message;
+                _errorLogger.LogError(ex.Message);
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
@@ -230,14 +229,13 @@ namespace AGenius.UsefulStuff.Helpers
                 string sWhere = $"WHERE {keyFieldName} {operatorType} '{fieldValue}' ";
                 string sSQL = $"SELECT * FROM {TableName} {sWhere}";
                 // var Results = null;
-                using (IDbConnection db = new SQLiteConnection(DBConnectionString))
-                {
-                    return db.Query<TENTITY>(sSQL).SingleOrDefault();
-                }
+                using IDbConnection db = new SQLiteConnection(DBConnectionString);
+                return db.Query<TENTITY>(sSQL).SingleOrDefault();
             }
             catch (DbException ex)
             {
                 _lastError = ex.Message;
+                _errorLogger.LogError(ex.Message);
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
@@ -265,13 +263,13 @@ namespace AGenius.UsefulStuff.Helpers
                 // as this metod is to read 1 record we need to add a TOP 1
                 string sSQL = $"SELECT * FROM {TableName} {sWhere} LIMIT 1";
                 // var Results = null;
-                using (IDbConnection db = new SQLiteConnection(DBConnectionString))
-                {
-                    return db.Query<TENTITY>(sSQL).SingleOrDefault();
-                }
+                using IDbConnection db = new SQLiteConnection(DBConnectionString);
+                return db.Query<TENTITY>(sSQL).SingleOrDefault();
             }
             catch (DbException ex)
             {
+                _lastError = ex.Message;
+                _errorLogger.LogError(ex.Message);
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
@@ -295,14 +293,14 @@ namespace AGenius.UsefulStuff.Helpers
                     throw new ArgumentException("Connection String not set");
                 }
 
-                using (IDbConnection db = new SQLiteConnection(DBConnectionString))
-                {
-                    return db.Query<TENTITY>(SprocName, Params, commandType:
-                    CommandType.StoredProcedure).ToList();
-                }
+                using IDbConnection db = new SQLiteConnection(DBConnectionString);
+                return db.Query<TENTITY>(SprocName, Params, commandType:
+                CommandType.StoredProcedure).ToList();
             }
             catch (DbException ex)
             {
+                _lastError = ex.Message;
+                _errorLogger.LogError(ex.Message);
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
@@ -320,13 +318,13 @@ namespace AGenius.UsefulStuff.Helpers
                 {
                     throw new ArgumentException("Connection String not set");
                 }
-                using (IDbConnection db = new SQLiteConnection(DBConnectionString))
-                {
-                    return db.Query<TENTITY>(SQLQuery).ToList();
-                }
+                using IDbConnection db = new SQLiteConnection(DBConnectionString);
+                return db.Query<TENTITY>(SQLQuery).ToList();
             }
             catch (DbException ex)
             {
+                _lastError = ex.Message;
+                _errorLogger.LogError(ex.Message);
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
@@ -353,14 +351,13 @@ namespace AGenius.UsefulStuff.Helpers
 
                 string sSQL = $"SELECT * FROM {TableName} {sWhere}";
                 // var Results = null;
-                using (IDbConnection db = new SQLiteConnection(DBConnectionString))
-                {
-                    return db.Query<TENTITY>(sSQL).ToList();
-                }
-
+                using IDbConnection db = new SQLiteConnection(DBConnectionString);
+                return db.Query<TENTITY>(sSQL).ToList();
             }
             catch (DbException ex)
             {
+                _lastError = ex.Message;
+                _errorLogger.LogError(ex.Message);
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
@@ -395,14 +392,13 @@ namespace AGenius.UsefulStuff.Helpers
                 string sWhere = string.IsNullOrEmpty(Criteria) ? "" : $"WHERE {Criteria}";
 
                 string sSQL = $"SELECT {FieldName} FROM {tableName} {sWhere}";
-                using (IDbConnection db = new SQLiteConnection(DBConnectionString))
-                {
-                    return db.ExecuteScalar(sSQL);
-                }
+                using IDbConnection db = new SQLiteConnection(DBConnectionString);
+                return db.ExecuteScalar(sSQL);
             }
             catch (DbException ex)
             {
                 _lastError = ex.Message;
+                _errorLogger.LogError(ex.Message);
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
@@ -432,14 +428,13 @@ namespace AGenius.UsefulStuff.Helpers
                 string sWhere = string.IsNullOrEmpty(Criteria) ? "" : $"WHERE {Criteria}";
 
                 string sSQL = $"SELECT count(*) FROM {tableName} {sWhere}";
-                using (IDbConnection db = new SQLiteConnection(DBConnectionString))
-                {
-                    return db.Query<int>(sSQL).FirstOrDefault();
-                }
+                using IDbConnection db = new SQLiteConnection(DBConnectionString);
+                return db.Query<int>(sSQL).FirstOrDefault();
             }
             catch (DbException ex)
             {
                 _lastError = ex.Message;
+                _errorLogger.LogError(ex.Message);
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
@@ -457,14 +452,13 @@ namespace AGenius.UsefulStuff.Helpers
                     throw new ArgumentException("Connection String not set");
                 }
 
-                using (IDbConnection db = new SQLiteConnection(DBConnectionString))
-                {
-                    return db.Insert(Record);
-                }
-
+                using IDbConnection db = new SQLiteConnection(DBConnectionString);
+                return db.Insert(Record);
             }
             catch (DbException ex)
             {
+                _lastError = ex.Message;
+                _errorLogger.LogError(ex.Message);
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
@@ -515,20 +509,18 @@ namespace AGenius.UsefulStuff.Helpers
                     sbInsert.AppendLine($"INSERT INTO [{tableName}] ({colNames}) VALUES ({rowValues});");
                 }
 
-                using (var db = new SQLiteConnection(DBConnectionString))
-                {
-                    db.Open();
+                using var db = new SQLiteConnection(DBConnectionString);
+                db.Open();
 
-                    using (var transaction = db.BeginTransaction())
-                    {
-                        var affectedRows = db.Execute(sbInsert.ToString());
+                using var transaction = db.BeginTransaction();
+                var affectedRows = db.Execute(sbInsert.ToString());
 
-                        transaction.Commit();
-                    }
-                }
+                transaction.Commit();
             }
             catch (DbException ex)
             {
+                _lastError = ex.Message;
+                _errorLogger.LogError(ex.Message);
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
@@ -543,22 +535,22 @@ namespace AGenius.UsefulStuff.Helpers
             }
             try
             {
-                using (var db = new SQLiteConnection(DBConnectionString))
-                {
-                    db.Open();
-                    SQLiteCommand dbCommand = db.CreateCommand();
-                    dbCommand.CommandText = "SELECT * FROM " + tableName;
+                using var db = new SQLiteConnection(DBConnectionString);
+                db.Open();
+                SQLiteCommand dbCommand = db.CreateCommand();
+                dbCommand.CommandText = "SELECT * FROM " + tableName;
 
-                    SQLiteDataReader executeReader = dbCommand.ExecuteReader(CommandBehavior.SingleResult);
-                    DataTable dt = new DataTable();
-                    dt.Load(executeReader); // <-- FormatException
-                    db.Close();
-                    return dt;
-                }
+                SQLiteDataReader executeReader = dbCommand.ExecuteReader(CommandBehavior.SingleResult);
+                DataTable dt = new DataTable();
+                dt.Load(executeReader); // <-- FormatException
+                db.Close();
+                return dt;
 
             }
             catch (DbException ex)
             {
+                _lastError = ex.Message;
+                _errorLogger.LogError(ex.Message);
                 throw new DatabaseAccessHelperException(ex.Message);
             }
 
@@ -574,14 +566,14 @@ namespace AGenius.UsefulStuff.Helpers
                     throw new ArgumentException("Connection String not set");
                 }
 
-                using (IDbConnection db = new SQLiteConnection(DBConnectionString))
-                {
-                    db.Execute(sqlCmd);
-                }
+                using IDbConnection db = new SQLiteConnection(DBConnectionString);
+                db.Execute(sqlCmd);
 
             }
             catch (DbException ex)
             {
+                _lastError = ex.Message;
+                _errorLogger.LogError(ex.Message);
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
@@ -616,13 +608,13 @@ namespace AGenius.UsefulStuff.Helpers
                     throw new ArgumentException("Connection String not set");
                 }
 
-                using (IDbConnection db = new SQLiteConnection(DBConnectionString))
-                {
-                    return db.Update(Record);
-                }
+                using IDbConnection db = new SQLiteConnection(DBConnectionString);
+                return db.Update(Record);
             }
             catch (DbException ex)
             {
+                _lastError = ex.Message;
+                _errorLogger.LogError(ex.Message);
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
@@ -640,13 +632,13 @@ namespace AGenius.UsefulStuff.Helpers
                     throw new ArgumentException("Connection String not set");
                 }
 
-                using (IDbConnection db = new SQLiteConnection(DBConnectionString))
-                {
-                    return db.Delete(Record);
-                }
+                using IDbConnection db = new SQLiteConnection(DBConnectionString);
+                return db.Delete(Record);
             }
             catch (DbException ex)
             {
+                _lastError = ex.Message;
+                _errorLogger.LogError(ex.Message);
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
@@ -673,8 +665,10 @@ namespace AGenius.UsefulStuff.Helpers
                 return true;
             }
 
-            catch (Exception)
+            catch (Exception ex)
             {
+                _lastError = ex.Message;
+                _errorLogger.LogError(ex.Message);
                 return false;
             }
         }
@@ -693,8 +687,10 @@ namespace AGenius.UsefulStuff.Helpers
                 return true;
             }
 
-            catch (Exception)
+            catch (Exception ex)
             {
+                _lastError = ex.Message;
+                _errorLogger.LogError(ex.Message);
                 return false;
             }
         }
@@ -734,8 +730,10 @@ namespace AGenius.UsefulStuff.Helpers
                 }
                 return true;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _lastError = ex.Message;
+                _errorLogger.LogError(ex.Message);
                 return false;
             }
         }
@@ -765,6 +763,8 @@ namespace AGenius.UsefulStuff.Helpers
 
             catch (Exception ex)
             {
+                _lastError = ex.Message;
+                _errorLogger.LogError(ex.Message);
                 return false;
             }
         }
@@ -787,12 +787,11 @@ namespace AGenius.UsefulStuff.Helpers
                 var data = ColsTable.Select(string.Format("COLUMN_NAME='{1}' AND TABLE_NAME='{0}'", tableName, columnName));
 
                 return data.Length == 1;
-
-
             }
-
-            catch (Exception)
+            catch (Exception ex)
             {
+                _lastError = ex.Message;
+                _errorLogger.LogError(ex.Message);
                 return false;
             }
         }
