@@ -151,8 +151,18 @@ public class Logger
                             path = Path.Combine(Utils.ApplicationPath, path.TrimStart(Path.DirectorySeparatorChar));
                         }
 
-                        _logFileWithPath += path;
+                        _logFileWithPath = path;
                     }
+                    else
+                    {
+                        string path = kvp.Value;
+                        if (path.StartsWith(@"\"))
+                        {
+                            path = Path.Combine(Utils.ApplicationPath, path.TrimStart(Path.DirectorySeparatorChar));
+                        }
+                        _logFileWithPath = path;
+                    }
+
                     break;
 
                 case "file.sizelimitbytes":
