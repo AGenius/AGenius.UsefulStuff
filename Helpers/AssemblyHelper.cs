@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Diagnostics;
@@ -7,6 +8,8 @@ using System.Reflection;
 using System.Resources;
 using System.Runtime.InteropServices;
 using System.Security;
+using System.Text.RegularExpressions;
+using System.Xml.Linq;
 
 namespace AGenius.UsefulStuff.Helpers
 {
@@ -66,24 +69,26 @@ namespace AGenius.UsefulStuff.Helpers
             {
                 return attributeCollection;
             }
-
+            Regex r = new Regex(@"(\.Assembly|\.)(?<Name>[^.]*)Attribute$", RegexOptions.IgnoreCase);
             foreach (var attrib in assembly.GetCustomAttributes(false))
             {
                 string name = attrib.GetType().Name;
                 string value = GetAttributeValue(attrib);
+                string TypeName = attrib.GetType().ToString();
+                string rName = r.Match(TypeName).Groups["Name"].ToString();
 
-                if (!string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(value))
+                if (!string.IsNullOrEmpty(rName) && !string.IsNullOrEmpty(value))
                 {
-                    attributeCollection.Add(name, value);
+                    attributeCollection.Add(rName, value);
                 }
             }
 
             // Additional information not available in AssemblyInfo
+            attributeCollection.Add("FullName", assembly.FullName);
             attributeCollection.Add("CodeBase", GetSafeCodeBase(assembly));
             attributeCollection.Add("BuildDate", GetAssemblyBuildDate(assembly).ToString("yyyy-MM-dd hh:mm tt"));
             attributeCollection.Add("Location", GetSafeLocation(assembly));
             attributeCollection.Add("Version", assembly.GetName().Version?.ToString() ?? "(unknown)");
-            attributeCollection.Add("FullName", assembly.FullName);
 
             return attributeCollection;
         }
