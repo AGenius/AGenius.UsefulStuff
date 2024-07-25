@@ -1,247 +1,247 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
-using System.Text.RegularExpressions;
+using System.Resources;
+using System.Runtime.InteropServices;
+using System.Security;
 
 namespace AGenius.UsefulStuff.Helpers
 {
+    /// <summary>
+    /// This helper class provides methods to retrieve information about assemblies.
+    /// </summary>
     public static class AssemblyHelper
     {
-        public static string CallingAssemblyName;
-        public static Assembly EntryAssembly;
-        private static NameValueCollection _EntryAssemblyAttribCollection;
-        public static string EntryAssemblyName;
-        public static string ExecutingAssemblyName;
+        /// <summary>
+        /// Static fields to cache assembly information
+        /// </summary>
+        public static string CallingAssemblyName => Assembly.GetCallingAssembly().GetName().Name;
+        //public static Assembly EntryAssembly => Assembly.GetEntryAssembly();
+        private static Assembly _entryAssembly; // Backing field for EntryAssembly
+        /// <summary>
+        /// Retrieves the entry assembly for the current application domain.
+        /// </summary>
+        public static Assembly EntryAssembly
+        {
+            get { return _entryAssembly ?? (_entryAssembly = Assembly.GetEntryAssembly()); }
+            set { _entryAssembly = value; }
+        }
+        private static NameValueCollection _entryAssemblyAttribCollection;
 
+        /// <summary>
+        /// Properties to get commonly used assembly names
+        /// </summary>
+        public static string EntryAssemblyName => EntryAssembly?.GetName().Name ?? "(not available)";
+        /// <summary>
+        /// The Assembly Name
+        /// </summary>
+        public static string ExecutingAssemblyName => Assembly.GetExecutingAssembly().GetName().Name;
+
+        /// <summary>
+        /// Property to get attributes of the entry assembly
+        /// </summary>
         public static NameValueCollection EntryAssemblyAttribCollection
         {
             get
             {
-                if (_EntryAssemblyAttribCollection == null)
+                if (_entryAssemblyAttribCollection == null)
                 {
-                    _EntryAssemblyAttribCollection = AssemblyAttributes(EntryAssembly);
+                    _entryAssemblyAttribCollection = AssemblyAttributes(EntryAssembly);
                 }
-                return _EntryAssemblyAttribCollection;
+                return _entryAssemblyAttribCollection;
             }
         }
-        /// <summary>returns string name / string value pair of all attribs for specified assembly</summary>
-        public static NameValueCollection AssemblyAttributes(Assembly a)
+
+        /// <summary>
+        /// Retrieves all assembly attributes and their values for a specified assembly.
+        /// </summary>
+        public static NameValueCollection AssemblyAttributes(Assembly assembly)
         {
-            string TypeName;
-            string Name;
-            string Value;
-            NameValueCollection nvc = new NameValueCollection();
-            Regex r = new Regex(@"(\.Assembly|\.)(?<Name>[^.]*)Attribute$", RegexOptions.IgnoreCase);
-            foreach (object attrib in a.GetCustomAttributes(false))
+            var attributeCollection = new NameValueCollection();
+
+            if (assembly == null)
             {
-                TypeName = attrib.GetType().ToString();
-                Name = r.Match(TypeName).Groups["Name"].ToString();
-                Value = string.Empty;
-                switch (TypeName)
+                return attributeCollection;
+            }
+
+            foreach (var attrib in assembly.GetCustomAttributes(false))
+            {
+                string name = attrib.GetType().Name;
+                string value = GetAttributeValue(attrib);
+
+                if (!string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(value))
                 {
-                    case "System.CLSCompliantAttribute":
-                        Value = ((CLSCompliantAttribute)attrib).IsCompliant.ToString();
-                        break;
-                    case "System.Diagnostics.DebuggableAttribute":
-                        Value = ((System.Diagnostics.DebuggableAttribute)attrib).IsJITTrackingEnabled.ToString();
-                        break;
-                    case "System.Reflection.AssemblyCompanyAttribute":
-                        Value = ((AssemblyCompanyAttribute)attrib).Company.ToString();
-                        break;
-                    case "System.Reflection.AssemblyConfigurationAttribute":
-                        Value = ((AssemblyConfigurationAttribute)attrib).Configuration.ToString();
-                        break;
-                    case "System.Reflection.AssemblyCopyrightAttribute":
-                        Value = ((AssemblyCopyrightAttribute)attrib).Copyright.ToString();
-                        break;
-                    case "System.Reflection.AssemblyDefaultAliasAttribute":
-                        Value = ((AssemblyDefaultAliasAttribute)attrib).DefaultAlias.ToString();
-                        break;
-                    case "System.Reflection.AssemblyDelaySignAttribute":
-                        Value = ((AssemblyDelaySignAttribute)attrib).DelaySign.ToString();
-                        break;
-                    case "System.Reflection.AssemblyDescriptionAttribute":
-                        Value = ((AssemblyDescriptionAttribute)attrib).Description.ToString();
-                        break;
-                    case "System.Reflection.AssemblyInformationalVersionAttribute":
-                        Value = ((AssemblyInformationalVersionAttribute)attrib).InformationalVersion.ToString();
-                        break;
-                    case "System.Reflection.AssemblyKeyFileAttribute":
-                        Value = ((AssemblyKeyFileAttribute)attrib).KeyFile.ToString();
-                        break;
-                    case "System.Reflection.AssemblyProductAttribute":
-                        Value = ((AssemblyProductAttribute)attrib).Product.ToString();
-                        break;
-                    case "System.Reflection.AssemblyTrademarkAttribute":
-                        Value = ((AssemblyTrademarkAttribute)attrib).Trademark.ToString();
-                        break;
-                    case "System.Reflection.AssemblyTitleAttribute":
-                        Value = ((AssemblyTitleAttribute)attrib).Title.ToString();
-                        break;
-                    case "System.Resources.NeutralResourcesLanguageAttribute":
-                        Value = ((System.Resources.NeutralResourcesLanguageAttribute)attrib).CultureName.ToString();
-                        break;
-                    case "System.Resources.SatelliteContractVersionAttribute":
-                        Value = ((System.Resources.SatelliteContractVersionAttribute)attrib).Version.ToString();
-                        break;
-                    case "System.Runtime.InteropServices.ComCompatibleVersionAttribute":
-                        {
-                            System.Runtime.InteropServices.ComCompatibleVersionAttribute x;
-                            x = ((System.Runtime.InteropServices.ComCompatibleVersionAttribute)attrib);
-                            Value = x.MajorVersion + "." + x.MinorVersion + "." + x.RevisionNumber + "." + x.BuildNumber;
-                            break;
-                        }
-                    case "System.Runtime.InteropServices.ComVisibleAttribute":
-                        Value = ((System.Runtime.InteropServices.ComVisibleAttribute)attrib).Value.ToString();
-                        break;
-                    case "System.Runtime.InteropServices.GuidAttribute":
-                        Value = ((System.Runtime.InteropServices.GuidAttribute)attrib).Value.ToString();
-                        break;
-                    case "System.Runtime.InteropServices.TypeLibVersionAttribute":
-                        {
-                            System.Runtime.InteropServices.TypeLibVersionAttribute x;
-                            x = ((System.Runtime.InteropServices.TypeLibVersionAttribute)attrib);
-                            Value = x.MajorVersion + "." + x.MinorVersion;
-                            break;
-                        }
-                    case "System.Security.AllowPartiallyTrustedCallersAttribute":
-                        Value = "(Present)";
-                        break;
-                    default:
-                        // debug.writeline("** unknown assembly attribute '" + TypeName + "'")
-                        Value = TypeName;
-                        break;
-                }
-                if (nvc[Name] == null)
-                {
-                    nvc.Add(Name, Value);
+                    attributeCollection.Add(name, value);
                 }
             }
-            // add some extra values that are not in the AssemblyInfo, but nice to have
-            // codebase
+
+            // Additional information not available in AssemblyInfo
+            attributeCollection.Add("CodeBase", GetSafeCodeBase(assembly));
+            attributeCollection.Add("BuildDate", GetAssemblyBuildDate(assembly).ToString("yyyy-MM-dd hh:mm tt"));
+            attributeCollection.Add("Location", GetSafeLocation(assembly));
+            attributeCollection.Add("Version", assembly.GetName().Version?.ToString() ?? "(unknown)");
+            attributeCollection.Add("FullName", assembly.FullName);
+
+            return attributeCollection;
+        }
+
+        /// <summary>
+        /// Retrieves the build date of an assembly.
+        /// </summary>
+        public static DateTime GetAssemblyBuildDate(Assembly assembly)
+        {
+            Version version = assembly?.GetName().Version;
+            if (version == null)
+            {
+                return DateTime.MaxValue;
+            }
+
+            DateTime buildDate;
             try
             {
-                nvc.Add("CodeBase", a.CodeBase.Replace("file:///", string.Empty));
-            }
-            catch (NotSupportedException)
-            {
-                nvc.Add("CodeBase", "(not supported)");
-            }
-            // build date
-            DateTime dt = AssemblyBuildDate(a, true);
-            if (dt == DateTime.MaxValue)
-            {
-                nvc.Add("BuildDate", "(unknown)");
-            }
-            else
-            {
-                nvc.Add("BuildDate", dt.ToString("yyyy-MM-dd hh:mm tt"));
-            }
-            // location
-            try
-            {
-                nvc.Add("Location", a.Location);
-            }
-            catch (NotSupportedException)
-            {
-                nvc.Add("Location", "(not supported)");
-            }
-            // version
-            try
-            {
-                if (a.GetName().Version.Major == 0 && a.GetName().Version.Minor == 0)
+                buildDate = new DateTime(2000, 1, 1).AddDays(version.Build).AddSeconds(version.Revision * 2);
+                if (TimeZone.IsDaylightSavingTime(buildDate, TimeZone.CurrentTimeZone.GetDaylightChanges(buildDate.Year)))
                 {
-                    nvc.Add("Version", "(unknown)");
-                }
-                else
-                {
-                    nvc.Add("Version", a.GetName().Version.ToString());
+                    buildDate = buildDate.AddHours(1);
                 }
             }
             catch (Exception)
             {
-                nvc.Add("Version", "(unknown)");
+                buildDate = DateTime.MaxValue;
             }
-            nvc.Add("FullName", a.FullName);
-            return nvc;
-        }
-        /// <summary> returns DateTime this Assembly was last built. Will attempt to calculate from build number, if possible. 
-        /// If not, the actual LastWriteTime on the assembly file will be returned.</summary>
-        /// <param name="a">Assembly to get build date for</param>
-        /// <param name="ForceFileDate">Don't attempt to use the build number to calculate the date</param>
-        /// <returns>DateTime this assembly was last built</returns>
-        public static DateTime AssemblyBuildDate(Assembly a, bool ForceFileDate)
-        {
-            Version AssemblyVersion = a.GetName().Version;
-            DateTime dt;
-            if (ForceFileDate)
-            {
-                dt = AssemblyLastWriteTime(a);
-            }
-            else
-            {
-                dt = DateTime.Parse("01/01/2000").AddDays(AssemblyVersion.Build).AddSeconds(AssemblyVersion.Revision * 2);
-                if (TimeZone.IsDaylightSavingTime(dt, TimeZone.CurrentTimeZone.GetDaylightChanges(dt.Year)))
-                {
-                    dt = dt.AddHours(1);
-                }
-                if (dt > DateTime.Now || AssemblyVersion.Build < 730 || AssemblyVersion.Revision == 0)
-                {
-                    dt = AssemblyLastWriteTime(a);
-                }
-            }
-            return dt;
+
+            return buildDate;
         }
 
-        /// <summary> exception-safe retrieval of LastWriteTime for this assembly.</summary>
-        /// <returns>File.GetLastWriteTime, or DateTime.MaxValue if exception was encountered.</returns>
-        public static DateTime AssemblyLastWriteTime(Assembly a)
+        /// <summary>
+        /// Retrieves the last write time of the assembly file.
+        /// </summary>
+        public static DateTime GetAssemblyLastWriteTime(Assembly assembly)
         {
             try
             {
-                if (a.Location == null || a.Location == string.Empty)
+                string location = assembly?.Location;
+                if (string.IsNullOrEmpty(location))
                 {
                     return DateTime.MaxValue;
                 }
 
-                try
-                {
-                    return File.GetLastWriteTime(a.Location);
-                }
-                catch (Exception)
-                {
-                    return DateTime.MaxValue;
-                }
+                return File.GetLastWriteTime(location);
             }
             catch (Exception)
             {
                 return DateTime.MaxValue;
             }
         }
+
         /// <summary>
-        /// retrieves a cached value from the entry assembly attribute lookup collection
+        /// Retrieves a specific attribute value safely.
         /// </summary>
-        public static string EntryAssemblyAttrib(string strName)
+        private static string GetAttributeValue(object attribute)
         {
-            if (EntryAssemblyAttribCollection[strName] == null)
+            switch (attribute)
             {
-                return "<Assembly: Assembly" + strName + "(\"\")>";
+                case CLSCompliantAttribute attr:
+                    return attr.IsCompliant.ToString();
+                case DebuggableAttribute attr:
+                    return attr.IsJITTrackingEnabled.ToString();
+                case AssemblyCompanyAttribute attr:
+                    return attr.Company;
+                case AssemblyConfigurationAttribute attr:
+                    return attr.Configuration;
+                case AssemblyCopyrightAttribute attr:
+                    return attr.Copyright;
+                case AssemblyDefaultAliasAttribute attr:
+                    return attr.DefaultAlias;
+                case AssemblyDelaySignAttribute attr:
+                    return attr.DelaySign.ToString();
+                case AssemblyDescriptionAttribute attr:
+                    return attr.Description;
+                case AssemblyInformationalVersionAttribute attr:
+                    return attr.InformationalVersion;
+                case AssemblyKeyFileAttribute attr:
+                    return attr.KeyFile;
+                case AssemblyProductAttribute attr:
+                    return attr.Product;
+                case AssemblyTrademarkAttribute attr:
+                    return attr.Trademark;
+                case AssemblyTitleAttribute attr:
+                    return attr.Title;
+                case NeutralResourcesLanguageAttribute attr:
+                    return attr.CultureName;
+                case SatelliteContractVersionAttribute attr:
+                    return attr.Version;
+                case ComVisibleAttribute attr:
+                    return attr.Value.ToString();
+                case GuidAttribute attr:
+                    return attr.Value;
+                case TypeLibVersionAttribute attr:
+                    return $"{attr.MajorVersion}.{attr.MinorVersion}";
+                case AllowPartiallyTrustedCallersAttribute:
+                    return "(Present)";
+                default:
+                    return attribute.GetType().Name;
+            }
+        }
+
+        /// <summary>
+        /// Safely retrieves the CodeBase of an assembly.
+        /// </summary>
+        private static string GetSafeCodeBase(Assembly assembly)
+        {
+            try
+            {
+                return assembly?.CodeBase?.Replace("file:///", string.Empty) ?? "(not supported)";
+            }
+            catch (NotSupportedException)
+            {
+                return "(not supported)";
+            }
+        }
+
+        /// <summary>
+        /// Safely retrieves the Location of an assembly.
+        /// </summary>
+        private static string GetSafeLocation(Assembly assembly)
+        {
+            try
+            {
+                return assembly?.Location ?? "(not supported)";
+            }
+            catch (NotSupportedException)
+            {
+                return "(not supported)";
+            }
+        }
+
+        /// <summary>
+        /// Retrieves a cached value from the entry assembly attribute lookup collection.
+        /// </summary>
+        public static string EntryAssemblyAttrib(string attributeName)
+        {
+            if (EntryAssemblyAttribCollection[attributeName] == null)
+            {
+                return $"<Assembly: Assembly{attributeName}(\"\")>";
             }
             else
             {
-                return EntryAssemblyAttribCollection[strName].ToString();
+                return EntryAssemblyAttribCollection[attributeName];
             }
         }
 
-        /// <summary>returns the entry assembly for the current application domain</summary>
-        /// <remarks>This is usually read-only, but in some weird cases (Smart Client apps) 
-        /// you won't have an entry assembly, so you may want to set this manually. </remarks>
+        /// <summary>
+        /// Retrieves the entry assembly for the current application domain.
+        /// </summary>
+        /// <remarks>
+        /// This is usually read-only, but in some cases, you may want to set this manually.
+        /// </remarks>
         public static Assembly AppEntryAssembly
         {
-            get { return AssemblyHelper.EntryAssembly; }
-            set { AssemblyHelper.EntryAssembly = value; }
+            get { return EntryAssembly; }
+            set { EntryAssembly = value; }
         }
-
     }
 }
