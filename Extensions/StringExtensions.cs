@@ -654,7 +654,7 @@ namespace AGenius.UsefulStuff
                     }
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 throw;
             }

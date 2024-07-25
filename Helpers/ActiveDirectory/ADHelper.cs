@@ -49,13 +49,11 @@ namespace AGenius.UsefulStuff.Helpers.ActiveDirectory
         {
             try
             {
-                using (PrincipalContext pc = new PrincipalContext(ContextType.Domain, domainName, "ou=users,ou=system", $"uid={adUser},ou=system", adPassowrd))
-                {
-                    // validate the credentials
-                    return pc.ValidateCredentials(userName, password);
-                }
+                using PrincipalContext pc = new PrincipalContext(ContextType.Domain, domainName, "ou=users,ou=system", $"uid={adUser},ou=system", adPassowrd);
+                // validate the credentials
+                return pc.ValidateCredentials(userName, password);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return false;
             }
@@ -79,7 +77,7 @@ namespace AGenius.UsefulStuff.Helpers.ActiveDirectory
             }
         }
 
-        private static Boolean CheckMember(List<string> userGroups, string theGroup)
+        private static bool CheckMember(List<string> userGroups, string theGroup)
         {
             foreach (string grp in userGroups)
             {
@@ -219,7 +217,7 @@ namespace AGenius.UsefulStuff.Helpers.ActiveDirectory
                 result = searcher.FindOne();
 
             }
-            catch (Exception ex)
+            catch (Exception)
             {
 
             }
@@ -296,7 +294,7 @@ namespace AGenius.UsefulStuff.Helpers.ActiveDirectory
             PrincipalContext principalContext = new PrincipalContext(ContextType.Domain, domainName, adUserName, adPassword);
             GroupPrincipal group = GroupPrincipal.FindByIdentity(principalContext, GroupName);
 
-            foreach (UserPrincipal principal in group.Members)
+            foreach (UserPrincipal principal in group.Members.Cast<UserPrincipal>())
             {
                 ADUser userItem = new ADUser();
                 userItem.AccountName = principal.SamAccountName;
@@ -308,6 +306,13 @@ namespace AGenius.UsefulStuff.Helpers.ActiveDirectory
             }
 
             return userNames;
+        }
+        public static PrincipalCollection GetADUsersRecords(string domainName, string adUserName, string adPassword, string GroupName = null)
+        {
+            PrincipalContext principalContext = new PrincipalContext(ContextType.Domain, domainName, adUserName, adPassword);
+            GroupPrincipal group = GroupPrincipal.FindByIdentity(principalContext, GroupName);
+
+            return group.Members;
         }
     }
 }
