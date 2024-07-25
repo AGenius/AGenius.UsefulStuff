@@ -47,12 +47,12 @@ namespace AGenius.UsefulStuff
         {
             var parts = str.Split(',');
             return new Font(
-                parts[1],                                                   // FontFamily.Name
-                float.Parse(parts[2]),                                      // Size
-                parts[3].ToEnum<FontStyle>(),                               // Style
-                parts[4].ToEnum<GraphicsUnit>(),                            // Unit
-                byte.Parse(parts[5]),                                       // GdiCharSet
-                bool.Parse(parts[6])                                        // GdiVerticalFont
+                parts[1],                                                       // FontFamily.Name
+                float.Parse(parts[2]),                                          // Size
+                (FontStyle)parts[3].ToEnum<FontStyle>(FontStyle.Regular),       // Style
+                (GraphicsUnit)parts[4].ToEnum<GraphicsUnit>(GraphicsUnit.Point),
+                byte.Parse(parts[5]),                                           // GdiCharSet
+                bool.Parse(parts[6])                                            // GdiVerticalFont
             );
         }
         /// <summary>
