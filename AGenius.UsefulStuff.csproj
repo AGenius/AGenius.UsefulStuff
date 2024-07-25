@@ -2,7 +2,7 @@
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
-   <LangVersion>latest</LangVersion>
+    <LangVersion>latest</LangVersion>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{0B7CC724-52C5-4B8F-A028-91E6226F7922}</ProjectGuid>
@@ -95,14 +95,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Extensions\AGLogger\RollingIntervalExtensions.cs" />
+    <Compile Include="Helpers\AGLogger\RollingIntervalExtensions.cs" />
     <Compile Include="Extensions\ControlExtensions.cs" />
     <Compile Include="Extensions\FontExtensions.cs" />
     <Compile Include="Extensions\FormExtensions.cs" />
     <Compile Include="Extensions\ImageExtensions.cs" />
     <Compile Include="Helpers\ActiveDirectory\ADHelper.cs" />
     <Compile Include="Helpers\ActiveDirectory\Model\ADUser.cs" />
-    <Compile Include="Helpers\AGLogger.cs" />
+    <Compile Include="Helpers\AGLogger\AGLogger.cs" />
+    <Compile Include="Helpers\AGLogger\LogEventLevel.cs" />
+    <Compile Include="Helpers\AGLogger\RollingInterval.cs" />
     <Compile Include="Helpers\ImageBuildProperties.cs" />
     <Compile Include="Helpers\ODBCDatabaseHelper.cs" />
     <Compile Include="Helpers\MimeTypesList.cs" />
@@ -188,6 +190,9 @@
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe">
       <Version>6.0.0</Version>
     </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Extensions\AGLogger\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.114.0\build\net46\Stub.System.Data.SQLite.Core.NetFramework.targets" Condition="Exists('packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.114.0\build\net46\Stub.System.Data.SQLite.Core.NetFramework.targets')" />
