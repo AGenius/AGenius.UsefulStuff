@@ -1837,7 +1837,7 @@ namespace AGenius.UsefulStuff.Helpers
                         {
                             COLUMN_NAME = prop.PropertyName,
                             DATA_TYPE = SQLDataTypeHelper.GetSqlDbType(prop.PropertyType, unincode).ToString(),
-                            ALLOW_NULL = (isID ? false : !isRequired),
+                            ALLOW_NULL = (!isID && !isRequired),
                             IDENTITY = (databaseGeneratedAttribute != null && databaseGeneratedAttribute.DatabaseGeneratedOption == DatabaseGeneratedOption.Identity),
                             CHARACTER_MAXIMUM_LENGTH = 0,
                             ORDINAL_POSITION = 0,
@@ -1852,8 +1852,9 @@ namespace AGenius.UsefulStuff.Helpers
                             }
                             if (columnAttribute.TypeName != null && columnAttribute.TypeName.Contains("(") & columnAttribute.TypeName.Contains(")"))
                             {
-                                col.CHARACTER_MAXIMUM_LENGTH = int.Parse(columnAttribute.TypeName.GetBetween("(", ")"));
-                                col.DATA_TYPE = col.DATA_TYPE.Replace($"({col.CHARACTER_MAXIMUM_LENGTH})", "");
+                                string lenData = columnAttribute.TypeName.GetBetween("(", ")");
+                                col.CHARACTER_MAXIMUM_LENGTH = lenData.IsAllNumber() ? int.Parse(columnAttribute.TypeName.GetBetween("(", ")")) : 0;
+                                col.DATA_TYPE = col.DATA_TYPE.Replace($"({lenData})", "");
                             }
                         }
                         // hack to change varchar to nvarchar and datetime2 to datetime
@@ -1873,8 +1874,10 @@ namespace AGenius.UsefulStuff.Helpers
             {
                 CreateTable(tableName, columns, collation: collation);
                 string lastQuery = _lastQuery; // Preserve Query to be returned after exist test
+                string lastError = _lastError; // Preserve error to be returned after exist test
                 var exists = TableExists(tableName);
                 _lastQuery = lastQuery;
+                _lastError = lastError;
                 if (exists)
                 {
                     return true;
