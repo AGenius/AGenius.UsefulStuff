@@ -1642,38 +1642,45 @@ namespace AGenius.UsefulStuff.Helpers
             }
             createSQL.AppendLine($"CREATE TABLE [{schemaName}].[{tableName}] ");
             createSQL.AppendLine($"    ( ");
-            createSQL.Append($"        [{idColName}]");
-            if (maxNameWidth > 0)
+            if (!string.IsNullOrEmpty(idColName))
             {
-                // pad spaces
-                int diff = maxNameWidth - idColName.Length + 2;
-                createSQL.Append(' ', diff);
+                createSQL.Append($"        [{idColName}]");
+
+                if (maxNameWidth > 0)
+                {
+                    // pad spaces
+                    int diff = maxNameWidth - idColName.Length + 2;
+                    createSQL.Append(' ', diff);
+                }
+                else
+                {
+                    createSQL.Append(' ');
+                }
+                createSQL.Append($"[{idColType.ToUpper()}] ");
+                if (maxTypeWidth > 0)
+                {
+                    // pad spaces
+                    int diff = maxTypeWidth - idColType.Length;
+                    createSQL.Append(' ', diff);
+                }
+                else
+                {
+                    createSQL.Append(' ');
+                }
+                createSQL.Append($" {(isIdentity ? "NOT NULL IDENTITY" : "NULL")} (1, 1), ");
             }
-            else
-            {
-                createSQL.Append(' ');
-            }
-            createSQL.Append($"[{idColType.ToUpper()}] ");
-            if (maxTypeWidth > 0)
-            {
-                // pad spaces
-                int diff = maxTypeWidth - idColType.Length;
-                createSQL.Append(' ', diff);
-            }
-            else
-            {
-                createSQL.Append(' ');
-            }
-            createSQL.Append($" {(isIdentity ? "NOT NULL IDENTITY" : "NULL")} (1, 1), ");
             createSQL.AppendLine();
             createSQL.AppendLine($"{colDetail} ");
             createSQL.AppendLine($"    )  ON [PRIMARY]");
-            createSQL.AppendLine($"ALTER TABLE [{schemaName}].[{tableName}]");
-            createSQL.AppendLine($"ADD  ");
-            createSQL.AppendLine($"    CONSTRAINT PK_{tableName}");
-            createSQL.AppendLine($"    PRIMARY KEY CLUSTERED ([{idColName}])");
-            createSQL.AppendLine($"    WITH( STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY];");
-            createSQL.AppendLine($"ALTER TABLE [{schemaName}].[{tableName}] SET (LOCK_ESCALATION = TABLE); ");
+            if (!string.IsNullOrEmpty(idColName))
+            {
+                createSQL.AppendLine($"ALTER TABLE [{schemaName}].[{tableName}]");
+                createSQL.AppendLine($"ADD  ");
+                createSQL.AppendLine($"    CONSTRAINT PK_{tableName}");
+                createSQL.AppendLine($"    PRIMARY KEY CLUSTERED ([{idColName}])");
+                createSQL.AppendLine($"    WITH( STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY];");
+                createSQL.AppendLine($"ALTER TABLE [{schemaName}].[{tableName}] SET (LOCK_ESCALATION = TABLE); ");
+            }
             createSQL.AppendLine($"COMMIT; ");
             try
             {
