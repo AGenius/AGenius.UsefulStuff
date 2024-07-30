@@ -16,7 +16,10 @@ public class Logger
 {
     internal string _logPath { get; set; }
     internal string _logFileName { get; set; }
-    Dictionary<string, string> _appliedSettings = new Dictionary<string, string>();
+    internal Dictionary<string, string> _appliedSettings = new Dictionary<string, string>();
+    /// <summary>
+    /// Exposes the logger settings provides from the appSettings section (if applicable)
+    /// </summary>
     public Dictionary<string, string> AppliedSettings { get { return _appliedSettings; } }
     bool _loggerCreated;
     string _settingPrefix;
@@ -99,8 +102,7 @@ public class Logger
     }
     /// <summary>
     /// Create an instance of the AGLogger
-    /// </summary>
-    /// <remarks>Apply settings from app.config</remarks>
+    /// </summary>    
     public Logger()
     {
         _nextCheckpoint = GetNextCheckpoint(DateTime.Now);
@@ -110,7 +112,7 @@ public class Logger
     /// </summary>
     /// <param name="settingPrefix">override the prefix for the settings - default:"aglog:" </param>
     /// <remarks>Apply settings from app.config</remarks>
-    public Logger CreateLogger(string settingPrefix = "aglog:")
+    public Logger CreateLogger(string settingPrefix = "aglog")
     {
         if (_loggerCreated) throw new InvalidOperationException("CreateAGLogger() was previously called and can only be called once.");
         _loggerCreated = true;
@@ -162,7 +164,6 @@ public class Logger
                         }
                         _logFileWithPath = path;
                     }
-
                     break;
 
                 case "file.sizelimitbytes":
@@ -227,8 +228,7 @@ public class Logger
 
             }
         }
-
-        return new Logger(LogPath: _logFileWithPath,
+        var newLogger = new Logger(LogPath: _logFileWithPath,
             AddTimeStamp: _addTimeStamp,
             MaxLogFileSize: _maxLogFileSize,
             logEventLevel: _logLevel,
@@ -239,6 +239,8 @@ public class Logger
             RolloverSubFolder: _rolloverSubfolderName
 
             );
+        newLogger._appliedSettings = _appliedSettings;
+        return newLogger;
     }
     /// <summary>Write to a text log file.</summary>
     /// <param name="EventText">The string message to write</param>
