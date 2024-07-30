@@ -1804,6 +1804,7 @@ namespace AGenius.UsefulStuff.Helpers
                 {
                     bool NotMappedAttribute = false;
                     bool isID = false;
+                    bool isRequired = false;
                     ColumnAttribute columnAttribute = null;
                     DatabaseGeneratedAttribute databaseGeneratedAttribute = null;
                     foreach (var att in prop.Attributes)
@@ -1823,6 +1824,9 @@ namespace AGenius.UsefulStuff.Helpers
                             case "KeyAttribute":
                                 isID = true;
                                 break;
+                            case "RequiredAttribute":
+                                isRequired = true;
+                                break;
                             default:
                                 break;
                         }
@@ -1833,12 +1837,13 @@ namespace AGenius.UsefulStuff.Helpers
                         {
                             COLUMN_NAME = prop.PropertyName,
                             DATA_TYPE = SQLDataTypeHelper.GetSqlDbType(prop.PropertyType, unincode).ToString(),
-                            ALLOW_NULL = prop.PropertyType.Name.Contains("Nullable"),
+                            ALLOW_NULL = (isID ? false : !isRequired),
                             IDENTITY = (databaseGeneratedAttribute != null && databaseGeneratedAttribute.DatabaseGeneratedOption == DatabaseGeneratedOption.Identity),
                             CHARACTER_MAXIMUM_LENGTH = 0,
                             ORDINAL_POSITION = 0,
                             IS_ID = isID
                         };
+                        //prop.PropertyType.Name.Contains("Nullable")
                         if (columnAttribute != null)
                         {
                             if (columnAttribute.TypeName != null)
