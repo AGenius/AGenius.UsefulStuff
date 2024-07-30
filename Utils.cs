@@ -600,11 +600,28 @@ namespace AGenius.UsefulStuff
         /// <summary>Return a random number </summary>
         /// <param name="min"></param>
         /// <param name="max"></param>
-        /// <returns></returns>
+        /// <returns>Random integer between min and max</returns>
         public static int RandomNumber(int min, int max)
         {
+            if (min > max)
+            {
+                throw new ArgumentException("min must be less than or equal to max");
+            }
             Random random = new Random();
             return random.Next(min, max);
+        }
+        /// <summary>Return a random number </summary>
+        /// <param name="min"></param>
+        /// <param name="max"></param>
+        /// <returns>Random double between min and max</returns>
+        public static double RandomNumber(double min, double max)
+        {
+            if (min > max)
+            {
+                throw new ArgumentException("min must be less than or equal to max");
+            }
+            Random random = new Random();
+            return random.NextDouble() * (max - min) + min;
         }
 
         /// <summary>Unscramble a string that was previously scrambled - Default Seed </summary>
