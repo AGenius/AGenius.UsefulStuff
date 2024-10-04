@@ -19,6 +19,9 @@ using static AGenius.UsefulStuff.ObjectExtensions;
 using System.Runtime.InteropServices;
 using System.Web;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.Menu;
+using AGenius.UsefulStuff.Helpers;
+using static Dapper.Contrib.Extensions.SqlMapperExtensions;
+using System.Security.Cryptography;
 
 namespace AGenius.UsefulStuff
 {
@@ -78,6 +81,10 @@ namespace AGenius.UsefulStuff
         /// <returns>true/false <see cref="bool"/></returns>
         public static bool isExeRunning(string FullPath)
         {
+            if (string.IsNullOrEmpty(FullPath))
+            {
+                throw new ArgumentNullException("Property cannot be empty");
+            }
             try
             {
                 string FilePath = Path.GetDirectoryName(FullPath);
@@ -108,8 +115,12 @@ namespace AGenius.UsefulStuff
         /// <param name="sourceDirName">The Source Directory Path</param>
         /// <param name="destDirName">The Target Directory Path</param>
         /// <param name="copySubDirs">Set true if you want all sub directories also copied.</param>
-        public static void DirectoryCopy(string sourceDirName, string destDirName, bool copySubDirs)
+        public static void DirectoryCopy(string sourceDirName, string destDirName, bool copySubDirs = false)
         {
+            if (string.IsNullOrEmpty(sourceDirName) || string.IsNullOrEmpty(destDirName))
+            {
+                throw new ArgumentNullException("Property cannot be empty");
+            }
             // Get the subdirectories for the specified directory.
             DirectoryInfo dir = new DirectoryInfo(sourceDirName);
 
@@ -150,6 +161,10 @@ namespace AGenius.UsefulStuff
         /// <returns>ByteArray</returns>
         public static byte[] imageToByteArray(Image imageIn)
         {
+            if (imageIn == null)
+            {
+                throw new ArgumentNullException("Image not supplied");
+            }
             using MemoryStream memoryStream = new MemoryStream();
             imageIn.Save(memoryStream, System.Drawing.Imaging.ImageFormat.Gif);
             return memoryStream.ToArray();
@@ -159,6 +174,10 @@ namespace AGenius.UsefulStuff
         /// <returns>ByteArray</returns>
         public static byte[] imageToByteArray(string imagePath)
         {
+            if (string.IsNullOrEmpty(imagePath))
+            {
+                throw new ArgumentNullException("Path cannot be empty");
+            }
             using Image image = Image.FromFile(imagePath);
             using MemoryStream memoryStream = new MemoryStream();
             image.Save(memoryStream, image.RawFormat);
@@ -169,12 +188,15 @@ namespace AGenius.UsefulStuff
         /// <returns>Image Object</returns>
         public static Image byteArrayToImage(byte[] byteArrayIn)
         {
+            if (byteArrayIn == null || byteArrayIn.Length == 0)
+            {
+                throw new ArgumentNullException("Array not supplied");
+            }
             using MemoryStream memoryStream = new MemoryStream(byteArrayIn);
             return Image.FromStream(memoryStream);
         }
 
         #region Scramble Methods       
-
 
         private static string _ApplicationPath;
         /// <summary>The path to the assembly</summary>
@@ -187,6 +209,10 @@ namespace AGenius.UsefulStuff
                 {
                     _ApplicationPath = Directory.GetParent(System.Reflection.Assembly.GetEntryAssembly().Location).FullName;
                 }
+                else
+                {
+                    _ApplicationPath = AppDomain.CurrentDomain.BaseDirectory;
+                }
                 return _ApplicationPath;
             }
             set
@@ -194,7 +220,6 @@ namespace AGenius.UsefulStuff
                 _ApplicationPath = value;
             }
         }
-
         /// <summary>
         /// Return a DateTime derived from a Unix Epoch time (seconds from 01/01/1970
         /// </summary>
@@ -204,7 +229,6 @@ namespace AGenius.UsefulStuff
         {
             return new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(unixTime);
         }
-
         /// <summary>
         /// Handle a list of enums
         /// </summary>
@@ -539,7 +563,7 @@ namespace AGenius.UsefulStuff
         /// <param name="searchOption">The required search option <see cref="SearchOption"/></param>
         /// <param name="ignoreThese">List of file names to be ignored</param>
         /// <returns></returns>
-        public static List<string> GetFilesList(string rootPath, string fileExt, SearchOption searchOption, List<string> ignoreThese = null)
+        public static List<string> GetFilesList(string rootPath, string fileExt = "*.*", SearchOption searchOption = SearchOption.TopDirectoryOnly, List<string> ignoreThese = null)
         {
             if (!Directory.Exists(rootPath.ToLower()))
             {
@@ -600,13 +624,29 @@ namespace AGenius.UsefulStuff
         /// <summary>Return a random number </summary>
         /// <param name="min"></param>
         /// <param name="max"></param>
-        /// <returns></returns>
+        /// <returns>Random integer between min and max</returns>
         public static int RandomNumber(int min, int max)
         {
+            if (min > max)
+            {
+                throw new ArgumentException("min must be less than or equal to max");
+            }
             Random random = new Random();
             return random.Next(min, max);
         }
-
+        /// <summary>Return a random number </summary>
+        /// <param name="min"></param>
+        /// <param name="max"></param>
+        /// <returns>Random double between min and max</returns>
+        public static double RandomNumber(double min, double max)
+        {
+            if (min > max)
+            {
+                throw new ArgumentException("min must be less than or equal to max");
+            }
+            Random random = new Random();
+            return random.NextDouble() * (max - min) + min;
+        }
         /// <summary>Unscramble a string that was previously scrambled - Default Seed </summary>
         /// <param name="ScrambledString">String to UnScramble</param>
         public static string UnScrambleString(string ScrambledString)
@@ -825,6 +865,10 @@ namespace AGenius.UsefulStuff
         /// <returns>JSON String</returns>
         public static string SerializeObject<TENTITY>(TENTITY objectRecord)
         {
+            if (objectRecord == null)
+            {
+                throw new ArgumentNullException("Entoty not supplied");
+            }
             string serialVersion = JsonConvert.SerializeObject(objectRecord, Formatting.Indented, new JsonSerializerSettings()
             {
                 ReferenceLoopHandling = ReferenceLoopHandling.Error
@@ -865,6 +909,10 @@ namespace AGenius.UsefulStuff
         /// <returns>Object of type TENTITY</returns>
         public static TENTITY DeSerializeObject<TENTITY>(string serializedString)
         {
+            if (string.IsNullOrEmpty(serializedString))
+            {
+                throw new ArgumentNullException("Property cannot be empty");
+            }
             return JsonConvert.DeserializeObject<TENTITY>(serializedString);
         }
         /// <summary>
@@ -874,6 +922,10 @@ namespace AGenius.UsefulStuff
         /// <returns>string containing the JSON object</returns>
         public static string JWTtoJSON(string JWTTokenString)
         {
+            if (string.IsNullOrEmpty(JWTTokenString))
+            {
+                throw new ArgumentNullException("String cannot be empty");
+            }
             var jwtHandler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
 
             //Check if readable token (string is in a JWT format)            
@@ -904,6 +956,10 @@ namespace AGenius.UsefulStuff
         /// <returns>Formatted JSON</returns>
         public static string JsonPrettify(string json)
         {
+            if (string.IsNullOrEmpty(json))
+            {
+                throw new ArgumentNullException("Property cannot be empty");
+            }
             using var stringReader = new StringReader(json);
             using var stringWriter = new StringWriter();
             var jsonReader = new JsonTextReader(stringReader);
@@ -921,6 +977,10 @@ namespace AGenius.UsefulStuff
         /// <param name="interval">Interval to pause between each increase</param>
         public async static void FadeIn(Form form, int interval = 10)
         {
+            if (form == null)
+            {
+                throw new ArgumentNullException("Form cannot be empty");
+            }
             FormBorderStyle currentBorder = form.FormBorderStyle;
 
             try
@@ -950,6 +1010,10 @@ namespace AGenius.UsefulStuff
         /// <param name="interval">Interval to pause between each decrease</param>
         public async static void FadeOut(Form form, int interval = 10)
         {
+            if (form == null)
+            {
+                throw new ArgumentNullException("Form cannot be empty");
+            }
             try
             {
                 //Object is fully visible. Fade it out
@@ -975,6 +1039,10 @@ namespace AGenius.UsefulStuff
         /// <returns></returns>
         public static object GetValueForPropertyByStringName<TEntity>(TEntity EntityObject, string PropertyName)
         {
+            if (string.IsNullOrEmpty(PropertyName))
+            {
+                throw new ArgumentNullException("Property cannot be empty");
+            }
             // Build the Properties list so it can be accessed via the name string
             foreach (PropertyInfo p in EntityObject.GetType().GetProperties())
             {
@@ -1035,6 +1103,14 @@ namespace AGenius.UsefulStuff
                 MailPriority priority = MailPriority.Normal
             )
         {
+            if (string.IsNullOrEmpty(MailFrom))
+            {
+                throw new ArgumentNullException("From not supplied");
+            }
+            if (string.IsNullOrEmpty(EmailTo))
+            {
+                throw new ArgumentNullException("To not supplied");
+            }
             List<string> images = new List<string>(); // This is to store the images found
             AlternateView avHtml = null;
 
@@ -1256,6 +1332,11 @@ namespace AGenius.UsefulStuff
         public static string ReplaceObjectFields<T>(string ContentString, T TheEntity, string ReplaceIfNullWith = null,
             string StartField = "[[", string EndField = "]]", string FormatForDateTimeFields = "dd/MM/yyyy")
         {
+            if (string.IsNullOrEmpty(ContentString))
+            {
+                throw new ArgumentNullException("Content not supplied");
+            }
+
             string NewContentString = ContentString;
             List<string> FieldsList = GetTokensFromString(ContentString, StartField, EndField);
 
@@ -1323,6 +1404,10 @@ namespace AGenius.UsefulStuff
         }
         private static string FormatFieldValue(string newTemplateText, object fieldValue, string fieldName, string objectName = "", string StartField = "[[", string EndField = "]]", string FormatForDateTimeFields = "dd/MM/yyyy")
         {
+            if (string.IsNullOrEmpty(newTemplateText))
+            {
+                throw new ArgumentNullException("Content not supplied");
+            }
             string searchString = $"{StartField}{fieldName}{EndField}";
 
             if (!string.IsNullOrEmpty(objectName))
@@ -1355,6 +1440,10 @@ namespace AGenius.UsefulStuff
         /// <returns>List of tokens in a list object></returns>     
         public static List<string> GetTokensFromString(string ContentString, string StartField = "[[", string EndField = "]]", bool includeFields = false)
         {
+            if (string.IsNullOrEmpty(ContentString))
+            {
+                throw new ArgumentNullException("Content not supplied");
+            }
             string NewContentString = ContentString;
             List<string> FieldsList = new List<string>();
             if (NewContentString.Contains(StartField))
@@ -1403,6 +1492,10 @@ namespace AGenius.UsefulStuff
         /// <remarks>The process will check each found token by trimming and if the result is less than the supplied LenthLimit characters then it is removed</remarks>
         public static string ReplaceEmptyTokensInString(string ContentString, int LenthLimit = 1, string StartField = "[[", string EndField = "]]")
         {
+            if (string.IsNullOrEmpty(ContentString))
+            {
+                throw new ArgumentNullException("Content not supplied");
+            }
             List<string> tokens = ContentString.GetTokensFromString(StartField, EndField);
             if (tokens != null && tokens.Count > 0)
             {
@@ -1616,6 +1709,127 @@ namespace AGenius.UsefulStuff
         public static string MimeTypeFromFileName(string fileName)
         {
             return MimeMapping.GetMimeMapping(fileName);
+        }
+        #endregion
+        #region Extension Icons
+        static Dictionary<string, Icon> _iconList = new Dictionary<string, Icon>(); //  Cache internal copy of icons created to spead up process
+        /// <summary>
+        /// Extract the file extention icon
+        /// </summary>
+        /// <param name="FileName">The FileName or Extension (include . prefix)</param>
+        /// <returns>Icon object</returns>
+        public static Icon ExtractAssociatedIcon(string FileName)//, Size? prefferedSize = null
+        {
+            string ext = "";
+            if (string.IsNullOrEmpty(FileName))
+            {
+                throw new ArgumentNullException("FileName/Extension not supplied");
+            }
+            if (FileName.Contains("."))
+            {
+                ext = Path.GetExtension(FileName);
+            }
+            if (!_iconList.ContainsKey(ext))
+            {
+                // If not, add the image to the image list.
+                // Set a default icon for the file.
+                Icon iconForFile = SystemIcons.WinLogo;
+
+                string DummyFilePath = TemporaryFiles.GetNew(ext);
+                System.IO.File.Create(DummyFilePath).Close();
+                iconForFile = System.Drawing.Icon.ExtractAssociatedIcon(DummyFilePath);
+                System.IO.File.Delete(DummyFilePath);
+                //if (iconForFile != null)
+                //{
+                //    iconForFile = new Icon(iconForFile, (prefferedSize.HasValue ? prefferedSize.Value : iconForFile.Size));
+                //}
+                _iconList.Add(ext, iconForFile);
+
+                return iconForFile;
+            }
+            else
+            {
+                return _iconList[ext];
+            }
+        }
+        #endregion
+
+        #region Encrypt/Decrypt Files
+        ///<summary>
+        /// Steve Lydford - 12/05/2008.
+        ///
+        /// Encrypts a file using Rijndael algorithm.
+        ///</summary>
+        ///<param name="inputFile"></param>
+        ///<param name="outputFile"></param>
+        private static void EncryptFile(string inputFile, string outputFile)
+        {
+            try
+            {
+                string password = @"Svompa2024!!"; // Your Key Here
+                UnicodeEncoding UE = new UnicodeEncoding();
+                byte[] key = UE.GetBytes(password);
+
+                string cryptFile = outputFile;
+                FileStream fsCrypt = new FileStream(cryptFile, FileMode.Create);
+
+                RijndaelManaged RMCrypto = new RijndaelManaged();
+
+                CryptoStream cs = new CryptoStream(fsCrypt,
+                    RMCrypto.CreateEncryptor(key, key),
+                    CryptoStreamMode.Write);
+
+                FileStream fsIn = new FileStream(inputFile, FileMode.Open);
+
+                int data;
+                while ((data = fsIn.ReadByte()) != -1)
+                    cs.WriteByte((byte)data);
+
+
+                fsIn.Close();
+                cs.Close();
+                fsCrypt.Close();
+            }
+            catch
+            {
+                MessageBox.Show("Encryption failed!", "Error");
+            }
+        }
+        ///<summary>
+        /// Steve Lydford - 12/05/2008.
+        ///
+        /// Decrypts a file using Rijndael algorithm.
+        ///</summary>
+        ///<param name="inputFile"></param>
+        ///<param name="outputFile"></param>
+        private static void DecryptFile(string inputFile, string outputFile)
+        {
+
+            {
+                string password = @"Svompa2024!!"; // Your Key Here
+
+                UnicodeEncoding UE = new UnicodeEncoding();
+                byte[] key = UE.GetBytes(password);
+
+                FileStream fsCrypt = new FileStream(inputFile, FileMode.Open);
+
+                RijndaelManaged RMCrypto = new RijndaelManaged();
+
+                CryptoStream cs = new CryptoStream(fsCrypt,
+                    RMCrypto.CreateDecryptor(key, key),
+                    CryptoStreamMode.Read);
+
+                FileStream fsOut = new FileStream(outputFile, FileMode.Create);
+
+                int data;
+                while ((data = cs.ReadByte()) != -1)
+                    fsOut.WriteByte((byte)data);
+
+                fsOut.Close();
+                cs.Close();
+                fsCrypt.Close();
+
+            }
         }
         #endregion
     }

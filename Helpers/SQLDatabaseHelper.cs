@@ -1642,38 +1642,45 @@ namespace AGenius.UsefulStuff.Helpers
             }
             createSQL.AppendLine($"CREATE TABLE [{schemaName}].[{tableName}] ");
             createSQL.AppendLine($"    ( ");
-            createSQL.Append($"        [{idColName}]");
-            if (maxNameWidth > 0)
+            if (!string.IsNullOrEmpty(idColName))
             {
-                // pad spaces
-                int diff = maxNameWidth - idColName.Length + 2;
-                createSQL.Append(' ', diff);
+                createSQL.Append($"        [{idColName}]");
+
+                if (maxNameWidth > 0)
+                {
+                    // pad spaces
+                    int diff = maxNameWidth - idColName.Length + 2;
+                    createSQL.Append(' ', diff);
+                }
+                else
+                {
+                    createSQL.Append(' ');
+                }
+                createSQL.Append($"[{idColType.ToUpper()}] ");
+                if (maxTypeWidth > 0)
+                {
+                    // pad spaces
+                    int diff = maxTypeWidth - idColType.Length;
+                    createSQL.Append(' ', diff);
+                }
+                else
+                {
+                    createSQL.Append(' ');
+                }
+                createSQL.Append($" {(isIdentity ? "NOT NULL IDENTITY" : "NULL")} (1, 1), ");
             }
-            else
-            {
-                createSQL.Append(' ');
-            }
-            createSQL.Append($"[{idColType.ToUpper()}] ");
-            if (maxTypeWidth > 0)
-            {
-                // pad spaces
-                int diff = maxTypeWidth - idColType.Length;
-                createSQL.Append(' ', diff);
-            }
-            else
-            {
-                createSQL.Append(' ');
-            }
-            createSQL.Append($" {(isIdentity ? "NOT NULL IDENTITY" : "NULL")} (1, 1), ");
             createSQL.AppendLine();
             createSQL.AppendLine($"{colDetail} ");
             createSQL.AppendLine($"    )  ON [PRIMARY]");
-            createSQL.AppendLine($"ALTER TABLE [{schemaName}].[{tableName}]");
-            createSQL.AppendLine($"ADD  ");
-            createSQL.AppendLine($"    CONSTRAINT PK_{tableName}");
-            createSQL.AppendLine($"    PRIMARY KEY CLUSTERED ([{idColName}])");
-            createSQL.AppendLine($"    WITH( STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY];");
-            createSQL.AppendLine($"ALTER TABLE [{schemaName}].[{tableName}] SET (LOCK_ESCALATION = TABLE); ");
+            if (!string.IsNullOrEmpty(idColName))
+            {
+                createSQL.AppendLine($"ALTER TABLE [{schemaName}].[{tableName}]");
+                createSQL.AppendLine($"ADD  ");
+                createSQL.AppendLine($"    CONSTRAINT PK_{tableName}");
+                createSQL.AppendLine($"    PRIMARY KEY CLUSTERED ([{idColName}])");
+                createSQL.AppendLine($"    WITH( STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY];");
+                createSQL.AppendLine($"ALTER TABLE [{schemaName}].[{tableName}] SET (LOCK_ESCALATION = TABLE); ");
+            }
             createSQL.AppendLine($"COMMIT; ");
             try
             {
@@ -1804,6 +1811,7 @@ namespace AGenius.UsefulStuff.Helpers
                 {
                     bool NotMappedAttribute = false;
                     bool isID = false;
+                    bool isRequired = false;
                     ColumnAttribute columnAttribute = null;
                     DatabaseGeneratedAttribute databaseGeneratedAttribute = null;
                     foreach (var att in prop.Attributes)
@@ -1823,6 +1831,9 @@ namespace AGenius.UsefulStuff.Helpers
                             case "KeyAttribute":
                                 isID = true;
                                 break;
+                            case "RequiredAttribute":
+                                isRequired = true;
+                                break;
                             default:
                                 break;
                         }
@@ -1833,12 +1844,13 @@ namespace AGenius.UsefulStuff.Helpers
                         {
                             COLUMN_NAME = prop.PropertyName,
                             DATA_TYPE = SQLDataTypeHelper.GetSqlDbType(prop.PropertyType, unincode).ToString(),
-                            ALLOW_NULL = prop.PropertyType.Name.Contains("Nullable"),
+                            ALLOW_NULL = (!isID && !isRequired),
                             IDENTITY = (databaseGeneratedAttribute != null && databaseGeneratedAttribute.DatabaseGeneratedOption == DatabaseGeneratedOption.Identity),
                             CHARACTER_MAXIMUM_LENGTH = 0,
                             ORDINAL_POSITION = 0,
                             IS_ID = isID
                         };
+                        //prop.PropertyType.Name.Contains("Nullable")
                         if (columnAttribute != null)
                         {
                             if (columnAttribute.TypeName != null)
@@ -1847,8 +1859,9 @@ namespace AGenius.UsefulStuff.Helpers
                             }
                             if (columnAttribute.TypeName != null && columnAttribute.TypeName.Contains("(") & columnAttribute.TypeName.Contains(")"))
                             {
-                                col.CHARACTER_MAXIMUM_LENGTH = int.Parse(columnAttribute.TypeName.GetBetween("(", ")"));
-                                col.DATA_TYPE = col.DATA_TYPE.Replace($"({col.CHARACTER_MAXIMUM_LENGTH})", "");
+                                string lenData = columnAttribute.TypeName.GetBetween("(", ")");
+                                col.CHARACTER_MAXIMUM_LENGTH = lenData.IsAllNumber() ? int.Parse(columnAttribute.TypeName.GetBetween("(", ")")) : 0;
+                                col.DATA_TYPE = col.DATA_TYPE.Replace($"({lenData})", "");
                             }
                         }
                         // hack to change varchar to nvarchar and datetime2 to datetime
@@ -1868,8 +1881,10 @@ namespace AGenius.UsefulStuff.Helpers
             {
                 CreateTable(tableName, columns, collation: collation);
                 string lastQuery = _lastQuery; // Preserve Query to be returned after exist test
+                string lastError = _lastError; // Preserve error to be returned after exist test
                 var exists = TableExists(tableName);
                 _lastQuery = lastQuery;
+                _lastError = lastError;
                 if (exists)
                 {
                     return true;
