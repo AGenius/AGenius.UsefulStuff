@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 
 namespace AGenius.UsefulStuff
 {
@@ -42,6 +43,44 @@ namespace AGenius.UsefulStuff
             return Math.Abs(color.R - anotherColor.R) < tolerance &&
                  Math.Abs(color.G - anotherColor.G) < tolerance &&
                  Math.Abs(color.B - anotherColor.B) < tolerance;
+        }
+        /// <summary>
+        /// Provide image resize ability
+        /// </summary>
+        /// <param name="image">The source image object</param>
+        /// <param name="size">New size settings</param>
+        /// <param name="preserveAspectRatio">Maintain aspect /true/false - [Defult:true]</param>
+        /// <returns></returns>
+        public static Image ResizeImage(this Image image, Size size, bool preserveAspectRatio = true)
+        {
+            if (image == null)
+            {
+                return null;
+            }
+            int newWidth;
+            int newHeight;
+            if (preserveAspectRatio)
+            {
+                int originalWidth = image.Width;
+                int originalHeight = image.Height;
+                float percentWidth = (float)size.Width / (float)originalWidth;
+                float percentHeight = (float)size.Height / (float)originalHeight;
+                float percent = percentHeight < percentWidth ? percentHeight : percentWidth;
+                newWidth = (int)(originalWidth * percent);
+                newHeight = (int)(originalHeight * percent);
+            }
+            else
+            {
+                newWidth = size.Width;
+                newHeight = size.Height;
+            }
+            Image newImage = new Bitmap(newWidth, newHeight);
+            using (Graphics graphicsHandle = Graphics.FromImage(newImage))
+            {
+                graphicsHandle.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                graphicsHandle.DrawImage(image, 0, 0, newWidth, newHeight);
+            }
+            return newImage;
         }
     }
 }

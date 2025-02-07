@@ -22,6 +22,7 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement.Menu;
 using AGenius.UsefulStuff.Helpers;
 using static Dapper.Contrib.Extensions.SqlMapperExtensions;
 using System.Security.Cryptography;
+using System.Xml.Serialization;
 
 namespace AGenius.UsefulStuff
 {
@@ -875,6 +876,26 @@ namespace AGenius.UsefulStuff
             });
             return serialVersion;
         }
+        /// <summary>
+        /// Convert an Object to a XML String
+        /// </summary>
+        /// <typeparam name="TENTITY">Entity type</typeparam>
+        /// <param name="objectRecord">The object record</param>
+        /// <returns>XML String</returns>
+        public static string SerializeObjectXML<TENTITY>(TENTITY objectRecord)
+        {
+            if (objectRecord == null)
+            {
+                throw new ArgumentNullException("Entoty not supplied");
+            }
+            using (var stringwriter = new System.IO.StringWriter())
+            {
+                var serializer = new XmlSerializer(objectRecord.GetType());
+                serializer.Serialize(stringwriter, objectRecord);
+                return stringwriter.ToString();
+            }
+
+        }
         //public static string Encrypt(string value)
         //{
         //    if (string.IsNullOrEmpty(value))
@@ -1103,6 +1124,7 @@ namespace AGenius.UsefulStuff
                 MailPriority priority = MailPriority.Normal
             )
         {
+            LogPath ??= ApplicationPath;
             if (string.IsNullOrEmpty(MailFrom))
             {
                 throw new ArgumentNullException("From not supplied");
@@ -1111,6 +1133,7 @@ namespace AGenius.UsefulStuff
             {
                 throw new ArgumentNullException("To not supplied");
             }
+            EmailFailedReason = "";
             List<string> images = new List<string>(); // This is to store the images found
             AlternateView avHtml = null;
 
@@ -1368,6 +1391,11 @@ namespace AGenius.UsefulStuff
                             }
                             else
                             {
+                                // Attempt to get property from object
+                                if (TheEntity.GetPropertyValue(objectName).GetPropertyValue(fieldName) != null)
+                                {
+                                    NewContentString = FormatFieldValue(NewContentString, TheEntity.GetPropertyValue(objectName).GetPropertyValue(fieldName), fieldName, objectName, StartField, EndField, FormatForDateTimeFields);
+                                }
                                 if (ReplaceIfNullWith != null)
                                 {
                                     NewContentString = FormatFieldValue(NewContentString, ReplaceIfNullWith, fieldName, objectName, StartField, EndField, FormatForDateTimeFields);
@@ -1750,6 +1778,30 @@ namespace AGenius.UsefulStuff
             else
             {
                 return _iconList[ext];
+            }
+        }
+        /// <summary>
+        /// Remove any dupicate entries in a supplied list based on a specified key
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <typeparam name="TKey"></typeparam>
+        /// <param name="list">The list</param>
+        /// <param name="keySelector">The key field name to use for the dupe check</param>
+        public static void RemoveDuplicates<T, TKey>(IList<T> list, Func<T, TKey> keySelector)
+        {
+            // Using HashSet to track unique keys
+            var seenKeys = new HashSet<TKey>();
+
+            // Iterate through the list in reverse order to remove duplicates safely
+            for (int i = list.Count - 1; i >= 0; i--)
+            {
+                TKey key = keySelector(list[i]);
+
+                // If the key has already been seen, remove the item
+                if (!seenKeys.Add(key))
+                {
+                    list.RemoveAt(i);
+                }
             }
         }
         #endregion
