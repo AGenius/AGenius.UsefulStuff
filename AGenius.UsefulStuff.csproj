@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>AGenius.UsefulStuff</RootNamespace>
     <AssemblyName>AGenius.UsefulStuff</AssemblyName>
-    <TargetFrameworkVersion>v4.8.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
     <NuGetPackageImportStamp>
@@ -41,7 +41,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <DebugType>full</DebugType>
     <PlatformTarget>x64</PlatformTarget>
-   <LangVersion>latest</LangVersion>
+    <LangVersion>latest</LangVersion>
     <ErrorReport>prompt</ErrorReport>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
@@ -122,6 +122,15 @@
     <Compile Include="Helpers\SQLiteDatabaseHelper.cs" />
     <Compile Include="Helpers\SQLDatabaseHelper.cs" />
     <Compile Include="Helpers\SQLInfoEnumerator.cs" />
+    <Compile Include="Helpers\TCPServer\ConnectionRegistrationException.cs" />
+    <Compile Include="Helpers\TCPServer\DataReceivedArgs.cs" />
+    <Compile Include="Helpers\TCPServer\TCPConnection.cs" />
+    <Compile Include="Helpers\TCPServer\TCPConnections.cs" />
+    <Compile Include="Helpers\TCPServer\TCPServer.cs" />
+    <Compile Include="Helpers\TCPSockets\TCPException.cs" />
+    <Compile Include="Helpers\TCPSockets\TCPServerConfig.cs" />
+    <Compile Include="Helpers\TCPSockets\TCPSocketHelper.cs" />
+    <Compile Include="Helpers\TCPSockets\TCPTransaction.cs" />
     <Compile Include="Utils.cs" />
     <Compile Include="Helpers\AssemblyHelper.cs" />
     <Compile Include="Helpers\FolderNameEditor.cs" />
