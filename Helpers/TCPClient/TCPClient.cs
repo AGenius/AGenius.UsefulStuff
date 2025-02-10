@@ -13,8 +13,10 @@ namespace AGenius.UsefulStuff.Helpers.TCPClient
     public class TCPClient
     {
         protected private TcpClient _client;
-        //public event EventHandler<string> MessageReceived; // Event for when a message is received from the server
-        //public event EventHandler<string> Disconnected; // Event for notification when the server disconnects
+        /// <summary>
+        /// Event to monitor TCP Activity
+        /// </summary>
+        /// <remarks>Subscribe to this event for updates and access to received messages </remarks>
         public event EventHandler<TCPClientEventArgs> ClientEvent; // Event for notifications
 
         protected private eTCPClientState _state = eTCPClientState.NotInitialized; // Set initial state
@@ -128,6 +130,7 @@ namespace AGenius.UsefulStuff.Helpers.TCPClient
             _client?.Close();
             OnEvent(eTCPClientState.Disconnected, "Client Disconnected", true);
         }
+        // Raise the activity event
         protected virtual void OnEvent(eTCPClientState state, string message, bool setLocalState = false)
         {
             if (setLocalState)
