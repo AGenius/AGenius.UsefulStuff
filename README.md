@@ -8,3 +8,10 @@ I always find that I re-use so much useful and reused code so I have decided to 
 I have added many usefull helpers and Utilites too
 
 Full Comments and Documentation to follow
+
+# TCPServer
+Simple TCPServer classes for listening and transporting messages
+from incomming client requests
+
+# TCPClient
+Simple TCPClient class for communicating to a server over TCP
