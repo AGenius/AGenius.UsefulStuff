@@ -9,7 +9,9 @@ using static AGenius.UsefulStuff.Utils;
 
 namespace AGenius.UsefulStuff.Helpers.TCPClient
 {
-
+    /// <summary>
+    /// Simple TCPClient class for communicating to a server over TCP
+    /// </summary>
     public class TCPClient
     {
         protected private TcpClient _client;
