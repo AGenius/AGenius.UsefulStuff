@@ -1,15 +1,7 @@
-﻿using AGenius.UsefulStuff.Helpers.ActiveDirectory;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+﻿using System;
 using System.Net.Sockets;
 using System.Net;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
-using System.Runtime.Remoting.Channels;
-using System.Web.UI.WebControls.WebParts;
 
 namespace AGenius.UsefulStuff.Helpers.TCPServer
 {
