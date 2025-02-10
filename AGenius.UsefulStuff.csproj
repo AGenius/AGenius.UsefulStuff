@@ -122,6 +122,8 @@
     <Compile Include="Helpers\SQLiteDatabaseHelper.cs" />
     <Compile Include="Helpers\SQLDatabaseHelper.cs" />
     <Compile Include="Helpers\SQLInfoEnumerator.cs" />
+    <Compile Include="Helpers\TCPClient\TCPClientEventArgs.cs" />
+    <Compile Include="Helpers\TCPClient\TCPClient.cs" />
     <Compile Include="Helpers\TCPServer\ConnectionRegistrationException.cs" />
     <Compile Include="Helpers\TCPServer\DataReceivedArgs.cs" />
     <Compile Include="Helpers\TCPServer\TCPConnection.cs" />
@@ -173,7 +175,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Dapper">
-      <Version>2.1.35</Version>
+      <Version>2.1.66</Version>
     </PackageReference>
     <PackageReference Include="Dapper.Contrib">
       <Version>2.0.78</Version>
@@ -188,16 +190,16 @@
       <Version>8.0.0</Version>
     </PackageReference>
     <PackageReference Include="System.Data.SQLite.x64">
-      <Version>1.0.118</Version>
+      <Version>1.0.119</Version>
     </PackageReference>
     <PackageReference Include="System.IdentityModel.Tokens.Jwt">
       <Version>7.6.2</Version>
     </PackageReference>
     <PackageReference Include="System.Memory">
-      <Version>4.5.5</Version>
+      <Version>4.6.0</Version>
     </PackageReference>
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe">
-      <Version>6.0.0</Version>
+      <Version>6.1.0</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup />
