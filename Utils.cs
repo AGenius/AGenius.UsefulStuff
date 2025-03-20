@@ -199,7 +199,7 @@ namespace AGenius.UsefulStuff
 
         #region Scramble Methods       
 
-        private static string _ApplicationPath;
+        private static string _ApplicationPath = "";
         /// <summary>The path to the assembly</summary>
         /// Can be overriden
         public static string ApplicationPath
@@ -507,12 +507,15 @@ namespace AGenius.UsefulStuff
         /// <param name="FileName">Base Filename to start</param>
         /// <param name="addBrackets">Add () around the new file number if applicable</param>
         /// <returns>FileName</returns>
-        public static string GetNewFileName(string FileName, bool addBrackets)
+        public static string GetNewFileName(string FileName, bool addBrackets = true)
         {
+            if (string.IsNullOrWhiteSpace(FileName))
+                throw new ArgumentException("File path cannot be null or empty.", nameof(FileName));
+
             string fileExt = Path.GetExtension(FileName).Replace(".", "");
             string FolderPath = Path.GetDirectoryName(FileName);
             string basefilename = Path.GetFileNameWithoutExtension(FileName);
-            int counter = 1;
+            int counter = 0;
             //string fullFileName = string.Format(@"{0}\{1} ({2}).{3}", FolderPath, basefilename, counter, fileExt);            
             string fullFileName = $"{FolderPath}\\{basefilename}.{fileExt}";
             while (File.Exists(fullFileName))
@@ -536,10 +539,13 @@ namespace AGenius.UsefulStuff
         /// <returns>FileName</returns>
         public static string GetNewFileName(string FileName, bool addBrackets, List<string> filesList)
         {
+            if (string.IsNullOrWhiteSpace(FileName))
+                throw new ArgumentException("File path cannot be null or empty.", nameof(FileName));
+
             string fileExt = Path.GetExtension(FileName).Replace(".", "");
             string FolderPath = Path.GetDirectoryName(FileName);
             string basefilename = Path.GetFileNameWithoutExtension(FileName);
-            int counter = 1;
+            int counter = 0;
             //string fullFileName = string.Format(@"{0}\{1} ({2}).{3}", FolderPath, basefilename, counter, fileExt);            
             string fullFileName = $"{FolderPath}\\{basefilename}.{fileExt}";
             string foundFile = filesList.Find(x => x.ToLower() == fullFileName.ToLower());
