@@ -12,9 +12,9 @@ namespace AGenius.UsefulStuff
         /// <summary>Return a given font to a string </summary>
         /// <param name="font">The font to serialize</param>
         /// <returns>String</returns>
-        static public string SerializeToString(this Font font)
+        static public string SerializeToString(this Font font, string sep = ",")
         {
-            return $"{font.GetType().Name},{font.FontFamily.Name},{font.Size},{font.Style},{font.Unit},{font.GdiCharSet},{font.GdiVerticalFont}";
+            return $"{font.GetType().Name}{sep}{font.FontFamily.Name}{sep}{font.Size}{sep}{font.Style}{sep}{font.Unit}{sep}{font.GdiCharSet}{sep}{font.GdiVerticalFont}";
         }
     }
 }
