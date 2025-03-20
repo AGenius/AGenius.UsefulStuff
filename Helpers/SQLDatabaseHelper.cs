@@ -285,7 +285,7 @@ namespace AGenius.UsefulStuff.Helpers
                     _lastError = "Connection String not set";
                     throw new ArgumentException(_lastError);
                 }
-                string sWhere = $"WHERE {keyFieldName} {operatorType} '{fieldValue}' ";
+                string sWhere = $"WHERE {keyFieldName} {operatorType} {fieldValue} ";
                 string sSQL = $"SELECT * FROM {TableName} {sWhere}";
                 _lastQuery = sSQL;
                 // var Results = null;
