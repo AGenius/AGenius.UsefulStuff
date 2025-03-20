@@ -10,6 +10,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Data.Entity.Design.PluralizationServices;
 using System.Drawing;
+using System.ComponentModel;
 
 //Copied from Tazmainiandevil/Useful.Extension
 namespace AGenius.UsefulStuff
@@ -43,9 +44,9 @@ namespace AGenius.UsefulStuff
         /// <summary>Convert a Serialized Font string to a real font</summary>
         /// <param name="str">The serialized font string , e.g. Font, Microsoft Sans Serif, 10, Regular, Point, 1, False</param>
         /// <returns>Font object</returns>
-        static public Font ToFont(this string str)
+        static public Font ToFont(this string str, string sep = ",")
         {
-            var parts = str.Split(',');
+            var parts = str.Split(new string[] { sep }, StringSplitOptions.None);
             return new Font(
                 parts[1],                                                       // FontFamily.Name
                 float.Parse(parts[2]),                                          // Size
@@ -236,6 +237,10 @@ namespace AGenius.UsefulStuff
         {
             try
             {
+                if (string.IsNullOrEmpty(StringValue))
+                {
+                    return "";
+                }
                 byte[] results;
                 var utf8 = new System.Text.UTF8Encoding();
 
@@ -410,6 +415,37 @@ namespace AGenius.UsefulStuff
             }
             return values;
         }
+        /// <summary>
+        /// Extract a number of months from a string
+        /// </summary>
+        /// <param name="selection">The string to parse e.g.  1 Month,2 Months or 2 Years</param>
+        /// <returns>An integer containing the number of months</returns>
+        /// <exception cref="ArgumentException">No string supplied</exception>
+        public static int ToMonthCount(this string selection)
+        {
+            if (string.IsNullOrEmpty(selection))
+                throw new ArgumentException("Selection cannot be null or empty", nameof(selection));
+
+            string[] parts = selection.Split(' ');
+            if (parts.Length != 2)
+                throw new ArgumentException("Invalid selection format", nameof(selection));
+
+            int value = int.Parse(parts[0]);
+            string unit = parts[1].ToLower();
+
+            switch (unit)
+            {
+                case "month":
+                case "months":
+                    return value;
+                case "year":
+                case "years":
+                    return value * 12;
+                default:
+                    throw new ArgumentException("Invalid time unit", nameof(selection));
+            }
+        }
+
         /// <summary>Convert unsecure string to readonly SecureString. </summary>
         /// <param name="StringValue">The unsecure string for conversion.</param>
         /// <param name="ReadOnly">Set result as readonly <see cref="bool"/></param>
