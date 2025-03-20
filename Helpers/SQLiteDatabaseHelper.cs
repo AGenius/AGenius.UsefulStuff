@@ -10,6 +10,7 @@ using System.Runtime.Serialization;
 using System.Data.Common;
 using System.Text;
 using System.IO;
+using System.Data.SqlTypes;
 //using System.Transactions;
 
 namespace AGenius.UsefulStuff.Helpers
@@ -642,7 +643,49 @@ namespace AGenius.UsefulStuff.Helpers
                 throw new DatabaseAccessHelperException(ex.Message);
             }
         }
+        /// <summary>Delete an Entity record</summary>
+        /// <typeparam name="TENTITY">Entity Object type</typeparam>
+        /// <param name="Record">The Record to Delete</param>
+        /// <returns><see cref="string"/></returns>
+        public string DeleteAll<TENTITY>() where TENTITY : class
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(DBConnectionString))
+                {
+                    throw new ArgumentException("Connection String not set");
+                }
 
+                return ExecuteScalar("DELETE FROM " + GetTableName<TENTITY>());
+            }
+            catch (DbException ex)
+            {
+                _lastError = ex.Message;
+                _errorLogger.LogError(ex.Message);
+                throw new DatabaseAccessHelperException(ex.Message);
+            }
+        }
+        /// <summary>DB Rebuild</summary>        
+        public void Vacuum()
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(DBConnectionString))
+                {
+                    throw new ArgumentException("Connection String not set");
+                }
+
+                using IDbConnection db = new SQLiteConnection(DBConnectionString);
+                db.Execute("VACUUM");
+
+            }
+            catch (DbException ex)
+            {
+                _lastError = ex.Message;
+                _errorLogger.LogError(ex.Message);
+                throw new DatabaseAccessHelperException(ex.Message);
+            }
+        }
         /// <summary> Return the TableName of the POCO </summary>
         /// <typeparam name="TENTITY">the PCO Entity</typeparam>
         /// <returns><see cref="string"/> holding the tablename</returns>
@@ -672,7 +715,23 @@ namespace AGenius.UsefulStuff.Helpers
                 return false;
             }
         }
+        /// <summary>Drop a table if it exists</summary>        
+        /// <returns><see cref="bool"/> true/false for success/failure</returns>
+        public bool DropTable(string TableName, string primaryKeyName = "id")
+        {
+            try
+            {
+                this.ExecuteSQL($"DROP TABLE IF EXISTS {TableName}");
+                return true;
+            }
 
+            catch (Exception ex)
+            {
+                _lastError = ex.Message;
+                _errorLogger.LogError(ex.Message);
+                return false;
+            }
+        }
         /// <summary>Create an index for a table if it does not exist</summary>
         /// <param name="TableName">The table Name</param>
         /// <param name="IndexName">The index Name</param>
@@ -702,7 +761,7 @@ namespace AGenius.UsefulStuff.Helpers
         /// <param name="columnSize">The column size</param>
         /// <param name="allowNull">Does the column allow null values</param>
         /// <returns><see cref="bool"/> true/false for success/failure</returns>
-        public bool AddColumn(string tableName, string columnName, string columnType, int columnSize, bool allowNull)
+        public bool AddColumn(string tableName, string columnName, string columnType, int? columnSize = null, bool allowNull = true)
         {
             try
             {
@@ -714,7 +773,10 @@ namespace AGenius.UsefulStuff.Helpers
 
                     if (columnType.ToUpper() != "INTEGER" && columnType.ToUpper() != "DATETIME" && columnType.ToUpper() != "BLOB")
                     {
-                        sSQL += "({3}) ";
+                        if (columnSize.HasValue)
+                        {
+                            sSQL += "({3}) ";
+                        }
                     }
 
                     if (allowNull)
