@@ -34,6 +34,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>bin\Release\AGenius.UsefulStuff.xml</DocumentationFile>
+    <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <DebugSymbols>true</DebugSymbols>
@@ -118,6 +119,10 @@
     <Compile Include="Helpers\AMS\Xml.cs" />
     <Compile Include="Helpers\AMS\XmlHelper.cs" />
     <Compile Include="Helpers\DataAccessException.cs" />
+    <Compile Include="Helpers\ScreenCapture\SSHelper.cs" />
+    <Compile Include="Helpers\ScreenCapture\SSOverlay.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Helpers\SQLDataTypeHelper.cs" />
     <Compile Include="Helpers\SQLiteDatabaseHelper.cs" />
     <Compile Include="Helpers\SQLDatabaseHelper.cs" />
@@ -129,9 +134,12 @@
     <Compile Include="Helpers\TCPServer\TCPConnection.cs" />
     <Compile Include="Helpers\TCPServer\TCPConnections.cs" />
     <Compile Include="Helpers\TCPServer\TCPServer.cs" />
+    <Compile Include="Helpers\TCPSockets\TCPEnums.cs" />
     <Compile Include="Helpers\TCPSockets\TCPException.cs" />
     <Compile Include="Helpers\TCPSockets\TCPServerConfig.cs" />
+    <Compile Include="Helpers\TCPSockets\Client\TCPSocketClient.cs" />
     <Compile Include="Helpers\TCPSockets\TCPSocketHelper.cs" />
+    <Compile Include="Helpers\TCPSockets\Server\TCPSocketServer.cs" />
     <Compile Include="Helpers\TCPSockets\TCPTransaction.cs" />
     <Compile Include="Utils.cs" />
     <Compile Include="Helpers\AssemblyHelper.cs" />
@@ -180,14 +188,20 @@
     <PackageReference Include="Dapper.Contrib">
       <Version>2.0.78</Version>
     </PackageReference>
+    <PackageReference Include="Microsoft.Data.ConnectionUI">
+      <Version>17.10.40152</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Logging">
+      <Version>9.0.2</Version>
+    </PackageReference>
+    <PackageReference Include="MouseKeyHook">
+      <Version>5.7.1</Version>
+    </PackageReference>
     <PackageReference Include="Newtonsoft.Json">
       <Version>13.0.3</Version>
     </PackageReference>
-    <PackageReference Include="SQLitePCLRaw.core">
-      <Version>2.1.8</Version>
-    </PackageReference>
     <PackageReference Include="System.Configuration.ConfigurationManager">
-      <Version>8.0.0</Version>
+      <Version>9.0.2</Version>
     </PackageReference>
     <PackageReference Include="System.Data.SQLite.x64">
       <Version>1.0.119</Version>
@@ -198,12 +212,21 @@
     <PackageReference Include="System.Memory">
       <Version>4.6.0</Version>
     </PackageReference>
+    <PackageReference Include="System.Numerics.Vectors">
+      <Version>4.6.0</Version>
+    </PackageReference>
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe">
       <Version>6.1.0</Version>
     </PackageReference>
+    <PackageReference Include="System.Text.Encodings.Web">
+      <Version>9.0.2</Version>
+    </PackageReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <EmbeddedResource Include="Helpers\ScreenCapture\SSOverlay.resx">
+      <DependentUpon>SSOverlay.cs</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Import Project="packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.114.0\build\net46\Stub.System.Data.SQLite.Core.NetFramework.targets" Condition="Exists('packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.114.0\build\net46\Stub.System.Data.SQLite.Core.NetFramework.targets')" />
   <Import Project="..\..\Xero.Net2.Tests\packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.115.0\build\net46\Stub.System.Data.SQLite.Core.NetFramework.targets" Condition="Exists('..\..\Xero.Net2.Tests\packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.115.0\build\net46\Stub.System.Data.SQLite.Core.NetFramework.targets')" />
 </Project>
