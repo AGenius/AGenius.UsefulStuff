@@ -20,7 +20,7 @@ namespace AGenius.UsefulStuff.Helpers
             this.StartPosition = FormStartPosition.Manual;
             this.Bounds = bounds;
             this.BackColor = Color.Wheat;
-            this.Opacity = 0.2;
+            this.Opacity = 0.4;
             this.TopMost = true;
             this.ShowInTaskbar = false;
             this.DoubleBuffered = true;
@@ -72,14 +72,14 @@ namespace AGenius.UsefulStuff.Helpers
             base.OnPaint(e);
             if (selectionState.IsDrawing)
             {
-                using (Pen pen = new Pen(Color.Red, 2))
+                using (Pen pen = new Pen(Color.Red, 2))               
                 {
                     var localRectangle = new Rectangle(
                         selectionState.SelectionRectangle.X - this.Bounds.X,
                         selectionState.SelectionRectangle.Y - this.Bounds.Y,
                         selectionState.SelectionRectangle.Width,
                         selectionState.SelectionRectangle.Height);
-                    e.Graphics.DrawRectangle(pen, localRectangle);
+                    e.Graphics.DrawRectangle(pen, localRectangle); // Draw the rectangle border
                 }
             }
         }

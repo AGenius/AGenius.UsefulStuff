@@ -36,6 +36,38 @@ or without SSL
 var server = new TcpServer(5001, serverLogger);
 await server.StartAsync();
 ```
+# SSHelper (Screen Capture Helper))
+A simple screen capture helper class to capture the screen and save it to a file
+
+Allowing a hot key to be pressed to capture the screen and save it to a file or initiate a screen capture directly
+
+To use the Screen Capture Helper, you can use the following code
+```
+        SSHelper ss;
+        private void button1_Click(object sender, EventArgs e)
+        {
+            ss = new SSHelper(); // Create a new instance of the SSHelper class
+            ss.ScreenshotCaptured += Ss_ScreenshotCaptured; // Subscribe to the ScreenshotCaptured event
+            ss.StartSSCapture();
+        }
+
+        private void Ss_ScreenshotCaptured(string screenshotPath)
+        {
+            this.BringToFront();
+            ss.Dispose();
+            
+            AGenius.UsefulStuff.Utils.LaunchURLorFile(screenshotPath);
+        }
+        ```
+        of you could use the follow to wait for a hot key to be pressed to capture the screen
+        ```
+        private void button1_Click(object sender, EventArgs e)
+        {
+            ss = new SSHelper(Keys.F12); // Create a new instance of the SSHelper class and wait for the F12 key to be pressed
+            ss.ScreenshotCaptured += Ss_ScreenshotCaptured; // Subscribe to the ScreenshotCaptured event
+            ss.StartSSCapture();
+        }
+        ```
 
 # TCPSocketClient
 A transactional based TCP Client using Socket (With or Without SSL) support

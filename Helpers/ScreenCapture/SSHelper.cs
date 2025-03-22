@@ -22,15 +22,15 @@ namespace AGenius.UsefulStuff.Helpers
         }
     }
 
-    public class SSHelper
+    public class SSHelper : IDisposable
     {
         public event Action<string> ScreenshotCaptured;
-
         // This is used to capture the screen area
         private IKeyboardMouseEvents globalHook;
         private Keys? _hotKey;
         private string tempPathSubFolder;
-        public SSHelper(Keys? keyCode, string tempPathSubFolder = "Screenshots")
+        private bool disposed = false;
+        public SSHelper(Keys? keyCode = Keys.None, string tempPathSubFolder = "Screenshots")
         {
             _hotKey = keyCode;
             this.tempPathSubFolder = tempPathSubFolder;
@@ -79,10 +79,11 @@ namespace AGenius.UsefulStuff.Helpers
                     DisposeKeyHook();
                     if (overlay.DialogResult == DialogResult.OK)
                     {
+                        overlay.Opacity = 0;
                         HideOverlays();// Ensure the overlay is not captured
 
                         // Capture the screenshot                            
-                        var ssFile = CaptureScreenshot(selectionState.SelectionRectangle, overlay.Bounds);
+                        var ssFile = CaptureScreenshot(selectionState.SelectionRectangle);
                         CloseOverlays();
                         // Raise the ScreenshotCaptured event
                         ScreenshotCaptured?.Invoke(ssFile);
@@ -131,16 +132,37 @@ namespace AGenius.UsefulStuff.Helpers
         /// <param name="KeyCode">The key code to trigger the capture process</param>
         public void StartSSCapture()
         {
-            globalHook = Hook.GlobalEvents();
-            globalHook.KeyDown += GlobalHook_KeyDown;
+            if (_hotKey == Keys.None)
+            {
+                // Still need key hook to close the overlay
+                globalHook = Hook.GlobalEvents();
+                globalHook.KeyDown += GlobalHook_KeyDown;
+                InitiateScreenCapture(); // Just initiate the screen capture process
+            }
+            else
+            {
+                // Start listening for the required hot key key and mouse events
+                globalHook = Hook.GlobalEvents();
+                globalHook.KeyDown += GlobalHook_KeyDown;
+            }
         }
         /// <summary>
         /// Stop listening for the Print Screen key and mouse events
         /// </summary>
         public void DisposeKeyHook()
         {
-            globalHook.KeyDown -= GlobalHook_KeyDown;
-            globalHook.Dispose();
+            try
+            {
+                if (globalHook != null)
+                {
+                    globalHook.KeyDown -= GlobalHook_KeyDown;
+                    globalHook.Dispose();
+                }
+            }
+            catch (Exception)
+            {
+
+            }
         }
         /// <summary>
         /// Perform the Capture of the screenshot to a file and return the path
@@ -148,26 +170,23 @@ namespace AGenius.UsefulStuff.Helpers
         /// <param name="rect"></param>
         /// <param name="screenBounds"></param>
         /// <returns></returns>
-        public string CaptureScreenshot(Rectangle rect, Rectangle screenBounds)
+        public string CaptureScreenshot(Rectangle rect)
         {
             try
             {
-                // Translate the coordinates of the selection rectangle to the screen coordinates of the respective monitor
-                Rectangle adjustedRect = new Rectangle(
-                    rect.X + screenBounds.X,
-                    rect.Y + screenBounds.Y,
-                    rect.Width,
-                    rect.Height
-                );
+                // Get the correct screen where the selection is happening
+                Screen selectedScreen = Screen.FromPoint(rect.Location);
+                Rectangle screenBounds = selectedScreen.Bounds;
 
-                using (Bitmap bitmap = new Bitmap(rect.Width, rect.Height))
+                // No need to re-adjust rect.X/Y since it's already in absolute screen coordinates
+                using (Bitmap bitmap = new Bitmap(rect.Width, rect.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb))
                 {
                     using (Graphics g = Graphics.FromImage(bitmap))
                     {
-                        g.CopyFromScreen(adjustedRect.Location, Point.Empty, adjustedRect.Size);
+                        g.CopyFromScreen(rect.Location, Point.Empty, rect.Size);
                     }
 
-                    var fileName = $"Screenshot_{DateTime.Now.ToString("yyyy-mm-dd_HHss")}";
+                    var fileName = $"Screenshot_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.png";
                     var screenshotPath = TemporaryFiles.GetNewAlt(fileName, ".png", tempPathSubFolder);
                     bitmap.Save(screenshotPath, System.Drawing.Imaging.ImageFormat.Png);
                     return screenshotPath;
@@ -177,6 +196,39 @@ namespace AGenius.UsefulStuff.Helpers
             {
                 throw ex;
             }
+        }
+        /// <summary>
+        /// Dispose the resources used by the SSHelper
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Dispose the resources used by the SSHelper
+        /// </summary>
+        /// <param name="disposing">Indicates whether the method is called from Dispose or the finalizer</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposed)
+            {
+                if (disposing)
+                {
+                    // Dispose managed resources
+                    DisposeKeyHook();
+                }
+
+                // Dispose unmanaged resources
+
+                disposed = true;
+            }
+        }
+
+        ~SSHelper()
+        {
+            Dispose(false);
         }
     }
 }

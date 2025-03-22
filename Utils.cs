@@ -77,6 +77,28 @@ namespace AGenius.UsefulStuff
 
         #endregion
 
+        /// <summary>
+        /// Launch a URL or File using the associated application
+        /// </summary>
+        /// <param name="urlorFilePath">URL or file path</param>
+        public static bool LaunchURLorFile(string urlorFilePath)
+        {
+            try
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = urlorFilePath,
+                    UseShellExecute = true
+                });
+                return true;
+            }
+            catch (Exception ex)
+            {
+                // Handle any exceptions that occur
+                return false;
+            }
+        }
+
         /// <summary>Determine if an executable is running</summary>
         /// <param name="FullPath">The full path to the EXE file</param>
         /// <returns>true/false <see cref="bool"/></returns>
