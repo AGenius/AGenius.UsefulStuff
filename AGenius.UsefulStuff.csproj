@@ -136,13 +136,6 @@
     <Compile Include="Helpers\TCPServer\TCPConnection.cs" />
     <Compile Include="Helpers\TCPServer\TCPConnections.cs" />
     <Compile Include="Helpers\TCPServer\TCPServer.cs" />
-    <Compile Include="Helpers\TCPSockets\TCPEnums.cs" />
-    <Compile Include="Helpers\TCPSockets\TCPException.cs" />
-    <Compile Include="Helpers\TCPSockets\TCPServerConfig.cs" />
-    <Compile Include="Helpers\TCPSockets\Client\TCPSocketClient.cs" />
-    <Compile Include="Helpers\TCPSockets\TCPSocketHelper.cs" />
-    <Compile Include="Helpers\TCPSockets\Server\TCPSocketServer.cs" />
-    <Compile Include="Helpers\TCPSockets\TCPTransaction.cs" />
     <Compile Include="Utils.cs" />
     <Compile Include="Helpers\AssemblyHelper.cs" />
     <Compile Include="Helpers\FolderNameEditor.cs" />
@@ -227,6 +220,7 @@
   <ItemGroup>
     <EmbeddedResource Include="Helpers\ScreenCapture\SSOverlay.resx">
       <DependentUpon>SSOverlay.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
