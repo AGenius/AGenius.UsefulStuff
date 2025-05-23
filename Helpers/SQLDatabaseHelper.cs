@@ -45,6 +45,50 @@ namespace AGenius.UsefulStuff.Helpers
             /// <summary>Type - Base Table or View</summary>
             public string TABLE_TYPE { get; set; }
         }
+        public class ColumnMetadata
+        {
+            public string ColumnName { get; set; }
+            public int ObjectId { get; set; }
+            public int ColumnId { get; set; }
+            public byte SystemTypeId { get; set; }
+            public int UserTypeId { get; set; }
+            public short MaxLength { get; set; }
+            public byte Precision { get; set; }
+            public byte Scale { get; set; }
+            public string CollationName { get; set; }
+            public bool IsNullable { get; set; }
+            public bool IsAnsiPadded { get; set; }
+            public bool IsRowGuidCol { get; set; }
+            public bool IsIdentity { get; set; }
+            public bool IsComputed { get; set; }
+            public bool IsFileStream { get; set; }
+            public bool IsReplicated { get; set; }
+            public bool IsNonSqlSubscribed { get; set; }
+            public bool IsMergePublished { get; set; }
+            public bool IsDtsReplicated { get; set; }
+            public bool IsXmlDocument { get; set; }
+            public int XmlCollectionId { get; set; }
+            public int DefaultObjectId { get; set; }
+            public int RuleObjectId { get; set; }
+            public bool IsSparse { get; set; }
+            public bool IsColumnSet { get; set; }
+            public byte GeneratedAlwaysType { get; set; }
+            public string GeneratedAlwaysTypeDesc { get; set; }
+            public byte EncryptionType { get; set; }
+            public string EncryptionTypeDesc { get; set; }
+            public string EncryptionAlgorithmName { get; set; }
+            public int ColumnEncryptionKeyId { get; set; }
+            public string ColumnEncryptionKeyDatabaseName { get; set; }
+            public bool IsHidden { get; set; }
+            public bool IsMasked { get; set; }
+            public bool IsDataDeletionFilterColumn { get; set; }
+            public byte LedgerViewColumnType { get; set; }
+            public string LedgerViewColumnTypeDesc { get; set; }
+            public bool IsDroppedLedgerColumn { get; set; }
+            public DateTime CreateDate { get; set; }
+            public DateTime ModifyDate { get; set; }
+        }
+
 
         readonly Helpers.AGLogger.Logger _errorLogger = new Helpers.AGLogger.Logger(LogPath: Path.Combine(Utils.ApplicationPath, "Logs", "SQLDatabaseHelper_Errors.log"), AddTimeStamp: true, RolloverSubFolder: "Complete");
         /// <summary>Provides access to the  Connection string in use</summary>
@@ -285,7 +329,7 @@ namespace AGenius.UsefulStuff.Helpers
                     _lastError = "Connection String not set";
                     throw new ArgumentException(_lastError);
                 }
-                string sWhere = $"WHERE {keyFieldName} {operatorType} {fieldValue} ";
+                string sWhere = $"WHERE {keyFieldName} {operatorType} '{fieldValue}' ";
                 string sSQL = $"SELECT * FROM {TableName} {sWhere}";
                 _lastQuery = sSQL;
                 // var Results = null;
@@ -759,7 +803,6 @@ namespace AGenius.UsefulStuff.Helpers
 
                 using IDbConnection db = new SqlConnection(DBConnectionString);
                 return db.Insert(Record, commandTimeout: DefaultTimeOut);
-
             }
             catch (DbException ex)
             {
@@ -787,24 +830,6 @@ namespace AGenius.UsefulStuff.Helpers
                 using IDbConnection db = new SqlConnection(DBConnectionString);
                 db.Insert(Records, commandTimeout: DefaultTimeOut);
                 return true;
-
-
-                //db.Open();
-                //var trans = db.BeginTransaction();
-                //try
-                //{
-                //    long rows = db.Insert(Records, trans);
-                //    trans.Commit();
-
-                //    return rows;
-                //}
-                //catch (Exception ex)
-                //{
-                //    trans.Rollback();
-                //    return -1;
-                //}
-
-
             }
             catch (DbException ex)
             {
@@ -892,7 +917,8 @@ namespace AGenius.UsefulStuff.Helpers
         /// <summary>Execute an SQL Statement </summary>
         /// <param name="SprocName">String holding the SQL Stored Proceedure Name</param>
         /// <param name="dParams">String holding the SQL params</param>
-        public object ExecuteSproc(string SprocName, DynamicParameters dParams)
+        /// <remarks>Modified to detect output params and return either a single value or a list of values</remarks>
+        public object ExecuteSproc(string SprocName, DynamicParameters dParams, List<string> outputParamNames = null)
         {
             try
             {
@@ -905,8 +931,31 @@ namespace AGenius.UsefulStuff.Helpers
                 }
 
                 using IDbConnection db = new SqlConnection(DBConnectionString);
-                return db.Execute(SprocName, dParams, commandType: CommandType.StoredProcedure, commandTimeout: DefaultTimeOut);
 
+                if (outputParamNames != null && outputParamNames.Count > 0)
+                {
+                    db.Execute(SprocName, dParams, commandType: CommandType.StoredProcedure, commandTimeout: DefaultTimeOut);
+
+                    if (outputParamNames.Count == 1)
+                    {
+                        // Return single value
+                        return dParams.Get<object>(outputParamNames[0]);
+                    }
+                    else
+                    {
+                        // Return multiple values
+                        List<object> list = new List<object>();
+                        foreach (var outputParamName in outputParamNames)
+                        {
+                            list.Add(dParams.Get<object>(outputParamName));
+                        }
+                        return list;
+                    }
+                }
+                else
+                {
+                    return db.Execute(SprocName, dParams, commandType: CommandType.StoredProcedure, commandTimeout: DefaultTimeOut);
+                }
             }
             catch (DbException ex)
             {
@@ -1502,6 +1551,60 @@ namespace AGenius.UsefulStuff.Helpers
             var rslt = ExecuteScalar($"SELECT CASE WHEN EXISTS(SELECT 1 FROM sys.columns WHERE Name = N'{ColumnName}' AND Object_ID = Object_ID(N'dbo.{tableName}')) THEN 1 ELSE 0 END");
             bool exists = (int)rslt == 1;
             return exists;
+        }
+        public IList<ColumnMetadata> GetColumnsMetaData(string tableName, string SchemaName = "dbo")
+        {
+            var sql = @$"
+SELECT
+       c.name                                AS ColumnName,
+       c.object_id                           AS ObjectId,
+       c.system_type_id                      AS SystemTypeId,
+       c.user_type_id                        AS UserTypeId,   
+       c.max_length                          AS MaxLength,
+       c.precision                           AS Precision,
+       c.scale                               AS Scale,
+       c.collation_name                      AS CollationName,
+       c.is_nullable                         AS IsNullable,
+       c.is_ansi_padded                      AS IsAnsiPadded,
+       c.is_rowguidcol                       AS IsRowGuidCol,
+       c.is_identity                         AS IsIdentity,
+       c.is_computed                         AS IsComputed,
+       c.is_filestream                       AS IsFileStream,
+       c.is_replicated                       AS IsReplicated,
+       c.is_non_sql_subscribed               AS IsNonSqlSubscribed,
+       c.is_merge_published                  AS IsMergePublished,
+       c.is_dts_replicated                   AS IsDtsReplicated,
+       c.is_xml_document                     AS IsXmlDocument,
+       c.xml_collection_id                   AS XmlCollectionId,
+       c.default_object_id                   AS DefaultObjectId,
+       c.rule_object_id                      AS RuleObjectId,
+       c.is_sparse                           AS IsSparse,
+       c.is_column_set                       AS IsColumnSet,
+       c.generated_always_type               AS GeneratedAlwaysType,
+       c.generated_always_type_desc          AS GeneratedAlwaysTypeDesc,
+       c.encryption_type                     AS EncryptionType,
+       c.encryption_type_desc                AS EncryptionTypeDesc,
+       c.encryption_algorithm_name           AS EncryptionAlgorithmName,
+       c.column_encryption_key_id            AS ColumnEncryptionKeyId,
+       c.column_encryption_key_database_name AS ColumnEncryptionKeyDatabaseName,
+       c.is_hidden                           AS IsHidden,
+       c.is_masked                           AS IsMasked,
+       c.is_data_deletion_filter_column      AS IsDataDeletionFilterColumn,
+       c.ledger_view_column_type             AS LedgerViewColumnType,
+       c.ledger_view_column_type_desc        AS LedgerViewColumnTypeDesc,
+       c.is_dropped_ledger_column            AS IsDroppedLedgerColumn,
+       t.create_date                         AS CreateDate,
+       t.modify_date                         AS ModifyDate
+    FROM
+       sys.columns           AS c
+       INNER JOIN sys.tables AS t ON c.object_id = t.object_id
+    WHERE
+       (t.name                      = '{tableName}')
+      AND (SCHEMA_NAME(t.schema_id) = '{SchemaName}')
+    ORDER BY
+       c.column_id;";
+            IList<ColumnMetadata> columns = ReadRecordsSQL<ColumnMetadata>(sql);
+            return columns;
         }
         /// <summary>Get a Fields MaxLength value</summary>
         /// <param name="tableName">The name of the table to check</param>
