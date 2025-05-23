@@ -247,7 +247,8 @@ public class Logger
     /// <param name="logLevel">The event level of the entry</param>        
     /// <param name="appendNewLine">Automatically add a new line after the message</param>  
     /// <param name="appendTimeStamp">Prefix event text with timestamp</param>
-    public void WriteLog(string EventText, LogEventLevel? logLevel = null, bool appendNewLine = true, bool? appendTimeStamp = null)
+    /// <param name="updateLastEntry">Attempt to update the last entry in the log file</param>
+    public void WriteLog(string EventText, LogEventLevel? logLevel = null, bool appendNewLine = true, bool? appendTimeStamp = null, bool updateLastEntry = false)
     {
         try
         {
@@ -260,8 +261,6 @@ public class Logger
             string logFileName = Path.GetFileName(CurrentLogFilePath); // Get the file name portion
             string logPathName = Path.GetDirectoryName(CurrentLogFilePath); // Get Folder Path
             string logLevelTag = GetLevelMoniker(_upperCaseLevelMap, logLevel.Value, this.LogLevelChars);
-
-            //  string sPath = Path.Combine(LogPath, SubFolder ?? "", $"{logFileName}.log");
 
             if (System.IO.File.Exists(CurrentLogFilePath).Equals(false))
             {
@@ -291,13 +290,20 @@ public class Logger
             }
             if (logLevel != LogEventLevel.Verbose || this.LogLevel == LogEventLevel.Verbose)
             {
-                if (appendNewLine)
+                if (updateLastEntry)
                 {
-                    File.AppendAllText(CurrentLogFilePath, Environment.NewLine + EventText);
+                    UpdateLastLogLine(CurrentLogFilePath, EventText);
                 }
                 else
                 {
-                    File.AppendAllText(CurrentLogFilePath, EventText);
+                    if (appendNewLine)
+                    {
+                        File.AppendAllText(CurrentLogFilePath, Environment.NewLine + EventText);
+                    }
+                    else
+                    {
+                        File.AppendAllText(CurrentLogFilePath, EventText);
+                    }
                 }
             }
 
@@ -314,6 +320,54 @@ public class Logger
         catch (System.Exception)
         {
             throw; // rethrow the exception to client
+        }
+    }
+    /// <summary>
+    /// Attempt to update te last line in the log file with the new message.
+    /// </summary>
+    /// <param name="logFile">The log file path</param>
+    /// <param name="message">The new line to add</param>
+    /// <remarks>This may or maynot work as the log file might be in use, if it is unable to update it does nothing</remarks>
+    private void UpdateLastLogLine(string logFile, string message)
+    {
+        Encoding encoding = Encoding.UTF8;
+        try
+        {
+            using (FileStream fs = new FileStream(logFile, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+            {
+                long position = fs.Length;
+                int bytesRead;
+                byte[] buffer = new byte[1];
+                bool foundLineBreak = false;
+
+                // Scan backwards to find the start of the last line
+                while (position > 0)
+                {
+                    position--;
+                    fs.Seek(position, SeekOrigin.Begin);
+                    bytesRead = fs.Read(buffer, 0, 1);
+
+                    if (buffer[0] == '\n')
+                    {
+                        foundLineBreak = true;
+                        position++; // Move to the byte after '\n'
+                        break;
+                    }
+                }
+
+                // Truncate at the start of the last line
+                fs.SetLength(position);
+
+                // Move to the end and write the new last line
+                fs.Seek(0, SeekOrigin.End);
+                byte[] newLineBytes = encoding.GetBytes((foundLineBreak ? "" : Environment.NewLine) + message);
+                fs.Write(newLineBytes, 0, newLineBytes.Length);
+                fs.Close();
+            }
+        }
+        catch (Exception)
+        {
+            // Could not update the last line, log file may be in use or locked by another process           
         }
     }
     /// <summary>Write an event entry with a specified level.</summary>
@@ -368,6 +422,7 @@ public class Logger
     {
         WriteLog(EventText, LogEventLevel.Verbose);
     }
+
     /// <summary>
     /// Write a log event with the <see cref="LogEventLevel.Verbose"/> level and associated exception.
     /// </summary>
@@ -442,6 +497,16 @@ public class Logger
     {
         WriteLog(EventText, LogEventLevel.Information);
     }
+    /// <summary>
+    /// Write a log event with the <see cref="LogEventLevel.Information"/> level and associated exception.
+    /// </summary>
+    /// <param name="EventText">The string message to describe the log entry</param>
+    /// <param name="updateLastEntry">Update the last entry in the log file</param>
+    public void LogInfo(string EventText, bool updateLastEntry)
+    {
+        WriteLog(EventText, LogEventLevel.Information, updateLastEntry: updateLastEntry);
+    }
+
     /// <summary>
     /// Write a log event with the <see cref="LogEventLevel.Information"/> level and associated exception.
     /// Allow Override of appending new line and time stamp

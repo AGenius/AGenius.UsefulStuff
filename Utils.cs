@@ -1126,7 +1126,7 @@ namespace AGenius.UsefulStuff
         /// <param name="SMTPAuth">SMTP Authentication required (optional, default=false) <see cref="bool"/></param>
         /// <param name="BCCList">BCC List to send email too, this is a ; seperated list (optional)</param>
         /// <param name="CCList">CC List to send email too, this is a ; seperated list (optional)</param>
-        /// <param name="imagespath">Path to where any images are located to embed in the Email body. will convert any src= references to the embeded image</param>
+        /// <param name="ImagesPath">Path to where any images are located to embed in the Email body. will convert any src= references to the embeded image</param>
         /// <param name="AttachmentPaths">A list of attachments to include in the email message (optional) <see cref="List{T}"/></param>
         /// <param name="LogErrors">Log any errors to "SMTPErrors.Log" file in the application folder</param>
         /// <param name="LogPath">The Path for the Errors log to be stored</param>
@@ -1145,7 +1145,7 @@ namespace AGenius.UsefulStuff
                 bool SMTPAuth = false,
                 string BCCList = null,
                 string CCList = null,
-                string imagespath = null,
+                string ImagesPath = null,
                 List<string> AttachmentPaths = null,
                 bool LogErrors = false,
                 string LogPath = null,
@@ -1178,7 +1178,7 @@ namespace AGenius.UsefulStuff
                 string tempcontent = MessageBody + "src=\""; // Ensures we get the last field
                 string strTemp = "";
 
-                if (!String.IsNullOrEmpty(imagespath))
+                if (!String.IsNullOrEmpty(ImagesPath))
                 {
                     // Build up the list of images parts in the Content
                     do
@@ -1208,9 +1208,9 @@ namespace AGenius.UsefulStuff
                         //AlternateView avText = AlternateView.CreateAlternateViewFromString(sMessage, null, MediaTypeNames.Text.Plain);
                         counter = 1;
 
-                        if (!imagespath.EndsWith(@"\"))
+                        if (!ImagesPath.EndsWith(@"\"))
                         {
-                            imagespath += @"\";
+                            ImagesPath += @"\";
                         }
                         string strItem = "";
 
@@ -1220,18 +1220,21 @@ namespace AGenius.UsefulStuff
                             {
                                 // Create a LinkedResource object for each embedded image and
                                 // add to the Alternative view object
-                                string ext = System.IO.Path.GetExtension(item);
-                                strItem = item;
-                                LinkedResource imageitem = ext.ToLower() switch
+                                if (!item.ToLower().StartsWith("http"))
                                 {
-                                    ".jpg" or ".jpeg" => new LinkedResource(imagespath + strItem, MediaTypeNames.Image.Jpeg),
-                                    ".gif" => new LinkedResource(imagespath + strItem, MediaTypeNames.Image.Gif),
-                                    ".png" => new LinkedResource(imagespath + strItem, "image/png"),
-                                    _ => null,
-                                };
-                                imageitem.ContentId = "image" + counter++;
-                                avHtml.LinkedResources.Add(imageitem);
-                                //
+                                    string ext = System.IO.Path.GetExtension(item);
+                                    strItem = item;
+                                    LinkedResource imageitem = ext.ToLower() switch
+                                    {
+                                        ".jpg" or ".jpeg" => new LinkedResource(ImagesPath + strItem, MediaTypeNames.Image.Jpeg),
+                                        ".gif" => new LinkedResource(ImagesPath + strItem, MediaTypeNames.Image.Gif),
+                                        ".png" => new LinkedResource(ImagesPath + strItem, "image/png"),
+                                        _ => null,
+                                    };
+                                    imageitem.ContentId = "image" + counter++;
+                                    avHtml.LinkedResources.Add(imageitem);
+                                    //
+                                }
                             }
                         }
 
@@ -1910,6 +1913,27 @@ namespace AGenius.UsefulStuff
                 fsCrypt.Close();
 
             }
+        }
+        #endregion
+        #region Region
+        /// <summary>
+        /// Create a region for a form for rounded corners
+        /// </summary>
+        /// <param name="cornerRadius">Set the rounded radius</param>
+        /// <param name="formWidth">The Forms Width</param>
+        /// <param name="formHeight">The Forms Height</param>
+        /// <returns></returns>
+        public static GraphicsPath CreateFormRegion(int cornerRadius, int formWidth, int formHeight)
+        {
+            GraphicsPath GrpRect = new GraphicsPath();
+            int width = formWidth + 1;
+            int height = formHeight + 1;
+            GrpRect.AddArc(new Rectangle(0, 0, cornerRadius * 2, cornerRadius * 2), 180f, 90f);//left-top
+            GrpRect.AddArc(new Rectangle((width - cornerRadius * 2) - 1, 0, cornerRadius * 2, cornerRadius * 2), -90f, 90f);//right-top
+            GrpRect.AddArc(new Rectangle((width - cornerRadius * 2) - 1, (height - cornerRadius * 2) - 1, cornerRadius * 2, cornerRadius * 2), 0f, 90f);//right-bottom
+            GrpRect.AddArc(new Rectangle(0, (height - cornerRadius * 2) - 1, cornerRadius * 2, cornerRadius * 2), 90f, 90f);//left-bottom
+            GrpRect.CloseAllFigures();
+            return GrpRect;
         }
         #endregion
     }

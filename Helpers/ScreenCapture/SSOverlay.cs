@@ -24,13 +24,15 @@ namespace AGenius.UsefulStuff.Helpers
             this.TopMost = true;
             this.ShowInTaskbar = false;
             this.DoubleBuffered = true;
-            this.Cursor = Cursors.Cross;
+            //this.Cursor = Cursors.Cross;
+            this.Cursor = CreateWhiteCrossCursor();
             this.selectionState = selectionState;
             this.selectionState.OnSelectionChanged += SelectionState_OnSelectionChanged;
         }
 
         private void SelectionState_OnSelectionChanged()
         {
+            UpdateRegion();
             this.Invalidate();
         }
 
@@ -72,7 +74,7 @@ namespace AGenius.UsefulStuff.Helpers
             base.OnPaint(e);
             if (selectionState.IsDrawing)
             {
-                using (Pen pen = new Pen(Color.Red, 2))               
+                using (Pen pen = new Pen(Color.Red, 2))
                 {
                     var localRectangle = new Rectangle(
                         selectionState.SelectionRectangle.X - this.Bounds.X,
@@ -93,6 +95,39 @@ namespace AGenius.UsefulStuff.Helpers
                 return true;
             }
             return base.ProcessCmdKey(ref msg, keyData);
+        }
+        private Cursor CreateWhiteCrossCursor()
+        {
+            Bitmap bitmap = new Bitmap(32, 32);
+            using (Graphics g = Graphics.FromImage(bitmap))
+            {
+                g.Clear(Color.Transparent);
+                Pen pen = new Pen(Color.White, 2);
+                g.DrawLine(pen, 16, 0, 16, 32);
+                g.DrawLine(pen, 0, 16, 32, 16);
+            }
+
+            IntPtr ptr = bitmap.GetHicon();
+            return new Cursor(ptr);
+        }
+        private void UpdateRegion()
+        {
+            if (selectionState.IsDrawing)
+            {
+                var localRectangle = new Rectangle(
+                    selectionState.SelectionRectangle.X - this.Bounds.X,
+                    selectionState.SelectionRectangle.Y - this.Bounds.Y,
+                    selectionState.SelectionRectangle.Width,
+                    selectionState.SelectionRectangle.Height);
+
+                Region region = new Region(new Rectangle(0, 0, this.Width, this.Height));
+                region.Exclude(localRectangle);
+                this.Region = region;
+            }
+            else
+            {
+                this.Region = new Region(new Rectangle(0, 0, this.Width, this.Height));
+            }
         }
     }
 

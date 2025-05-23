@@ -79,9 +79,6 @@ namespace AGenius.UsefulStuff.Helpers
                     DisposeKeyHook();
                     if (overlay.DialogResult == DialogResult.OK)
                     {
-                        overlay.Opacity = 0;
-                        HideOverlays();// Ensure the overlay is not captured
-
                         // Capture the screenshot                            
                         var ssFile = CaptureScreenshot(selectionState.SelectionRectangle);
                         CloseOverlays();

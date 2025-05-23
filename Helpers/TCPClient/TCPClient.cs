@@ -64,14 +64,23 @@ namespace AGenius.UsefulStuff.Helpers.TCPClient
         /// Send message to the connected server
         /// </summary>
         /// <param name="message"></param>
-        public bool SendMessage(string message)
+        public bool SendMessage(string message, bool appendCR = true)
         {
             try
             {
                 if (_client.Client.Connected)
                 {
                     NetworkStream stream = _client.GetStream();
-                    byte[] buffer = Encoding.ASCII.GetBytes(message);
+                    byte[] buffer;
+                    if (appendCR)
+                    {
+                        buffer = Encoding.ASCII.GetBytes(message + '\n');
+                    }
+                    else
+                    {
+                        buffer = Encoding.ASCII.GetBytes(message);
+                    }
+
                     stream.Write(buffer, 0, buffer.Length);
                     return true;
                 }
@@ -99,7 +108,7 @@ namespace AGenius.UsefulStuff.Helpers.TCPClient
 
             while (true)
             {
-                int bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length).ConfigureAwait(true);
+                int bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
 
                 if (bytesRead == 0)
                 {
@@ -110,8 +119,9 @@ namespace AGenius.UsefulStuff.Helpers.TCPClient
                 string data = Encoding.ASCII.GetString(buffer, 0, bytesRead);
                 messageBuilder.Append(data);
 
-                if (data.Length > 0)
+                if (!stream.DataAvailable)
                 {
+                    // End of data received
                     string receivedMessage = messageBuilder.ToString();
                     OnEvent(eTCPClientState.MessageReceived, receivedMessage, false);
                     //OnMessageReceived(receivedMessage);
@@ -135,7 +145,7 @@ namespace AGenius.UsefulStuff.Helpers.TCPClient
         {
             if (setLocalState)
                 _state = state;
-            
+
             var receivedArgs = new TCPClientEventArgs()
             {
                 EventType = state,
