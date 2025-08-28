@@ -72,19 +72,21 @@ namespace AGenius.UsefulStuff.Helpers
             public int RuleObjectId { get; set; }
             public bool IsSparse { get; set; }
             public bool IsColumnSet { get; set; }
-            public byte GeneratedAlwaysType { get; set; }
-            public string GeneratedAlwaysTypeDesc { get; set; }
-            public byte EncryptionType { get; set; }
-            public string EncryptionTypeDesc { get; set; }
-            public string EncryptionAlgorithmName { get; set; }
-            public int ColumnEncryptionKeyId { get; set; }
-            public string ColumnEncryptionKeyDatabaseName { get; set; }
-            public bool IsHidden { get; set; }
-            public bool IsMasked { get; set; }
-            public bool IsDataDeletionFilterColumn { get; set; }
-            public byte LedgerViewColumnType { get; set; }
-            public string LedgerViewColumnTypeDesc { get; set; }
-            public bool IsDroppedLedgerColumn { get; set; }
+            // The following are SQL Server 2016+ only — comment out for 2008-2014 support
+            //public byte GeneratedAlwaysType { get; set; }
+            //public string GeneratedAlwaysTypeDesc { get; set; }
+            //public byte EncryptionType { get; set; }
+            //public string EncryptionTypeDesc { get; set; }
+            //public string EncryptionAlgorithmName { get; set; }
+            //public int ColumnEncryptionKeyId { get; set; }
+            //public string ColumnEncryptionKeyDatabaseName { get; set; }
+            //public bool IsHidden { get; set; }
+            //public bool IsMasked { get; set; }
+            // SQL 2022 Support
+            //public bool IsDataDeletionFilterColumn { get; set; }
+            //public byte LedgerViewColumnType { get; set; }
+            //public string LedgerViewColumnTypeDesc { get; set; }
+            //public bool IsDroppedLedgerColumn { get; set; }
             public DateTime CreateDate { get; set; }
             public DateTime ModifyDate { get; set; }
         }
@@ -152,77 +154,29 @@ namespace AGenius.UsefulStuff.Helpers
         /// <typeparam name="TENTITY">Entity Object type</typeparam>
         /// <param name="ID"><see cref="int"/> ID of the record to read</param>
         /// <returns>The Entity record requested or null</returns>
-        public TENTITY ReadRecord<TENTITY>(int? ID) where TENTITY : class
-        {
-            try
-            {
-                _lastError = "";
-                _lastQuery = "";
-                if (string.IsNullOrEmpty(DBConnectionString))
-                {
-                    _lastError = "Connection String not set";
-                    throw new ArgumentException(_lastError);
-                }
-                if (!ID.HasValue || ID.Value <= 0)
-                {
-                    _lastError = "Invalid ID specified";
-                    throw new ArgumentException(_lastError);
-                }
-                using IDbConnection db = new SqlConnection(DBConnectionString);
-                return db.Get<TENTITY>(ID, commandTimeout: DefaultTimeOut);
-            }
-            catch (DbException ex)
-            {
-                if (ex.Message.Contains("deadlocked"))
-                {
-                    // Retry
-                    _errorLogger.LogError(ex.Message);
-                    return ReadRecord<TENTITY>(ID);
-                }
-                _lastError = ex.Message;
-                throw new DatabaseAccessHelperException(ex.Message);
-            }
-        }
+        public TENTITY ReadRecord<TENTITY>(int? ID) where TENTITY : class => DoReadRecord<TENTITY>(ID);
+        /// <summary>Return a single record for the specified ID </summary>
+        /// <typeparam name="TENTITY">Entity Object type</typeparam>
+        /// <param name="ID"><see cref="long"/> ID of the record to read</param>
+        /// <returns>The Entity record requested or null</returns>
+        public TENTITY ReadRecord<TENTITY>(long? ID) where TENTITY : class => DoReadRecord<TENTITY>(ID);
+
         /// <summary>Return a single record for the specified ID </summary>
         /// <typeparam name="TENTITY">Entity Object type</typeparam>
         /// <param name="ID"><see cref="string"/> ID of the record to read</param>
         /// <returns>The Entity record requested or null</returns>
-        public TENTITY ReadRecord<TENTITY>(string ID) where TENTITY : class
-        {
-            try
-            {
-                _lastError = "";
-                _lastQuery = "";
-                if (string.IsNullOrEmpty(DBConnectionString))
-                {
-                    _lastError = "Connection String not set";
-                    throw new ArgumentException(_lastError);
-                }
-                if (string.IsNullOrEmpty(ID))
-                {
-                    _lastError = "Invalid ID specified";
-                    throw new ArgumentException(_lastError);
-                }
-                using IDbConnection db = new SqlConnection(DBConnectionString);
-                return db.Get<TENTITY>(ID, commandTimeout: DefaultTimeOut);
-            }
-            catch (DbException ex)
-            {
-                if (ex.Message.Contains("deadlocked"))
-                {
-                    // Retry
-                    _errorLogger.LogError(ex.Message);
-                    return ReadRecord<TENTITY>(ID);
-                }
-                _lastError = ex.Message;
-                throw new DatabaseAccessHelperException(ex.Message);
-            }
-        }
+        public TENTITY ReadRecord<TENTITY>(string ID) where TENTITY : class => DoReadRecord<TENTITY>(ID);
         /// <summary>Return a single record for the specified ID </summary>
         /// <typeparam name="TENTITY">Entity Object type</typeparam>
-        /// <param name="ID">a Guid representing the ID of the record</param>
+        /// <param name="ID"><see cref="Guid"/> ID of the record to read</param>
         /// <returns>The Entity record requested or null</returns>
-        public TENTITY ReadRecord<TENTITY>(Guid ID) where TENTITY : class
+        public TENTITY ReadRecord<TENTITY>(Guid ID) where TENTITY : class => DoReadRecord<TENTITY>(ID);
+
+        /// <summary>Return a single record for the specified ID </summary>
+        /// <typeparam name="TENTITY">Entity Object type</typeparam>
+        /// <param name="ID">Can be any of : <see cref="int"/><see cref="long"/><see cref="string"/> or <see cref="Guid"/> </param>
+        /// <returns>The Entity record requested or null</returns>
+        private TENTITY DoReadRecord<TENTITY>(object ID) where TENTITY : class
         {
             try
             {
@@ -239,7 +193,23 @@ namespace AGenius.UsefulStuff.Helpers
                     throw new ArgumentException(_lastError);
                 }
                 using IDbConnection db = new SqlConnection(DBConnectionString);
-                return db.Get<TENTITY>(ID.ToString(), commandTimeout: DefaultTimeOut);
+                if (ID is int iID)
+                {
+                    return db.Get<TENTITY>(iID, commandTimeout: DefaultTimeOut);
+                }
+                else if (ID is long lID)
+                {
+                    return db.Get<TENTITY>(lID, commandTimeout: DefaultTimeOut);
+                }
+                else if (ID is string sID)
+                {
+                    return db.Get<TENTITY>(sID.ToString(), commandTimeout: DefaultTimeOut);
+                }
+                else if (ID is Guid gID)
+                {
+                    return db.Get<TENTITY>(gID.ToString(), commandTimeout: DefaultTimeOut);
+                }
+                return null;
             }
             catch (DbException ex)
             {
@@ -247,7 +217,7 @@ namespace AGenius.UsefulStuff.Helpers
                 {
                     // Retry
                     _errorLogger.LogError(ex.Message);
-                    return ReadRecord<TENTITY>(ID);
+                    return DoReadRecord<TENTITY>(ID);
                 }
                 _lastError = ex.Message;
                 throw new DatabaseAccessHelperException(ex.Message);
@@ -516,6 +486,55 @@ namespace AGenius.UsefulStuff.Helpers
         /// <summary>Return a list of objects that match the selection criteria </summary>
         /// <typeparam name="TENTITY">Entity Object type</typeparam>
         /// <param name="Where">criteria</param>
+        /// <param name="noTimeout">Set no Timeout and wait indefinitely</param>
+        /// <returns><see cref="IList{T}"/> containing the Entity records</returns>
+        public IList<TENTITY> ReadRecordsPropertiesOnly<TENTITY>(string Where = "", bool noTimeout = false) where TENTITY : class
+        {
+            try
+            {
+                _lastError = "";
+                _lastQuery = "";
+                string TableName = GetTableName<TENTITY>();
+                if (string.IsNullOrEmpty(TableName))
+                {
+                    _lastError = "Invalid Table Name";
+                    throw new ArgumentException(_lastError);
+                }
+                if (string.IsNullOrEmpty(DBConnectionString))
+                {
+                    _lastError = "Connection String not set";
+                    throw new ArgumentException(_lastError);
+                }
+                string sWhere = string.IsNullOrEmpty(Where) ? "" : $"WHERE {Where}";
+                // Get comma-separated property names
+
+                var fieldList = string.Join(", ", typeof(TENTITY).GetProperties().Where(p => !Attribute.IsDefined(p, typeof(ExcludeFromListReads)))
+                    .Select(p => $"[{p.Name}]"));
+                string sSQL = $"SELECT {fieldList} FROM {TableName} {sWhere}";
+
+
+                _lastQuery = sSQL;
+                // var Results = null;
+                using IDbConnection db = new SqlConnection(DBConnectionString);
+                return db.Query<TENTITY>(sSQL, commandTimeout: noTimeout ? 0 : DefaultTimeOut).ToList();
+            }
+            catch (DbException ex)
+            {
+                if (ex.Message.Contains("deadlocked"))
+                {
+                    // Retry
+                    _errorLogger.LogError(ex.Message);
+                    return ReadRecordsPropertiesOnly<TENTITY>(Where, noTimeout);
+                }
+                _lastError = ex.Message;
+                //       throw new DatabaseAccessHelperException(ex.Message);
+                return null;
+            }
+        }
+        /// <summary>Return a list of objects that match the selection criteria </summary>
+        /// <typeparam name="TENTITY">Entity Object type</typeparam>
+        /// <param name="Where">criteria</param>
+        /// <param name="noTimeout">Set no Timeout and wait indefinitely</param>
         /// <returns><see cref="IList{T}"/> containing the Entity records</returns>
         public IList<TENTITY> ReadRecords<TENTITY>(string Where = "") where TENTITY : class
         {
@@ -540,48 +559,6 @@ namespace AGenius.UsefulStuff.Helpers
                 // var Results = null;
                 using IDbConnection db = new SqlConnection(DBConnectionString);
                 return db.Query<TENTITY>(sSQL, commandTimeout: DefaultTimeOut).ToList();
-            }
-            catch (DbException ex)
-            {
-                if (ex.Message.Contains("deadlocked"))
-                {
-                    // Retry
-                    _errorLogger.LogError(ex.Message);
-                    return ReadRecords<TENTITY>(Where);
-                }
-                _lastError = ex.Message;
-                //       throw new DatabaseAccessHelperException(ex.Message);
-                return null;
-            }
-        }
-        /// <summary>Return a list of objects that match the selection criteria </summary>
-        /// <typeparam name="TENTITY">Entity Object type</typeparam>
-        /// <param name="Where">criteria</param>
-        /// <param name="noTimeout">Set no Timeout and wait indefinitely</param>
-        /// <returns><see cref="IList{T}"/> containing the Entity records</returns>
-        public IList<TENTITY> ReadRecords<TENTITY>(string Where = "", bool noTimeout = false) where TENTITY : class
-        {
-            try
-            {
-                _lastError = "";
-                _lastQuery = "";
-                string TableName = GetTableName<TENTITY>();
-                if (string.IsNullOrEmpty(TableName))
-                {
-                    _lastError = "Invalid Table Name";
-                    throw new ArgumentException(_lastError);
-                }
-                if (string.IsNullOrEmpty(DBConnectionString))
-                {
-                    _lastError = "Connection String not set";
-                    throw new ArgumentException(_lastError);
-                }
-                string sWhere = string.IsNullOrEmpty(Where) ? "" : $"WHERE {Where}";
-                string sSQL = $"SELECT * FROM {TableName} {sWhere}";
-                _lastQuery = sSQL;
-                // var Results = null;
-                using IDbConnection db = new SqlConnection(DBConnectionString);
-                return db.Query<TENTITY>(sSQL, commandTimeout: noTimeout ? 0 : DefaultTimeOut).ToList();
             }
             catch (DbException ex)
             {
@@ -1580,21 +1557,24 @@ SELECT
        c.rule_object_id                      AS RuleObjectId,
        c.is_sparse                           AS IsSparse,
        c.is_column_set                       AS IsColumnSet,
-       c.generated_always_type               AS GeneratedAlwaysType,
-       c.generated_always_type_desc          AS GeneratedAlwaysTypeDesc,
-       c.encryption_type                     AS EncryptionType,
-       c.encryption_type_desc                AS EncryptionTypeDesc,
-       c.encryption_algorithm_name           AS EncryptionAlgorithmName,
-       c.column_encryption_key_id            AS ColumnEncryptionKeyId,
-       c.column_encryption_key_database_name AS ColumnEncryptionKeyDatabaseName,
-       c.is_hidden                           AS IsHidden,
-       c.is_masked                           AS IsMasked,
-       c.is_data_deletion_filter_column      AS IsDataDeletionFilterColumn,
-       c.ledger_view_column_type             AS LedgerViewColumnType,
-       c.ledger_view_column_type_desc        AS LedgerViewColumnTypeDesc,
-       c.is_dropped_ledger_column            AS IsDroppedLedgerColumn,
-       t.create_date                         AS CreateDate,
-       t.modify_date                         AS ModifyDate
+       -- The following are SQL Server 2016+ only — comment out for 2008-2014 support
+       --c.generated_always_type               AS GeneratedAlwaysType,
+       --c.generated_always_type_desc          AS GeneratedAlwaysTypeDesc,
+       --c.encryption_type                     AS EncryptionType,
+       --c.encryption_type_desc                AS EncryptionTypeDesc,
+       --c.encryption_algorithm_name           AS EncryptionAlgorithmName,
+       --c.column_encryption_key_id            AS ColumnEncryptionKeyId,
+       --c.column_encryption_key_database_name AS ColumnEncryptionKeyDatabaseName,
+       --c.is_hidden                           AS IsHidden,
+       --c.is_masked                           AS IsMasked,
+       -- SQL 2022 Support
+       --c.is_data_deletion_filter_column      AS IsDataDeletionFilterColumn,
+       --c.ledger_view_column_type             AS LedgerViewColumnType,
+       --c.ledger_view_column_type_desc        AS LedgerViewColumnTypeDesc,
+       --c.is_dropped_ledger_column            AS IsDroppedLedgerColumn,
+        t.create_date                         AS CreateDate,
+        t.modify_date                         AS ModifyDate
+       
     FROM
        sys.columns           AS c
        INNER JOIN sys.tables AS t ON c.object_id = t.object_id
