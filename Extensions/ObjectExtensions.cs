@@ -2,15 +2,79 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 
 namespace AGenius.UsefulStuff
 {
+    /// <summary>
+    /// Attribute to mark properties that should be ignored during mapping.
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Property)]
+    public class IgnoreMapAttribute : Attribute
+    {
+    }
+    [AttributeUsage(AttributeTargets.Property)]
+    public class ExcludeFromListReads : Attribute
+    {
+    }
     #region object extension for comparision
     /// <summary>Object Extensions</summary>
     public static class ObjectExtensions
     {
+        /// <summary>
+        /// Maps properties from one object to another of the same type.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="target"></param>
+        /// <param name="source"></param>
+        public static void MapPropertiesFrom<T>(this T target, T source) where T : class
+        {
+            if (target == null || source == null)
+                return;
+
+            var props = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                        .Where(p => p.CanRead && p.CanWrite &&
+                                    p.GetCustomAttribute(typeof(IgnoreMapAttribute)) == null);
+
+            foreach (var prop in props)
+            {
+                var value = prop.GetValue(source, null);
+                prop.SetValue(target, value, null);
+            }
+        }
+        /// <summary>
+        /// Maps properties from one object to another of different types.
+        /// </summary>
+        /// <typeparam name="TTarget"></typeparam>
+        /// <typeparam name="TSource"></typeparam>
+        /// <param name="target"></param>
+        /// <param name="source"></param>
+        public static void MapPropertiesFrom<TTarget, TSource>(this TTarget target, TSource source, bool ignoreNulls = false)
+            where TTarget : class
+            where TSource : class
+        {
+            if (target == null || source == null)
+                return;
+
+            var targetProps = typeof(TTarget).GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                .Where(p => p.CanRead && p.CanWrite && p.GetCustomAttribute(typeof(IgnoreMapAttribute)) == null);
+
+            var sourceProps = typeof(TSource).GetProperties(BindingFlags.Public | BindingFlags.Instance);
+
+            foreach (var targetProp in targetProps)
+            {
+                var sourceProp = sourceProps.FirstOrDefault(p => p.Name == targetProp.Name && p.PropertyType == targetProp.PropertyType && p.CanRead);
+                if (sourceProp != null)
+                {
+                    var value = sourceProp.GetValue(source, null);
+                    if (ignoreNulls && value == null)
+                        continue;
+                    targetProp.SetValue(target, value, null);
+                }
+            }
+        }
         /// <summary>
         /// This will return the properties of a class with any annotations decorating it
         /// </summary>
