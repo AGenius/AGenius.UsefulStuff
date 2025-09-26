@@ -20,6 +20,156 @@ namespace AGenius.UsefulStuff
     /// </summary>
     public static class StringExtensions
     {
+        /// <summary>
+        /// Repace single quotes outside of double quotes with a replacement character
+        /// </summary>        
+        /// <param name="replacement">string to replace</param>
+        /// <returns></returns>
+        public static string ReplaceSingleQuotesOutsideQuotes(this string str, string replacement = "''")
+        {
+            if (string.IsNullOrEmpty(str)) return null;
+
+            var result = new StringBuilder();
+            bool insideDoubleQuotes = false;
+
+            foreach (char c in str)
+            {
+                if (c == '"')
+                {
+                    insideDoubleQuotes = !insideDoubleQuotes;
+                    result.Append(c);
+                }
+                else if (c == '\'' && !insideDoubleQuotes)
+                {
+                    result.Append(replacement);
+                }
+                else
+                {
+                    result.Append(c);
+                }
+            }
+
+            return result.ToString();
+        }
+        /// <summary>
+        /// Replace single quotes in a block of text defined by start and end markers
+        /// </summary>        
+        /// <param name="startMarker">Strnig to mark start of substring</param>
+        /// <param name="endMarker">stnig to mark end of substring</param>
+        /// <param name="replacement">Replace with this</param>
+        /// <returns></returns>
+        public static string ReplaceSingleQuotesInBlock(
+            this string input,
+            string startMarker,
+            string endMarker,
+            string replacement = "`")
+        {
+            if (string.IsNullOrEmpty(input) || string.IsNullOrEmpty(startMarker) || string.IsNullOrEmpty(endMarker))
+                return input;
+
+            var result = new StringBuilder();
+            int index = 0;
+
+            while (index < input.Length)
+            {
+                int startIndex = input.IndexOf(startMarker, index, StringComparison.OrdinalIgnoreCase);
+                if (startIndex == -1)
+                {
+                    result.Append(input.Substring(index));
+                    break;
+                }
+
+                int endIndex = input.IndexOf(endMarker, startIndex + startMarker.Length, StringComparison.OrdinalIgnoreCase);
+                if (endIndex == -1)
+                {
+                    result.Append(input.Substring(index));
+                    break;
+                }
+
+                // Append everything before the start marker
+                result.Append(input.Substring(index, startIndex - index));
+
+                // Append the exact start marker from the original string (case preserved)
+                result.Append(input.Substring(startIndex, startMarker.Length));
+
+                // Move index to the content inside the block
+                int contentStart = startIndex + startMarker.Length;
+
+                // Replace single quotes in the content inside the block
+                for (int i = contentStart; i < endIndex; i++)
+                {
+                    result.Append(input[i] == '\'' ? replacement : input[i]);
+                }
+
+                // Append the exact end marker from the original string (case preserved)
+                result.Append(input.Substring(endIndex, endMarker.Length));
+
+                // Update index to continue after the end marker
+                index = endIndex + endMarker.Length;
+            }
+
+            return result.ToString();
+        }
+        public static string ReplaceSingleQuotesOutsideBlock(
+        this string input,
+        string startMarker,
+        string endMarker,
+        string replacement = "''")
+        {
+            if (string.IsNullOrEmpty(input) || string.IsNullOrEmpty(startMarker) || string.IsNullOrEmpty(endMarker))
+                return input;
+
+            var result = new StringBuilder();
+            int index = 0;
+
+            while (index < input.Length)
+            {
+                // Find the next start marker (case-insensitive)
+                int startIndex = input.IndexOf(startMarker, index, StringComparison.OrdinalIgnoreCase);
+
+                if (startIndex == -1)
+                {
+                    // No more blocks; process the rest as outside
+                    for (int i = index; i < input.Length; i++)
+                    {
+                        result.Append(input[i] == '\'' ? replacement : input[i]);
+                    }
+                    break;
+                }
+
+                // Process everything before the start block as outside
+                for (int i = index; i < startIndex; i++)
+                {
+                    result.Append(input[i] == '\'' ? replacement : input[i]);
+                }
+
+                // Append the exact start marker (preserve original case)
+                result.Append(input.Substring(startIndex, startMarker.Length));
+
+                // Move to the start of the block content
+                int contentStart = startIndex + startMarker.Length;
+
+                // Find the end marker (case-insensitive)
+                int endIndex = input.IndexOf(endMarker, contentStart, StringComparison.OrdinalIgnoreCase);
+                if (endIndex == -1)
+                {
+                    // No matching end; treat the rest as normal text (inside the block — leave as-is)
+                    result.Append(input.Substring(contentStart));
+                    break;
+                }
+
+                // Append content inside the block without modification
+                result.Append(input.Substring(contentStart, endIndex - contentStart));
+
+                // Append the end marker
+                result.Append(input.Substring(endIndex, endMarker.Length));
+
+                // Move index past this block
+                index = endIndex + endMarker.Length;
+            }
+
+            return result.ToString();
+        }
         /// <summary>Chop up string into smaller chunks</summary>
         /// <param name="str">The String to process</param>
         /// <param name="charCount">Number of characters per chunk</param>
@@ -95,6 +245,16 @@ namespace AGenius.UsefulStuff
         public static string CleanString(this string stringValue)
         {
             return Regex.Replace(stringValue, "[^a-zA-Z0-9]", string.Empty);
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="stringValue"></param>
+        /// <param name="replacement"></param>
+        /// <returns></returns>
+        public static string OnlyNumbers(this string stringValue)
+        {
+            return Regex.Replace(stringValue, "[^0-9]", string.Empty);
         }
         /// <summary>Decode the Base36 Encoded string into a number</summary>
         internal static Int64 DecodeBase36(this string input)

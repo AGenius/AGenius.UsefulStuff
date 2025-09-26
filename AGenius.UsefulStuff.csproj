@@ -107,6 +107,7 @@
     <Compile Include="Helpers\AGLogger\AGLogger.cs" />
     <Compile Include="Helpers\AGLogger\LogEventLevel.cs" />
     <Compile Include="Helpers\AGLogger\RollingInterval.cs" />
+    <Compile Include="Helpers\SQueeze.cs" />
     <Compile Include="Helpers\SystemInfoHelper.cs" />
     <Compile Include="Helpers\ImageBuildProperties.cs" />
     <Compile Include="Helpers\ODBCDatabaseHelper.cs" />
@@ -187,16 +188,16 @@
       <Version>17.10.40152</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.Extensions.Logging">
-      <Version>9.0.5</Version>
+      <Version>9.0.9</Version>
     </PackageReference>
     <PackageReference Include="MouseKeyHook">
       <Version>5.7.1</Version>
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json">
-      <Version>13.0.3</Version>
+      <Version>13.0.4</Version>
     </PackageReference>
     <PackageReference Include="System.Configuration.ConfigurationManager">
-      <Version>9.0.5</Version>
+      <Version>9.0.9</Version>
     </PackageReference>
     <PackageReference Include="System.Data.SQLite.x64">
       <Version>1.0.119</Version>
@@ -214,7 +215,7 @@
       <Version>6.1.2</Version>
     </PackageReference>
     <PackageReference Include="System.Text.Encodings.Web">
-      <Version>9.0.5</Version>
+      <Version>9.0.9</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>

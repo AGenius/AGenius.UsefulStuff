@@ -182,7 +182,7 @@ namespace AGenius.UsefulStuff
 
             return age;
         }
-        /// <summary>Return a has based on the date</summary>
+        /// <summary>Return a hash based on the date</summary>
         /// <param name="dateTime">The DataTime value to hash</param>
         /// <param name="ResultLength">Return this many characters from the hash result (default : 8)</param>
         /// <returns></returns>

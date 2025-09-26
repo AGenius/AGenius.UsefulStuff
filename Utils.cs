@@ -1936,5 +1936,103 @@ namespace AGenius.UsefulStuff
             return GrpRect;
         }
         #endregion
+        #region Network Share Access
+        public static bool QuickBestGuessAboutAccessibilityOfPath(string path)
+        {
+            if (string.IsNullOrEmpty(path))
+            {
+                return false;
+            }
+
+            string pathRoot = Path.GetPathRoot(path);
+            if (string.IsNullOrEmpty(pathRoot))
+            {
+                return false;
+            }
+
+            ProcessStartInfo pinfo = new ProcessStartInfo("net", "use")
+            {
+                CreateNoWindow = true,
+                RedirectStandardOutput = true,
+                UseShellExecute = false
+            };
+            string output;
+            using (Process p = Process.Start(pinfo))
+            {
+                output = p.StandardOutput.ReadToEnd();
+            }
+
+            foreach (string line in output.Split(Environment.NewLine.ToArray()))
+            {
+                if (line.ToLower().Contains(path.ToLower()) && line.Contains("OK"))
+                {
+                    return true; // shareIsProbablyConnected
+                }
+            }
+            return false;
+        }
+        public static string CreateMappedDrive(string path, string arg = "")
+        {
+            //
+            ProcessStartInfo pinfo = new ProcessStartInfo("net", $"use {path} {arg}")
+            {
+                CreateNoWindow = true,
+                RedirectStandardOutput = true,
+                UseShellExecute = false
+            };
+            string output;
+            using (Process p = Process.Start(pinfo))
+            {
+                output = p.StandardOutput.ReadToEnd();
+            }
+            return output;
+        }
+        #endregion
+        #region Squeeze Compression
+        public enum SQOptions
+        {
+            Compress,
+            Encrypt,
+            Compress_Encrypt,
+            Decrypt,
+            Decompress,
+            Decompress_Decrypt
+        }
+        /// <summary>
+        /// Take a string list and SQueeZe it into a single string, optionally compressing or encrypting the result
+        /// </summary>
+        /// <param name="input">The list of strings to process </param>
+        /// <param name="option">Option </param>
+        /// <param name="password"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        public static List<string> SQueeZe(List<string> input, SQOptions? option, string password = null)
+        {
+            if (input == null || input.Count == 0)
+            {
+                throw new ArgumentNullException("Items to SQueeZe cannot be empty");
+            }
+            if (option == null)
+            {
+                throw new ArgumentNullException("Option cannot be null");
+            }
+            if ((option == SQOptions.Encrypt || option == SQOptions.Compress_Encrypt) && string.IsNullOrEmpty(password))
+            {
+                throw new ArgumentNullException("Password must be supplied");
+            }
+            foreach (var item in input)
+            {
+
+
+
+            }
+
+            return new List<string> { "Not Implemented" }; // Placeholder for now
+
+
+        }
+     
+
+        #endregion
     }
 }
