@@ -524,6 +524,23 @@ namespace AGenius.UsefulStuff
 
             return Pass;
         }
+        /// <summary>
+        /// Generate a secure random URL safe token
+        /// </summary>
+        /// <param name="length">The length if the resulting token</param>
+        /// <returns>Randomized token string</returns>
+        public static string GenerateSecureToken(int length = 32)
+        {
+            byte[] tokenData = new byte[length];
+            using (var rng = RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(tokenData);
+            }
+            return Convert.ToBase64String(tokenData)
+                .Replace("+", "-")   // URL safe
+                .Replace("/", "_")   // URL safe
+                .TrimEnd('=');
+        }
 
         /// <summary>return the next filename by adding _(1) or _(2) etc or _1 or _2</summary>
         /// <param name="FileName">Base Filename to start</param>
