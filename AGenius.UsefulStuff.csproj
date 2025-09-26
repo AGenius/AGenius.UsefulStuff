@@ -107,6 +107,7 @@
     <Compile Include="Helpers\AGLogger\AGLogger.cs" />
     <Compile Include="Helpers\AGLogger\LogEventLevel.cs" />
     <Compile Include="Helpers\AGLogger\RollingInterval.cs" />
+    <Compile Include="Helpers\GoogleRoutesHelper.cs" />
     <Compile Include="Helpers\SQueeze.cs" />
     <Compile Include="Helpers\SystemInfoHelper.cs" />
     <Compile Include="Helpers\ImageBuildProperties.cs" />
